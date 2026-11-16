@@ -539,6 +539,61 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .call-row .avatar { box-shadow: 0 0 0 2px transparent; transition: box-shadow .12s; }
 .call-row.speaking .avatar { box-shadow: 0 0 0 2px var(--green); }
 .call-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+
+/* ---------- Private calls ---------- */
+.call-btn {
+  flex: none; width: 38px; height: 38px; border: 0; border-radius: 50%;
+  display: grid; place-items: center; margin-left: auto; margin-right: 10px;
+  background: linear-gradient(135deg, #a855f7, #7c3aed); transition: filter .15s, transform .06s;
+}
+.call-btn:hover { filter: brightness(1.12); }
+.call-btn:active { transform: translateY(1px); }
+.call-btn[hidden] { display: none; }
+.btn-accept { background: var(--green); color: #fff; }
+.btn-accept:hover { filter: brightness(1.1); }
+.incoming-call {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 45;
+  display: flex; align-items: center; gap: 10px;
+  width: min(440px, calc(100vw - 24px)); padding: 12px 14px;
+  background: var(--bg-2); border: 1px solid #7c3aed; border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .6), 0 0 0 4px rgba(124, 58, 237, .18);
+  animation: pop .18s ease-out;
+}
+.incoming-call .inc-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.incoming-call .inc-text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.incoming-call .inc-text span { color: var(--muted); font-size: 13px; }
+.incoming-call .btn { padding: 9px 12px; }
+
+/* ---------- Groups ---------- */
+.group-icon {
+  width: 36px; height: 36px; flex: none; border-radius: 50%;
+  display: inline-grid; place-items: center;
+}
+.group-icon.xl { width: 84px; height: 84px; }
+.group-icon.xl svg { width: 40px; height: 40px; }
+.section-label.with-action { display: flex; align-items: center; justify-content: space-between; padding-right: 6px; }
+.mini-btn {
+  width: 24px; height: 24px; border: 0; border-radius: 8px; line-height: 1;
+  background: var(--bg-3); color: var(--text); font-size: 18px; font-weight: 600;
+}
+.mini-btn:hover { background: var(--bg-4); }
+.picker { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.picker input[type="search"] { background: var(--bg-0); padding: 9px 12px; }
+.picker-list { max-height: 190px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; padding: 4px; background: var(--bg-0); }
+.picker-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; cursor: pointer; margin: 0; color: var(--text); font-weight: 500; font-size: 14px; }
+.picker-row:hover { background: var(--bg-3); }
+.picker-row input { width: 18px; height: 18px; flex: none; accent-color: #7c3aed; }
+.picker-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.member-list { display: flex; flex-direction: column; gap: 2px; max-height: 200px; overflow-y: auto; }
+.member-row { display: flex; align-items: center; gap: 10px; padding: 5px 4px; color: var(--text); }
+.member-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; font-size: 14px; }
+.owner-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: rgba(124, 58, 237, .2); color: #c4b5fd; }
+.btn.small { padding: 6px 12px; font-size: 13px; margin-top: 0; }
+.inline-form { display: flex; gap: 8px; width: 100%; margin: 6px 0; }
+.inline-form input { flex: 1 1 auto; width: auto; min-width: 0; }
+.inline-form .btn, .member-row .btn { flex: none; width: auto; }
+.modal-card .form .btn.small { margin-top: 0; }
+.modal-card .form .btn-primary.small { margin-top: 8px; }
 </style>
 
   <!-- Supabase JavaScript SDK (free, loaded from a public CDN) -->
@@ -666,6 +721,7 @@ input:disabled { opacity: .6; cursor: not-allowed; }
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div id="chat-title" class="chat-title"></div>
+        <button id="call-btn" class="call-btn" type="button" title="Start a voice call" aria-label="Start a voice call" hidden></button>
         <div id="online-pill" class="pill"><span class="dot"></span><span id="online-count">0 online</span></div>
       </header>
 
@@ -712,8 +768,8 @@ input:disabled { opacity: .6; cursor: not-allowed; }
    quote marks. (Never paste a "secret" or "service_role" key here.)
    ===================================================================== */
 
-const SUPABASE_URL = 'https://wpojiwrjyutxgetosojn.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_MRM54_01CwVv2h6lXsMvhw_8QWBAr9Q';
+const SUPABASE_URL = 'https://fvqdtdzohsqzrqmebeoj.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_tdamvVfSQOB6879jetIsPw_YxT15rFG';
 
 /* ===================================================================== */
 
@@ -913,6 +969,9 @@ function withPhotoHint(message) {
   if (/display_name|username_changed_at/.test(message || '')) {
     return 'Display names need a one-time database update. Run supabase-names.sql in Supabase (see README.md).';
   }
+  if (/group_id/.test(message || '')) {
+    return 'Groups need a one-time database update. Run supabase-groups.sql in Supabase (see README.md).';
+  }
   return message;
 }
 
@@ -997,6 +1056,12 @@ function freshState() {
     profiles: new Map(),   // id -> profile (everyone)
     online: new Set(),     // ids of people online right now
     chat: { type: 'global', id: null },
+    groups: new Map(),     // group id -> group
+    members: new Map(),    // group id -> Map(user id -> member row)
+    groupsReady: false,    // false until the groups tables answer
+    groupsError: '',
+    groupsChannel: null,
+    openGroupInfo: null,   // id of the group whose info window is open
     messages: [],          // messages in the open chat (oldest first)
     seen: new Set(),       // message ids already shown (prevents doubles)
     hasMore: false,
@@ -1024,6 +1089,7 @@ const profileOf = (id) =>
 
 /** Which chat does this message belong to, from my point of view? */
 function messageKey(m) {
+  if (m.group_id) return state.groups.has(m.group_id) ? m.group_id : null;
   if (m.recipient_id === null) return 'global';
   if (m.sender_id === state.user.id) return m.recipient_id;
   if (m.recipient_id === state.user.id) return m.sender_id;
@@ -1254,12 +1320,15 @@ async function startApp(user) {
 
   await loadUsers();
   subscribeRealtime();
+  subscribeGroupsRealtime();
+  await loadGroups();
   joinPresence();
   joinCallChannel();
   await openChat('global');
 }
 
 function stopApp() {
+  dismissIncoming();
   leaveCall(true);
   if (db) {
     if (callChannel) db.removeChannel(callChannel);
@@ -1267,6 +1336,7 @@ function stopApp() {
     callPeople = new Map();
     if (state.dbChannel) db.removeChannel(state.dbChannel);
     if (state.presenceChannel) db.removeChannel(state.presenceChannel);
+    if (state.groupsChannel) db.removeChannel(state.groupsChannel);
   }
   clearPendingImage();
   signedLinks.clear();
@@ -1348,6 +1418,21 @@ function renderUsers() {
   }, phoneIcon(), el('span', { class: 'name', text: 'Global Call' }),
   callCount ? el('span', { class: 'call-count', text: callCount + ' in call' }) : null));
 
+  // Groups
+  list.append(el('div', { class: 'section-label with-action' },
+    el('span', { text: 'Groups' }),
+    el('button', { class: 'mini-btn', text: '+', attrs: { type: 'button', title: 'Create a group', 'aria-label': 'Create a group' }, on: { click: () => { closeSidebar(); openCreateGroup(); } } })));
+  const gTerm = state.search.trim().toLowerCase();
+  const myGroups = groupList().filter((g) => !gTerm || g.name.toLowerCase().includes(gTerm));
+  myGroups.forEach((g) => list.append(chatItem({
+    key: g.id, avatar: groupIcon(g.id), name: g.name,
+    badge: state.unread.get(g.id) || 0,
+    onClick: () => openChat('group', g.id),
+  })));
+  if (!myGroups.length) {
+    list.append(el('div', { class: 'empty-note', text: state.groupsError || (gTerm ? 'No groups found.' : 'No groups yet. Tap + to make one.') }));
+  }
+
   const term = state.search.trim().toLowerCase();
   const others = [...state.profiles.values()]
     .filter((p) => p.id !== state.user.id && (!term || p.username.toLowerCase().includes(term) || nameOf(p).toLowerCase().includes(term)));
@@ -1371,6 +1456,237 @@ function renderUsers() {
   off.forEach((p) => list.append(personItem(p, false)));
 
   list.scrollTop = keepScroll;
+}
+
+// =====================================================================
+//  GROUPS  (chats for a few people you choose)
+// =====================================================================
+const GROUP_COLORS = ['#5865f2', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#0ea5e9', '#22c55e', '#eab308'];
+
+function groupColor(id) {
+  let h = 0;
+  for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return GROUP_COLORS[h % GROUP_COLORS.length];
+}
+
+/** The group picture: two little people on a coloured circle. */
+function groupIcon(id, size = '') {
+  const icon = el('span', { class: 'group-icon ' + size, style: { background: groupColor(id) }, attrs: { 'aria-hidden': 'true' } });
+  icon.innerHTML =
+    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+    '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/>' +
+    '<circle cx="17" cy="9" r="2.4"/><path d="M17.5 14.6c2.3.2 3.9 1.9 3.9 4.4"/></svg>';
+  return icon;
+}
+
+const groupList = () => [...state.groups.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+const memberIds = (gid) => [...(state.members.get(gid) || new Map()).keys()];
+const iAmOwner = (gid) => { const m = state.members.get(gid); return !!(m && m.get(state.user.id) && m.get(state.user.id).role === 'owner'); };
+
+function friendlyGroupError(error) {
+  const msg = (error && error.message) || '';
+  if (/relation .*group|function .*group|schema cache|could not find the function/i.test(msg)) {
+    return 'Groups need a one-time database update. Run supabase-groups.sql in Supabase (see README.md).';
+  }
+  return msg || 'Something went wrong. Please try again.';
+}
+
+async function loadGroups() {
+  const g = await db.from('groups').select('id, name, created_by, created_at');
+  if (g.error) { state.groupsReady = false; state.groupsError = friendlyGroupError(g.error); renderUsers(); return; }
+  const m = await db.from('group_members').select('group_id, user_id, role, joined_at');
+  if (m.error) { state.groupsReady = false; state.groupsError = friendlyGroupError(m.error); renderUsers(); return; }
+
+  state.groupsReady = true;
+  state.groupsError = '';
+  state.groups = new Map((g.data || []).map((row) => [row.id, row]));
+  state.members = new Map();
+  (m.data || []).forEach((row) => {
+    if (!state.members.has(row.group_id)) state.members.set(row.group_id, new Map());
+    state.members.get(row.group_id).set(row.user_id, row);
+  });
+  await ensureProfiles((m.data || []).map((row) => row.user_id));
+
+  // If the group I am looking at is gone (I left, was removed, or it was deleted), go back to Global Chat.
+  if (state.chat.type === 'group' && !state.groups.has(state.chat.id)) {
+    toast('You are no longer in that group.');
+    closeModal();
+    openChat('global');
+    return;
+  }
+  renderUsers();
+  if (state.chat.type === 'group') { renderHeader(); }
+  if ($('#modal') && !$('#modal').hidden && state.openGroupInfo) openGroupInfo(state.openGroupInfo);
+}
+
+let groupRefreshTimer = null;
+function scheduleGroupsRefresh() {
+  clearTimeout(groupRefreshTimer);
+  groupRefreshTimer = setTimeout(loadGroups, 300);
+}
+
+/** A separate live channel for groups, so a problem here can never affect normal chatting. */
+function subscribeGroupsRealtime() {
+  const channel = db.channel('chatworld-groups');
+  channel
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, scheduleGroupsRefresh)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'group_members' }, scheduleGroupsRefresh)
+    .subscribe();
+  state.groupsChannel = channel;
+}
+
+/** A searchable list of people with tick boxes. Returns { node, selected }. */
+function peoplePicker(candidates) {
+  const selected = new Set();
+  const count = el('span', { class: 'field-note', text: 'No one selected yet.' });
+  const search = el('input', { attrs: { type: 'search', placeholder: 'Search people…', autocomplete: 'off' } });
+  const box = el('div', { class: 'picker-list' });
+
+  const draw = () => {
+    const term = search.value.trim().toLowerCase();
+    box.replaceChildren();
+    const shown = candidates.filter((p) => !term || p.username.toLowerCase().includes(term) || nameOf(p).toLowerCase().includes(term));
+    if (!shown.length) box.append(el('div', { class: 'empty-note', text: candidates.length ? 'No one found.' : 'There is no one to add.' }));
+    shown.forEach((p) => {
+      const cb = el('input', { attrs: { type: 'checkbox' } });
+      cb.checked = selected.has(p.id);
+      cb.addEventListener('change', () => {
+        cb.checked ? selected.add(p.id) : selected.delete(p.id);
+        count.textContent = selected.size ? selected.size + ' selected.' : 'No one selected yet.';
+      });
+      box.append(el('label', { class: 'picker-row' }, cb, makeAvatar(p, 'sm'),
+        el('span', { class: 'picker-name', text: nameOf(p) }),
+        p.display_name ? el('span', { class: 'msg-handle', text: '@' + p.username }) : null));
+    });
+  };
+  search.addEventListener('input', draw);
+  draw();
+  return { node: el('div', { class: 'picker' }, search, box, count), selected };
+}
+
+const otherPeople = (excludeIds = []) => [...state.profiles.values()]
+  .filter((p) => p.id !== state.user.id && !excludeIds.includes(p.id)).sort(byName);
+
+function openCreateGroup() {
+  if (!state.groupsReady) { toast(state.groupsError || 'Groups are not ready yet.', 'error'); return; }
+  state.openGroupInfo = null;
+  const card = $('#modal-card');
+  const nameInput = el('input', { attrs: { type: 'text', maxlength: '40', placeholder: 'Group name', autocomplete: 'off', id: 'group-name' } });
+  const picker = peoplePicker(otherPeople());
+  const err = el('div', { class: 'form-error' });
+  const create = el('button', { class: 'btn btn-primary', text: 'Create group', attrs: { type: 'submit' } });
+  const form = el('form', { class: 'form' },
+    el('label', { text: 'Group name' }), nameInput,
+    el('label', { text: 'Add people' }), picker.node, err, create);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.textContent = '';
+    const name = nameInput.value.trim();
+    if (!name) { err.textContent = 'Please give the group a name.'; return; }
+    create.disabled = true; create.textContent = 'Creating…';
+    const { data, error } = await db.rpc('create_group', { group_name: name, member_ids: [...picker.selected] });
+    create.disabled = false; create.textContent = 'Create group';
+    if (error) { err.textContent = friendlyGroupError(error); return; }
+    closeModal();
+    await loadGroups();
+    openChat('group', data);
+  });
+
+  card.replaceChildren(
+    el('button', { class: 'icon-btn modal-close', text: '✕', attrs: { type: 'button', 'aria-label': 'Close' }, on: { click: closeModal } }),
+    el('h3', { text: 'New group' }),
+    el('p', { class: 'muted', text: 'Pick a name and the people you want to talk with.' }),
+    form);
+  $('#modal').hidden = false;
+  nameInput.focus();
+}
+
+function openGroupInfo(gid) {
+  const group = state.groups.get(gid);
+  if (!group) return;
+  state.openGroupInfo = gid;
+  const owner = iAmOwner(gid);
+  const card = $('#modal-card');
+  const ids = memberIds(gid);
+  const err = el('div', { class: 'form-error' });
+
+  const run = async (promise, okText) => {
+    err.textContent = '';
+    const { error } = await promise;
+    if (error) { err.textContent = friendlyGroupError(error); return false; }
+    if (okText) toast(okText, 'success');
+    return true;
+  };
+
+  // Members
+  const rows = ids.map((id) => {
+    const p = profileOf(id);
+    const role = (state.members.get(gid).get(id) || {}).role;
+    return el('div', { class: 'member-row' },
+      makeAvatar(p, 'sm'),
+      el('span', { class: 'member-name', text: nameOf(p) + (id === state.user.id ? ' (you)' : '') }),
+      role === 'owner' ? el('span', { class: 'owner-tag', text: 'owner' }) : null,
+      owner && id !== state.user.id ? el('button', {
+        class: 'btn btn-ghost small', text: 'Remove', attrs: { type: 'button' },
+        on: { click: async () => {
+          if (!confirm('Remove ' + nameOf(p) + ' from this group?')) return;
+          if (await run(db.rpc('remove_group_member', { gid, uid: id }))) await loadGroups();
+        } },
+      }) : null);
+  });
+
+  // Rename (owner)
+  let renameBox = null;
+  if (owner) {
+    const input = el('input', { attrs: { type: 'text', maxlength: '40', autocomplete: 'off' } });
+    input.value = group.name;
+    renameBox = el('div', { class: 'inline-form' }, input, el('button', {
+      class: 'btn btn-ghost small', text: 'Rename', attrs: { type: 'button' },
+      on: { click: async () => {
+        const n = input.value.trim();
+        if (!n || n === group.name) return;
+        if (await run(db.rpc('rename_group', { gid, new_name: n }), 'Group renamed.')) await loadGroups();
+      } },
+    }));
+  }
+
+  // Add people (any member)
+  const picker = peoplePicker(otherPeople(ids));
+  const addBtn = el('button', {
+    class: 'btn btn-primary small', text: 'Add selected people', attrs: { type: 'button' },
+    on: { click: async () => {
+      if (!picker.selected.size) { err.textContent = 'Tick the people you want to add first.'; return; }
+      if (await run(db.rpc('add_group_members', { gid, member_ids: [...picker.selected] }), 'People added.')) await loadGroups();
+    } },
+  });
+
+  const actions = el('div', { class: 'call-actions' },
+    el('button', {
+      class: 'btn btn-leave', text: 'Leave group', attrs: { type: 'button' },
+      on: { click: async () => {
+        if (!confirm('Leave "' + group.name + '"? You will not see its messages any more.')) return;
+        if (await run(db.rpc('leave_group', { gid }))) { state.openGroupInfo = null; closeModal(); await loadGroups(); }
+      } },
+    }),
+    owner ? el('button', {
+      class: 'btn btn-ghost', text: 'Delete group', attrs: { type: 'button' },
+      on: { click: async () => {
+        if (!confirm('Delete "' + group.name + '" for everyone? All its messages will be lost.')) return;
+        if (await run(db.rpc('delete_group', { gid }))) { state.openGroupInfo = null; closeModal(); await loadGroups(); }
+      } },
+    }) : null);
+
+  card.replaceChildren(
+    el('button', { class: 'icon-btn modal-close', text: '✕', attrs: { type: 'button', 'aria-label': 'Close' }, on: { click: () => { state.openGroupInfo = null; closeModal(); } } }),
+    groupIcon(gid, 'xl'),
+    el('h3', { text: group.name }),
+    el('p', { class: 'muted', text: ids.length + (ids.length === 1 ? ' member' : ' members') }),
+    renameBox,
+    el('div', { class: 'form' },
+      el('label', { text: 'Members' }), el('div', { class: 'member-list' }, rows),
+      el('label', { text: 'Add people' }), picker.node, addBtn, err, actions));
+  $('#modal').hidden = false;
 }
 
 // =====================================================================
@@ -1429,6 +1745,7 @@ function subscribeRealtime() {
 }
 
 function onNewMessage(m) {
+  if (m.group_id && !state.groups.has(m.group_id)) { scheduleGroupsRefresh(); return; }   // a group I was just added to
   const key = messageKey(m);
   if (!key) return;
   const mine = m.sender_id === state.user.id;
@@ -1465,7 +1782,7 @@ async function openChat(type, id = null) {
   renderUsers();
   updateTitle();
 
-  const name = type === 'global' ? 'Global Chat' : nameOf(profileOf(id));
+  const name = type === 'global' ? 'Global Chat' : type === 'group' ? ((state.groups.get(id) || {}).name || 'group') : nameOf(profileOf(id));
   $('#message-input').placeholder = 'Message ' + name;
 
   $('#messages').replaceChildren(el('div', { class: 'empty' }, el('span', { class: 'big', text: '⏳' }), el('span', { text: 'Loading messages…' })));
@@ -1476,13 +1793,15 @@ async function openChat(type, id = null) {
 
 function fetchMessages(before = null) {
   let q = db.from('messages')
-    .select('id, sender_id, recipient_id, content, image_path, created_at')
+    .select('id, sender_id, recipient_id, group_id, content, image_path, created_at')
     .order('created_at', { ascending: false })
     .limit(PAGE_SIZE);
   if (before) q = q.lt('created_at', before);
 
   if (state.chat.type === 'global') {
-    q = q.is('recipient_id', null);
+    q = q.is('recipient_id', null).is('group_id', null);
+  } else if (state.chat.type === 'group') {
+    q = q.eq('group_id', state.chat.id);
   } else {
     const me = state.user.id;
     const other = state.chat.id;
@@ -1547,6 +1866,14 @@ function renderHeader() {
       globeIcon(),
       el('div', { class: 'title-text' }, el('h2', { text: 'Global Chat' }), el('p', { id: 'chat-sub' })),
     );
+  } else if (state.chat.type === 'group') {
+    const g = state.groups.get(state.chat.id) || { id: state.chat.id, name: 'Group' };
+    box.append(
+      groupIcon(g.id),
+      el('div', { class: 'title-text' }, el('h2', { text: g.name }), el('p', { id: 'chat-sub' })),
+    );
+    box.classList.add('clickable');
+    box.onclick = () => openGroupInfo(g.id);
   } else {
     const p = profileOf(state.chat.id);
     box.append(
@@ -1556,6 +1883,7 @@ function renderHeader() {
     box.classList.add('clickable');
     box.onclick = () => openProfile(p.id);
   }
+  $('#call-btn').hidden = state.chat.type !== 'dm';
   updateHeaderSub();
 }
 
@@ -1566,6 +1894,10 @@ function updateHeaderSub() {
   if (!sub) return;
   if (state.chat.type === 'global') {
     sub.textContent = 'Public room · everyone can read and write here';
+  } else if (state.chat.type === 'group') {
+    const ids = memberIds(state.chat.id);
+    const names = ids.map((id) => (id === state.user.id ? 'You' : nameOf(profileOf(id))));
+    sub.textContent = ids.length + (ids.length === 1 ? ' member' : ' members') + ' · ' + names.join(', ');
   } else {
     const p = profileOf(state.chat.id);
     const status = state.online.has(p.id) ? '🟢 Online' : '⚪ Offline';
@@ -1575,6 +1907,13 @@ function updateHeaderSub() {
 }
 
 function emptyState() {
+  if (state.chat.type === 'group') {
+    const g = state.groups.get(state.chat.id) || { name: 'this group' };
+    return el('div', { class: 'empty' },
+      el('span', { class: 'big', text: '👥' }),
+      el('strong', { text: 'Welcome to ' + g.name }),
+      el('span', { text: 'Only the people in this group can see these messages.' }));
+  }
   const isGlobal = state.chat.type === 'global';
   return el('div', { class: 'empty' },
     el('span', { class: 'big', text: isGlobal ? '💬' : '👋' }),
@@ -1712,11 +2051,12 @@ async function sendMessage(textOverride) {
 
   // Remember where this message is going, in case the person switches chats while a photo uploads.
   const recipient = state.chat.type === 'dm' ? state.chat.id : null;
+  const groupId = state.chat.type === 'group' ? state.chat.id : null;
 
   let imagePath = null;
   if (usingImage) {
     const me = state.user.id;
-    imagePath = (recipient ? 'dm/' + me + '/' + recipient : 'global/' + me) + '/' + randomFileName();
+    imagePath = (groupId ? 'group/' + groupId + '/' + me : recipient ? 'dm/' + me + '/' + recipient : 'global/' + me) + '/' + randomFileName();
     const up = await db.storage.from('chat-images')
       .upload(imagePath, usingImage.blob, { contentType: 'image/jpeg', cacheControl: '3600', upsert: false });
     if (up.error) {
@@ -1732,6 +2072,7 @@ async function sendMessage(textOverride) {
     recipient_id: recipient,
     content: text,
   };
+  if (groupId) row.group_id = groupId;
   if (imagePath) row.image_path = imagePath;
   const { data, error } = await db.from('messages').insert(row).select().single();
 
@@ -1994,6 +2335,7 @@ function openProfile(id) {
 }
 
 function closeModal() {
+  state.openGroupInfo = null;
   $('#modal').hidden = true;
   $('#modal-card').replaceChildren();
 }
@@ -2025,7 +2367,7 @@ function joinCallChannel() {
   callChannel = db.channel('chatworld-call', { config: { presence: { key: state.user.id } } });
   callChannel
     .on('presence', { event: 'sync' }, onCallPresence)
-    .on('broadcast', { event: 'signal' }, ({ payload }) => onCallSignal(payload))
+    .on('broadcast', { event: 'signal' }, ({ payload }) => onSignal(payload))
     .subscribe();
 }
 
@@ -2062,43 +2404,62 @@ function openCallConfirm() {
   $('#modal').hidden = false;
 }
 
+/** Asks the browser for the microphone. Returns the stream, or null (after telling the person why). */
+async function getMic() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection) {
+    toast('This browser cannot do voice calls. Try Chrome, Edge, Firefox or Safari.', 'error'); return null;
+  }
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+  } catch (e) {
+    toast(e && e.name === 'NotAllowedError'
+      ? 'Microphone is blocked. Allow the microphone for this site in your browser, then try again.'
+      : 'Could not use a microphone. Is one plugged in?', 'error');
+    return null;
+  }
+}
+
+/** Sets up the "I am in a call" state. kind is 'global' or 'private'. */
+function makeCall(stream, kind) {
+  call = { kind, stream, peers: new Map(), early: new Map(), muted: false, ctx: null, meters: new Map(), speaking: new Set(), timer: null,
+           with: null, phase: 'connecting', otherMuted: false, ringTimer: null };
+  watchSpeaking(state.user.id, stream);
+  call.timer = setInterval(checkSpeaking, 200);
+  return call;
+}
+
 async function joinCall() {
   if (call || !callChannel) return;
   if (callPeople.size >= CALL_MAX) { toast('The call is full (' + CALL_MAX + ' people). Try again soon.', 'error'); return; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection) {
     toast('This browser cannot do voice calls. Try Chrome, Edge, Firefox or Safari.', 'error'); return;
   }
-  let stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
-  } catch (e) {
-    toast(e && e.name === 'NotAllowedError'
-      ? 'Microphone is blocked. Allow the microphone for this site in your browser, then try again.'
-      : 'Could not use a microphone. Is one plugged in?', 'error');
-    return;
-  }
-  call = { stream, peers: new Map(), early: new Map(), muted: false, ctx: null, meters: new Map(), speaking: new Set(), timer: null };
-  watchSpeaking(state.user.id, stream);
-  call.timer = setInterval(checkSpeaking, 200);
+  const stream = await getMic();
+  if (!stream) return;
+  makeCall(stream, 'global');
   try { await callChannel.track(callMeta()); } catch (e) { /* the sync event will still arrive */ }
   renderCallPanel();
   renderUsers();
   toast('You joined the Global Call.');
 }
 
-async function leaveCall(quiet) {
+async function leaveCall(quiet, remoteEnded) {
   if (!call) return;
   const c = call;
   call = null;
   clearInterval(c.timer);
+  clearTimeout(c.ringTimer);
+  if (c.kind === 'private') {
+    if (!remoteEnded) sendSignal(c.with, c.phase === 'calling' ? 'cancel' : 'hangup');
+  }
   for (const id of [...c.peers.keys()]) closePeer(id, c);
   c.meters.forEach((m) => { try { m.src.disconnect(); } catch (e) { /* ignore */ } });
   c.stream.getTracks().forEach((t) => t.stop());
   if (c.ctx) c.ctx.close().catch(() => {});
   const panel = $('#call-panel'); if (panel) panel.remove();
-  if (callChannel) { try { await callChannel.untrack(); } catch (e) { /* ignore */ } }
+  if (c.kind === 'global' && callChannel) { try { await callChannel.untrack(); } catch (e) { /* ignore */ } }
   if (state.user) renderUsers();
-  if (!quiet) toast('You left the Global Call.');
+  if (!quiet) toast(c.kind === 'private' ? 'Call ended.' : 'You left the Global Call.');
 }
 
 function toggleMute() {
@@ -2106,13 +2467,14 @@ function toggleMute() {
   call.muted = !call.muted;
   call.stream.getAudioTracks().forEach((t) => { t.enabled = !call.muted; });
   if (call.muted) call.speaking.delete(state.user.id);
-  if (callChannel) callChannel.track(callMeta()).catch(() => {});
+  if (call.kind === 'private') sendSignal(call.with, 'mute', { muted: call.muted });
+  else if (callChannel) callChannel.track(callMeta()).catch(() => {});
   renderCallPanel();
 }
 
 // ----- Connecting to the other people (peer to peer) -----
 function syncPeers() {
-  if (!call) return;
+  if (!call || call.kind === 'private') return;
   for (const id of callPeople.keys()) {
     if (id === state.user.id || call.peers.has(id)) continue;
     // To avoid two people calling each other at the same moment, the smaller id always makes the first call.
@@ -2137,6 +2499,10 @@ function startPeer(id, initiator) {
   };
   pc.onconnectionstatechange = () => {
     peer.state = pc.connectionState;
+    if (call && call.kind === 'private' && call.peers.get(id) === peer) {
+      if (pc.connectionState === 'connected') call.phase = 'connected';
+      if (pc.connectionState === 'failed') { endPrivate('The call lost its connection.'); return; }
+    }
     if (pc.connectionState === 'failed' && call && call.peers.get(id) === peer) {
       closePeer(id);
       toast('Lost connection to someone in the call. Trying again…', 'error');
@@ -2171,7 +2537,15 @@ async function flushIce(peer) {
   for (const cand of waiting) { try { await peer.pc.addIceCandidate(cand); } catch (e) { /* ignore */ } }
 }
 
+function onSignal(m) {
+  if (!m || m.to !== state.user.id || typeof m.from !== 'string' || m.from === state.user.id) return;
+  if (!/^[0-9a-f-]{36}$/.test(m.from)) return;
+  if (m.kind === 'offer' || m.kind === 'answer' || m.kind === 'ice') onCallSignal(m);
+  else onPrivateSignal(m);
+}
+
 async function onCallSignal(m) {
+  if (call && call.kind === 'private' && m.from !== call.with) return;
   if (!call || !m || m.to !== state.user.id || typeof m.from !== 'string' || m.from === state.user.id) return;
   if (!/^[0-9a-f-]{36}$/.test(m.from) || !m.data || typeof m.data !== 'object') return;
   const from = m.from;
@@ -2245,31 +2619,147 @@ function renderCallPanel() {
   let panel = $('#call-panel');
   if (!panel) { panel = el('div', { id: 'call-panel', class: 'call-panel', attrs: { role: 'region', 'aria-label': 'Global Call' } }); document.body.append(panel); }
 
-  const ids = [...callPeople.keys()].filter((id) => id !== state.user.id).sort();
+  const isPrivate = call.kind === 'private';
+  const ids = isPrivate ? [call.with] : [...callPeople.keys()].filter((id) => id !== state.user.id).sort();
   ids.unshift(state.user.id);
   const rows = ids.map((id) => {
     const meta = callPeople.get(id) || {};
     const isMe = id === state.user.id;
     const p = state.profiles.get(id) || (isMe ? state.profile : { username: meta.username || '?' });
     const peer = call.peers.get(id);
-    const status = isMe ? '' : (peer && peer.state === 'connected' ? '' : ' · connecting…');
+    const status = isMe ? '' : (isPrivate && call.phase === 'calling' ? ' · calling…' : (peer && peer.state === 'connected' ? '' : ' · connecting…'));
     return el('div', { class: 'call-row' + (call.speaking.has(id) ? ' speaking' : ''), attrs: { 'data-id': id } },
       makeAvatar(p, 'sm'),
       el('span', { class: 'call-name', text: nameOf(p) + (isMe ? ' (you)' : '') + status }),
-      (isMe ? call.muted : meta.muted) ? el('span', { class: 'call-muted', text: '🔇', attrs: { title: 'Muted' } }) : null,
+      (isMe ? call.muted : (isPrivate ? call.otherMuted : meta.muted)) ? el('span', { class: 'call-muted', text: '🔇', attrs: { title: 'Muted' } }) : null,
     );
   });
 
   panel.replaceChildren(
     el('div', { class: 'call-head' }, phoneIcon(16),
-      el('strong', { text: 'Global Call' }),
-      el('span', { class: 'muted', text: ids.length + (ids.length === 1 ? ' person' : ' people') })),
+      el('strong', { text: isPrivate ? 'Private call' : 'Global Call' }),
+      el('span', { class: 'muted', text: isPrivate
+        ? (call.phase === 'calling' ? 'Ringing…' : call.phase === 'connected' ? 'Connected' : 'Connecting…')
+        : ids.length + (ids.length === 1 ? ' person' : ' people') })),
     el('div', { class: 'call-list' }, rows),
     el('div', { class: 'call-actions' },
       el('button', { class: 'btn btn-ghost', text: call.muted ? 'Unmute' : 'Mute', attrs: { type: 'button' }, on: { click: toggleMute } }),
-      el('button', { class: 'btn btn-leave', text: 'Leave', attrs: { type: 'button' }, on: { click: () => leaveCall() } }),
+      el('button', { class: 'btn btn-leave', text: isPrivate ? (call.phase === 'calling' ? 'Cancel' : 'End call') : 'Leave', attrs: { type: 'button' }, on: { click: () => leaveCall() } }),
     ),
   );
+}
+
+// =====================================================================
+//  PRIVATE CALLS  (a one-to-one voice call from the button at the top right of a private chat)
+//  Uses the same WebRTC + Supabase signalling as the Global Call, plus "ringing".
+// =====================================================================
+const RING_MS = 30000;      // how long the phone rings before giving up
+let incoming = null;        // an incoming call that is ringing right now
+
+async function startPrivateCall(id) {
+  if (call || incoming) { toast('Finish your current call first.', 'error'); return; }
+  if (!callChannel) { toast('Calls are not ready yet. Try again in a moment.', 'error'); return; }
+  const p = profileOf(id);
+  if (!state.online.has(id)) { toast(nameOf(p) + ' is offline right now, so they cannot get a call.', 'error'); return; }
+  const stream = await getMic();
+  if (!stream) return;
+  if (call || incoming) { stream.getTracks().forEach((t) => t.stop()); return; }
+  makeCall(stream, 'private');
+  call.with = id;
+  call.phase = 'calling';
+  call.ringTimer = setTimeout(() => { if (call && call.phase === 'calling') endPrivate(nameOf(p) + ' did not answer.'); }, RING_MS);
+  sendSignal(id, 'invite');
+  renderCallPanel();
+  renderUsers();
+}
+
+/** Ends a private call. remoteEnded = the other person already hung up, so there is nothing to tell them. */
+function endPrivate(message, remoteEnded) {
+  leaveCall(true, remoteEnded);
+  if (message) toast(message);
+}
+
+function onPrivateSignal(m) {
+  const from = m.from;
+  const name = nameOf(profileOf(from));
+  const mine = call && call.kind === 'private' && call.with === from;
+  switch (m.kind) {
+    case 'invite':
+      if (call || incoming) { sendSignal(from, 'busy'); return; }
+      showIncoming(from);
+      break;
+    case 'cancel':
+      if (incoming && incoming.from === from) { dismissIncoming(); toast('Missed call from ' + name + '.'); }
+      break;
+    case 'accept':
+      if (mine && call.phase === 'calling') {
+        clearTimeout(call.ringTimer);
+        call.phase = 'connecting';
+        startPeer(from, true);
+        renderCallPanel();
+      }
+      break;
+    case 'decline': if (mine && call.phase === 'calling') endPrivate(name + ' declined the call.', true); break;
+    case 'busy':    if (mine && call.phase === 'calling') endPrivate(name + ' is on another call.', true); break;
+    case 'hangup':  if (mine) endPrivate(name + ' ended the call.', true); break;
+    case 'mute':    if (mine) { call.otherMuted = !!(m.data && m.data.muted); renderCallPanel(); } break;
+  }
+}
+
+function startRing() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const beep = () => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = 523; g.gain.value = 0.05;
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.25);
+    };
+    beep();
+    return { ctx, timer: setInterval(beep, 1800) };
+  } catch (e) { return null; }
+}
+
+function showIncoming(from) {
+  const p = profileOf(from);
+  const box = el('div', { id: 'incoming-call', class: 'incoming-call', attrs: { role: 'alertdialog', 'aria-label': 'Incoming call' } },
+    makeAvatar(p, 'sm'),
+    el('div', { class: 'inc-text' }, el('strong', { text: nameOf(p) }), el('span', { text: 'is calling you…' })),
+    el('button', { class: 'btn btn-leave', text: 'Decline', attrs: { type: 'button' }, on: { click: declineIncoming } }),
+    el('button', { class: 'btn btn-accept', text: 'Accept', attrs: { type: 'button' }, on: { click: acceptIncoming } }),
+  );
+  document.body.append(box);
+  incoming = { from, ring: startRing(), timer: setTimeout(dismissIncoming, RING_MS + 5000) };
+}
+
+function dismissIncoming() {
+  if (!incoming) return;
+  clearTimeout(incoming.timer);
+  if (incoming.ring) { clearInterval(incoming.ring.timer); incoming.ring.ctx.close().catch(() => {}); }
+  incoming = null;
+  const box = $('#incoming-call'); if (box) box.remove();
+}
+
+function declineIncoming() {
+  if (!incoming) return;
+  sendSignal(incoming.from, 'decline');
+  dismissIncoming();
+}
+
+async function acceptIncoming() {
+  if (!incoming) return;
+  const from = incoming.from;
+  dismissIncoming();
+  if (call) { sendSignal(from, 'busy'); return; }
+  const stream = await getMic();
+  if (!stream) { sendSignal(from, 'decline'); return; }
+  makeCall(stream, 'private');
+  call.with = from;
+  call.phase = 'connecting';
+  sendSignal(from, 'accept');
+  renderCallPanel();
+  renderUsers();
 }
 
 // =====================================================================
@@ -2282,6 +2772,12 @@ function closeSidebar() { $('#app').classList.remove('sidebar-open'); }
 //  WIRING EVERYTHING UP
 // =====================================================================
 function bindUI() {
+  // Call button (top right of a private chat)
+  $('#call-btn').innerHTML = phoneSvg(20);
+  $('#call-btn').addEventListener('click', () => { if (state.chat.type === 'dm') startPrivateCall(state.chat.id); });
+  window.addEventListener('pagehide', () => {
+    if (call && call.kind === 'private') sendSignal(call.with, call.phase === 'calling' ? 'cancel' : 'hangup');
+  });
   // Photos in chat
   $('#attach-btn').addEventListener('click', () => $('#image-input').click());
   $('#image-input').addEventListener('change', (e) => {
