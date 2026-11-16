@@ -784,7 +784,9 @@ const MAX_INPUT_BYTES = 15 * 1024 * 1024;     // minimum time between two sends 
 const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
 // Supabase needs an email behind every account. People only type a username, so we build a private
 // address from it. No emails are ever sent to it. (Do not change this after people have signed up!)
-const LOGIN_DOMAIN = 'chatworld-members.app';
+// Supabase only accepts sign-up addresses whose domain can receive email, so the hidden address
+// uses a mail domain that can. No email is ever sent to it (people only type a username).
+const LOGIN_DOMAIN = 'gmail.com';
 const toLoginEmail = (username) => username.trim().toLowerCase() + '@' + LOGIN_DOMAIN;
 const COLORS = ['#5865f2', '#8b5cf6', '#ec4899', '#ef4444', '#f97316',
                 '#eab308', '#22c55e', '#14b8a6', '#0ea5e9', '#64748b'];
@@ -1102,7 +1104,10 @@ function friendlyAuthError(error) {
   if (/invalid login credentials/i.test(msg)) return 'Wrong username or password.';
   if (/email not confirmed/i.test(msg)) return 'Your account still needs confirming. The site owner must turn off "Confirm email" in Supabase (Authentication, Sign In / Providers, Email).';
   if (/already registered|already been registered/i.test(msg)) return 'That username is taken. Please pick another one.';
-  if (/rate limit|too many/i.test(msg)) return 'Too many attempts. Please wait a few minutes and try again.';
+  if (/rate limit|too many/i.test(msg)) {
+    state.lockUntil = Date.now() + 60000;   // pause the buttons for a minute so repeated clicks do not extend the limit
+    return 'Too many attempts. Please wait a minute and try again.';
+  }
   if (/password/i.test(msg) && /(short|least|weak)/i.test(msg)) return 'Please choose a longer, stronger password (8+ characters).';
   if (/invalid.*email|email.*invalid|not authorized/i.test(msg)) return 'Supabase did not accept the sign-up address. Tell the site owner: change LOGIN_DOMAIN in index.html. (' + msg + ')';
   if (/network|fetch/i.test(msg)) return 'Could not reach the server. Check your internet connection.';
@@ -1241,6 +1246,9 @@ async function handleSignup(e) {
 
   // Bot trap: real people never fill this hidden box.
   if ($('#signup-website').value) return;
+
+  const pause = Math.ceil((state.lockUntil - Date.now()) / 1000);
+  if (pause > 0) { err.textContent = 'Too many attempts. Please wait ' + pause + ' seconds.'; return; }
 
   const username = $('#signup-username').value.trim();
   const display = $('#signup-display').value.trim().slice(0, 30);
