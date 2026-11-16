@@ -768,8 +768,8 @@ input:disabled { opacity: .6; cursor: not-allowed; }
    quote marks. (Never paste a "secret" or "service_role" key here.)
    ===================================================================== */
 
-const SUPABASE_URL = 'https://fvqdtdzohsqzrqmebeoj.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_tdamvVfSQOB6879jetIsPw_YxT15rFG';
+const SUPABASE_URL = 'https://wpojiwrjyutxgetosojn.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_MRM54_01CwVv2h6lXsMvhw_8QWBAr9Q';
 
 /* ===================================================================== */
 
@@ -965,14 +965,16 @@ function renderImage(path) {
 
 /** Adds a helpful hint when the photo database update has not been run yet. */
 function withPhotoHint(message) {
-  if (/image_path|avatar_path/.test(message || '')) {
-    return 'Photos need a one-time database update. Run supabase-photos.sql in Supabase (see README.md).';
+  const raw = message || '';
+  const tail = raw ? ' [Details: ' + raw + ']' : '';
+  if (/image_path|avatar_path/.test(raw)) {
+    return 'Photos need a one-time database update. Run supabase-photos.sql in Supabase (see README.md).' + tail;
   }
-  if (/display_name|username_changed_at/.test(message || '')) {
-    return 'Display names need a one-time database update. Run supabase-names.sql in Supabase (see README.md).';
+  if (/display_name|username_changed_at/.test(raw)) {
+    return 'Display names need a one-time database update. Run supabase-names.sql in Supabase (see README.md).' + tail;
   }
-  if (/group_id/.test(message || '')) {
-    return 'Groups need a one-time database update. Run supabase-groups.sql in Supabase (see README.md).';
+  if (/group_id/.test(raw)) {
+    return 'Groups need a one-time database update. Run supabase-groups.sql in Supabase (see README.md).' + tail;
   }
   return message;
 }
