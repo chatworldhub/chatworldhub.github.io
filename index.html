@@ -419,6 +419,12 @@ input:focus, textarea:focus {
 .photo-actions { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 6px; }
 .modal-card .photo-actions .btn { width: auto; padding: 8px 14px; font-size: 14px; }
 
+/* ---------- Display names ---------- */
+.msg-handle { color: var(--muted); font-size: 12px; font-weight: 400; }
+.field-note { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+.field-note.lock { color: var(--amber); }
+input:disabled { opacity: .6; cursor: not-allowed; }
+
 /* ---------- Modal (profile window) ---------- */
 .modal {
   position: fixed; inset: 0; z-index: 40;
@@ -498,6 +504,41 @@ input:focus, textarea:focus {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
+
+/* ---------- Global Call ---------- */
+.phone-icon {
+  width: 36px; height: 36px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+}
+.phone-icon.big { width: 56px; height: 56px; margin-bottom: 4px; }
+.phone-icon.big svg { width: 26px; height: 26px; }
+.call-panel .phone-icon { width: 26px; height: 26px; }
+.chat-item.in-call { color: #fff; }
+.call-count {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+  background: rgba(35, 165, 90, .18); color: var(--green); white-space: nowrap;
+}
+.call-actions { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
+.call-actions .btn { flex: 1; }
+.btn-call { background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; }
+.btn-call:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-leave { background: var(--red); color: #fff; }
+.btn-leave:hover:not(:disabled) { filter: brightness(1.1); }
+.call-panel {
+  position: fixed; top: 72px; right: 14px; z-index: 30;
+  width: min(320px, calc(100vw - 28px)); max-height: 70dvh; overflow-y: auto;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px;
+  padding: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+  animation: pop .18s ease-out;
+}
+.call-head { display: flex; align-items: center; gap: 8px; padding: 2px 2px 8px; }
+.call-head .muted { margin-left: auto; color: var(--muted); font-size: 13px; }
+.call-list { display: flex; flex-direction: column; gap: 4px; }
+.call-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; }
+.call-row .avatar { box-shadow: 0 0 0 2px transparent; transition: box-shadow .12s; }
+.call-row.speaking .avatar { box-shadow: 0 0 0 2px var(--green); }
+.call-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 </style>
 
   <!-- Supabase JavaScript SDK (free, loaded from a public CDN) -->
@@ -552,6 +593,9 @@ input:focus, textarea:focus {
       <form id="signup-form" class="form" hidden novalidate>
         <label for="signup-username">Username</label>
         <input id="signup-username" type="text" autocomplete="username" placeholder="Letters, numbers, _ (3-20), no spaces" maxlength="20" autocapitalize="off" spellcheck="false" required />
+
+        <label for="signup-display">Display name <span style="font-weight:400">(optional)</span></label>
+        <input id="signup-display" type="text" autocomplete="nickname" placeholder="How your name appears in chat" maxlength="30" />
 
 
         <label for="signup-password">Password</label>
@@ -742,7 +786,9 @@ function el(tag, opts = {}, ...kids) {
 }
 
 const safeColor = (c) => (/^#[0-9a-fA-F]{6}$/.test(c || '') ? c : '#5865f2');
-const byName = (a, b) => a.username.localeCompare(b.username, undefined, { sensitivity: 'base' });
+/** The name people see: the display name if there is one, otherwise the username. */
+const nameOf = (p) => ((p && p.display_name && p.display_name.trim()) || (p && p.username) || '?');
+const byName = (a, b) => nameOf(a).localeCompare(nameOf(b), undefined, { sensitivity: 'base' });
 
 /** Public web address of a profile picture (the "avatars" storage folder is readable by link). */
 function avatarUrl(path) {
@@ -751,10 +797,10 @@ function avatarUrl(path) {
 }
 
 function makeAvatar(profile, extra = '') {
-  const name = (profile && profile.username) || '?';
+  const name = nameOf(profile);
   const node = el('span', {
     class: 'avatar ' + extra,
-    text: name.charAt(0).toUpperCase(),
+    text: (Array.from(name)[0] || '?').toUpperCase(),
     style: { background: safeColor(profile && profile.avatar_color) },
   });
   // A photo (if there is one) covers the coloured letter. If it cannot load, the letter stays.
@@ -861,9 +907,13 @@ function renderImage(path) {
 
 /** Adds a helpful hint when the photo database update has not been run yet. */
 function withPhotoHint(message) {
-  return /image_path|avatar_path/.test(message || '')
-    ? 'Photos need a one-time database update. Run supabase-photos.sql in Supabase (see README.md).'
-    : message;
+  if (/image_path|avatar_path/.test(message || '')) {
+    return 'Photos need a one-time database update. Run supabase-photos.sql in Supabase (see README.md).';
+  }
+  if (/display_name|username_changed_at/.test(message || '')) {
+    return 'Display names need a one-time database update. Run supabase-names.sql in Supabase (see README.md).';
+  }
+  return message;
 }
 
 /** Turns message text into text + animated emoticon images. Only known emoticon names are accepted. */
@@ -1095,7 +1145,13 @@ async function handleLogin(e) {
   if (!USERNAME_RE.test(username)) { err.textContent = 'Wrong username or password.'; return; }
 
   setBusy(form, true, 'Logging in…');
-  const { error } = await db.auth.signInWithPassword({ email: toLoginEmail(username), password });
+  // Find the private sign-in address for this username (it keeps working even after a username change).
+  let loginEmail = toLoginEmail(username);
+  try {
+    const found = await db.rpc('login_email', { check_name: username });
+    if (found && typeof found.data === 'string' && found.data) loginEmail = found.data;
+  } catch (e) { /* if the lookup is not available, fall back to the original address */ }
+  const { error } = await db.auth.signInWithPassword({ email: loginEmail, password });
   setBusy(form, false);
 
   if (error) {
@@ -1121,6 +1177,7 @@ async function handleSignup(e) {
   if ($('#signup-website').value) return;
 
   const username = $('#signup-username').value.trim();
+  const display = $('#signup-display').value.trim().slice(0, 30);
   const password = $('#signup-password').value;
 
   if (!USERNAME_RE.test(username)) {
@@ -1145,7 +1202,7 @@ async function handleSignup(e) {
   const { data, error } = await db.auth.signUp({
     email: toLoginEmail(username),
     password,
-    options: { data: { username } },
+    options: { data: display ? { username, display_name: display } : { username } },
   });
   setBusy(form, false);
 
@@ -1198,11 +1255,16 @@ async function startApp(user) {
   await loadUsers();
   subscribeRealtime();
   joinPresence();
+  joinCallChannel();
   await openChat('global');
 }
 
 function stopApp() {
+  leaveCall(true);
   if (db) {
+    if (callChannel) db.removeChannel(callChannel);
+    callChannel = null;
+    callPeople = new Map();
     if (state.dbChannel) db.removeChannel(state.dbChannel);
     if (state.presenceChannel) db.removeChannel(state.presenceChannel);
   }
@@ -1228,7 +1290,7 @@ async function logout() {
 async function loadUsers() {
   const { data, error } = await db
     .from('profiles')
-    .select('id, username, bio, avatar_color, avatar_path')
+    .select('id, username, display_name, bio, avatar_color, avatar_path')
     .order('username', { ascending: true })
     .limit(1000);
   if (error) { toast('Could not load people: ' + withPhotoHint(error.message), 'error'); return; }
@@ -1239,13 +1301,13 @@ async function loadUsers() {
 async function ensureProfiles(ids) {
   const missing = [...new Set(ids)].filter((id) => !state.profiles.has(id));
   if (!missing.length) return;
-  const { data } = await db.from('profiles').select('id, username, bio, avatar_color, avatar_path').in('id', missing);
+  const { data } = await db.from('profiles').select('id, username, display_name, bio, avatar_color, avatar_path').in('id', missing);
   (data || []).forEach((p) => state.profiles.set(p.id, p));
 }
 
 function renderMe() {
   $('#me-avatar-slot').replaceChildren(makeAvatar(state.profile));
-  $('#me-name').textContent = state.profile.username;
+  $('#me-name').textContent = nameOf(state.profile);
 }
 
 function chatItem({ key, avatar, name, online, badge, onClick }) {
@@ -1273,16 +1335,29 @@ function renderUsers() {
     onClick: () => openChat('global'),
   }));
 
+  // Global Call (voice) sits right under Global Chat
+  const callCount = callPeople.size;
+  list.append(el('button', {
+    class: 'chat-item' + (call ? ' in-call' : ''),
+    attrs: { type: 'button' },
+    on: { click: () => {
+      closeSidebar();
+      if (call) toast('You are already in the call. Use the Leave button on the call window.');
+      else openCallConfirm();
+    } },
+  }, phoneIcon(), el('span', { class: 'name', text: 'Global Call' }),
+  callCount ? el('span', { class: 'call-count', text: callCount + ' in call' }) : null));
+
   const term = state.search.trim().toLowerCase();
   const others = [...state.profiles.values()]
-    .filter((p) => p.id !== state.user.id && (!term || p.username.toLowerCase().includes(term)));
+    .filter((p) => p.id !== state.user.id && (!term || p.username.toLowerCase().includes(term) || nameOf(p).toLowerCase().includes(term)));
   const on = others.filter((p) => state.online.has(p.id)).sort(byName);
   const off = others.filter((p) => !state.online.has(p.id)).sort(byName);
 
   const personItem = (p, isOnline) => {
     const wrap = el('span', { class: 'avatar-wrap' }, makeAvatar(p), isOnline ? el('span', { class: 'status-dot' }) : null);
     return chatItem({
-      key: p.id, avatar: wrap, name: p.username, online: isOnline,
+      key: p.id, avatar: wrap, name: nameOf(p), online: isOnline,
       badge: state.unread.get(p.id) || 0,
       onClick: () => openChat('dm', p.id),
     });
@@ -1390,7 +1465,7 @@ async function openChat(type, id = null) {
   renderUsers();
   updateTitle();
 
-  const name = type === 'global' ? 'Global Chat' : '@' + profileOf(id).username;
+  const name = type === 'global' ? 'Global Chat' : nameOf(profileOf(id));
   $('#message-input').placeholder = 'Message ' + name;
 
   $('#messages').replaceChildren(el('div', { class: 'empty' }, el('span', { class: 'big', text: '⏳' }), el('span', { text: 'Loading messages…' })));
@@ -1476,7 +1551,7 @@ function renderHeader() {
     const p = profileOf(state.chat.id);
     box.append(
       makeAvatar(p, 'sm'),
-      el('div', { class: 'title-text' }, el('h2', { text: p.username }), el('p', { id: 'chat-sub' })),
+      el('div', { class: 'title-text' }, el('h2', { text: nameOf(p) }), el('p', { id: 'chat-sub' })),
     );
     box.classList.add('clickable');
     box.onclick = () => openProfile(p.id);
@@ -1494,7 +1569,8 @@ function updateHeaderSub() {
   } else {
     const p = profileOf(state.chat.id);
     const status = state.online.has(p.id) ? '🟢 Online' : '⚪ Offline';
-    sub.textContent = p.bio ? status + ' · ' + p.bio : status + ' · Private conversation';
+    const handle = '@' + p.username;
+    sub.textContent = p.bio ? status + ' · ' + handle + ' · ' + p.bio : status + ' · ' + handle + ' · Private conversation';
   }
 }
 
@@ -1502,7 +1578,7 @@ function emptyState() {
   const isGlobal = state.chat.type === 'global';
   return el('div', { class: 'empty' },
     el('span', { class: 'big', text: isGlobal ? '💬' : '👋' }),
-    el('strong', { text: isGlobal ? 'Welcome to ChatWorld!' : 'Say hello to @' + profileOf(state.chat.id).username }),
+    el('strong', { text: isGlobal ? 'Welcome to ChatWorld!' : 'Say hello to ' + nameOf(profileOf(state.chat.id)) }),
     el('span', { text: isGlobal ? 'Be the first to say something to the world.' : 'This is the start of your private conversation.' }),
   );
 }
@@ -1525,7 +1601,7 @@ function buildMessageNodes(m, prev) {
     row.append(el('span', { class: 'msg-gutter', text: formatTime(m.created_at) }));
   } else {
     row.append(el('button', {
-      class: 'msg-avatar', attrs: { type: 'button', 'aria-label': 'View profile of ' + p.username },
+      class: 'msg-avatar', attrs: { type: 'button', 'aria-label': 'View profile of ' + nameOf(p) },
       on: { click: () => openProfile(p.id) },
     }, makeAvatar(p)));
   }
@@ -1533,7 +1609,8 @@ function buildMessageNodes(m, prev) {
   const body = el('div', { class: 'msg-body' });
   if (!grouped) {
     body.append(el('div', { class: 'msg-head' },
-      el('button', { class: 'msg-author', text: p.username, attrs: { type: 'button' }, on: { click: () => openProfile(p.id) } }),
+      el('button', { class: 'msg-author', text: nameOf(p), attrs: { type: 'button' }, on: { click: () => openProfile(p.id) } }),
+      p.display_name ? el('span', { class: 'msg-handle', text: '@' + p.username }) : null,
       el('span', { class: 'msg-time', text: formatTime(m.created_at) }),
     ));
   }
@@ -1733,7 +1810,8 @@ function openProfile(id) {
     card.append(
       closeBtn,
       makeAvatar(p, 'xl'),
-      el('h3', { text: p.username }),
+      el('h3', { text: nameOf(p) }),
+      el('p', { class: 'muted', text: '@' + p.username }),
       el('p', { class: 'muted', text: state.online.has(p.id) ? '🟢 Online now' : '⚪ Offline' }),
       el('p', { class: 'bio', text: p.bio || 'This person has not written a bio yet.' }),
       el('button', {
@@ -1748,15 +1826,32 @@ function openProfile(id) {
     const hadPhoto = !!p.avatar_path;
     const shownProfile = () => ({
       username: (nameInput.value.trim() || p.username || '?'),
+      display_name: displayInput.value.trim() || null,
       avatar_color: chosen,
       avatar_path: removePhoto ? null : p.avatar_path,
       avatar_preview: newPhoto ? newPhoto.url : null,
     });
-    const preview = el('span', { id: 'edit-avatar-slot' }, makeAvatar({ username: p.username, avatar_color: chosen, avatar_path: p.avatar_path }, 'xl'));
+    const preview = el('span', { id: 'edit-avatar-slot' }, makeAvatar({ username: p.username, display_name: p.display_name, avatar_color: chosen, avatar_path: p.avatar_path }, 'xl'));
 
     const nameInput = el('input', { attrs: { type: 'text', id: 'edit-username', maxlength: '20', autocomplete: 'off' } });
     nameInput.value = p.username;
     restrictInput(nameInput, NOT_USERNAME_CHAR);
+
+    // Username can only be changed once every 5 days (the database enforces this too).
+    const LOCK_MS = 5 * 24 * 60 * 60 * 1000;
+    const lockUntil = p.username_changed_at ? new Date(p.username_changed_at).getTime() + LOCK_MS : 0;
+    const usernameLocked = lockUntil > Date.now();
+    if (usernameLocked) nameInput.disabled = true;
+    const usernameNote = el('p', {
+      class: 'field-note' + (usernameLocked ? ' lock' : ''),
+      text: usernameLocked
+        ? '🔒 You can change your username again on ' + new Date(lockUntil).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) + '.'
+        : 'This is the name you log in with. You can change it once every 5 days.',
+    });
+
+    const displayInput = el('input', { attrs: { type: 'text', id: 'edit-display', maxlength: '30', autocomplete: 'off', placeholder: 'How your name appears in chat (optional)' } });
+    displayInput.value = p.display_name || '';
+    displayInput.addEventListener('input', () => refreshPreview());
     const bioInput = el('textarea', { attrs: { id: 'edit-bio', rows: '3', maxlength: '160', placeholder: 'Tell people about yourself (160 characters)' } });
     bioInput.value = p.bio || '';
     const errorP = el('p', { class: 'form-error', attrs: { role: 'alert' } });
@@ -1810,7 +1905,9 @@ function openProfile(id) {
     const form = el('form', { class: 'form', attrs: { novalidate: '' } },
       el('label', { text: 'Profile photo' }),
       el('div', { class: 'photo-actions' }, photoBtn, removeBtn, photoInput),
-      el('label', { text: 'Username', attrs: { for: 'edit-username' } }), nameInput,
+      el('label', { text: 'Display name', attrs: { for: 'edit-display' } }), displayInput,
+      el('p', { class: 'field-note', text: 'Shown in chat instead of your username. Change it any time.' }),
+      el('label', { text: 'Username', attrs: { for: 'edit-username' } }), nameInput, usernameNote,
       el('label', { text: 'Bio', attrs: { for: 'edit-bio' } }), bioInput,
       el('label', { text: 'Avatar colour' }), swatches,
       errorP, saveBtn,
@@ -1820,14 +1917,23 @@ function openProfile(id) {
       e.preventDefault();
       errorP.textContent = '';
       const username = nameInput.value.trim();
+      const display = displayInput.value.trim();
       const bio = bioInput.value.trim();
+      const usernameChanged = !usernameLocked && username !== p.username;
 
       if (!USERNAME_RE.test(username)) {
         errorP.textContent = 'Username must be 3-20 characters: letters, numbers and _ only.'; return;
       }
+      if (display.length > 30) { errorP.textContent = 'Display name can be up to 30 characters.'; return; }
+
+      if (usernameChanged) {
+        const sure = window.confirm('Change your username to "' + username + '"?\n\nThis is the name you log in with. ' +
+          'You will not be able to change it again for 5 days.');
+        if (!sure) return;
+      }
       saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
 
-      if (username.toLowerCase() !== p.username.toLowerCase()) {
+      if (usernameChanged && username.toLowerCase() !== p.username.toLowerCase()) {
         const check = await db.rpc('username_available', { check_name: username });
         if (check.data === false) {
           errorP.textContent = 'That username is taken.';
@@ -1836,7 +1942,10 @@ function openProfile(id) {
         }
       }
 
-      const changes = { username, bio, avatar_color: chosen };
+      // Only send what actually changed (this also keeps the 5-day rule from being triggered by accident).
+      const changes = { bio, avatar_color: chosen };
+      if (usernameChanged) changes.username = username;
+      if (display !== (p.display_name || '')) changes.display_name = display || null;
       let uploadedPath = null;
       if (newPhoto) {
         uploadedPath = state.user.id + '/avatar-' + randomFileName();
@@ -1861,7 +1970,10 @@ function openProfile(id) {
       saveBtn.disabled = false; saveBtn.textContent = 'Save profile';
       if (error) {
         if (uploadedPath) db.storage.from('avatars').remove([uploadedPath]);   // tidy up the unused upload
-        errorP.textContent = error.code === '23505' ? 'That username is taken.' : 'Could not save: ' + withPhotoHint(error.message);
+        errorP.textContent = error.code === '23505' ? 'That username is taken.'
+          : /once every 5 days/i.test(error.message || '') ? error.message
+          : /display_name_format/i.test(error.message || '') ? 'Display name must be 1-30 characters with no special control characters.'
+          : 'Could not save: ' + withPhotoHint(error.message);
         return;
       }
       // The old photo is no longer used: delete its file (if this fails it does not matter).
@@ -1884,6 +1996,280 @@ function openProfile(id) {
 function closeModal() {
   $('#modal').hidden = true;
   $('#modal-card').replaceChildren();
+}
+
+// =====================================================================
+//  GLOBAL CALL  (group voice call: WebRTC for the audio, Supabase Realtime for signalling)
+//  Everyone who joins talks directly to everyone else (peer to peer), so no server
+//  handles your voice. Supabase only passes the small "hello, here is how to reach me"
+//  notes that let the browsers find each other.
+// =====================================================================
+const CALL_MAX = 8;   // everyone connects to everyone, so keep the group small
+const ICE_SERVERS = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] }];
+let callChannel = null;          // the Supabase channel used for call notes + "who is in the call"
+let call = null;                 // filled in only while I am in the call
+let callPeople = new Map();      // everyone in the call right now (id -> info)
+
+function phoneSvg(size) {
+  return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
+}
+/** The Global Call icon: a white phone on a purple circle. */
+function phoneIcon(size = 20) {
+  const icon = el('span', { class: 'phone-icon', attrs: { 'aria-hidden': 'true' } });
+  icon.innerHTML = phoneSvg(size);
+  return icon;
+}
+
+function joinCallChannel() {
+  callChannel = db.channel('chatworld-call', { config: { presence: { key: state.user.id } } });
+  callChannel
+    .on('presence', { event: 'sync' }, onCallPresence)
+    .on('broadcast', { event: 'signal' }, ({ payload }) => onCallSignal(payload))
+    .subscribe();
+}
+
+function onCallPresence() {
+  if (!callChannel || !state.user) return;
+  callPeople = new Map(Object.entries(callChannel.presenceState()).map(([id, metas]) => [id, metas[0] || {}]));
+  renderUsers();
+  if (call) { syncPeers(); renderCallPanel(); }
+}
+
+const callMeta = () => ({ username: state.profile.username, muted: !!(call && call.muted) });
+
+function sendSignal(to, kind, data) {
+  if (!callChannel) return;
+  callChannel.send({ type: 'broadcast', event: 'signal', payload: { from: state.user.id, to, kind, data } });
+}
+
+// ----- Opening / leaving -----
+function openCallConfirm() {
+  const n = callPeople.size;
+  const card = $('#modal-card');
+  card.replaceChildren(
+    phoneIcon(26),
+    el('h3', { text: 'Start Global Call?' }),
+    el('p', { class: 'muted', text: n
+      ? n + (n === 1 ? ' person is' : ' people are') + ' in the call right now. Starting joins you to it.'
+      : 'A voice call that anyone on ChatWorld can join. Your browser will ask to use your microphone.' }),
+    el('div', { class: 'call-actions' },
+      el('button', { class: 'btn btn-ghost', text: 'Cancel', attrs: { type: 'button' }, on: { click: closeModal } }),
+      el('button', { class: 'btn btn-call', text: 'Start Call', attrs: { type: 'button' }, on: { click: () => { closeModal(); joinCall(); } } }),
+    ),
+  );
+  card.querySelector('.phone-icon').classList.add('big');
+  $('#modal').hidden = false;
+}
+
+async function joinCall() {
+  if (call || !callChannel) return;
+  if (callPeople.size >= CALL_MAX) { toast('The call is full (' + CALL_MAX + ' people). Try again soon.', 'error'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection) {
+    toast('This browser cannot do voice calls. Try Chrome, Edge, Firefox or Safari.', 'error'); return;
+  }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+  } catch (e) {
+    toast(e && e.name === 'NotAllowedError'
+      ? 'Microphone is blocked. Allow the microphone for this site in your browser, then try again.'
+      : 'Could not use a microphone. Is one plugged in?', 'error');
+    return;
+  }
+  call = { stream, peers: new Map(), early: new Map(), muted: false, ctx: null, meters: new Map(), speaking: new Set(), timer: null };
+  watchSpeaking(state.user.id, stream);
+  call.timer = setInterval(checkSpeaking, 200);
+  try { await callChannel.track(callMeta()); } catch (e) { /* the sync event will still arrive */ }
+  renderCallPanel();
+  renderUsers();
+  toast('You joined the Global Call.');
+}
+
+async function leaveCall(quiet) {
+  if (!call) return;
+  const c = call;
+  call = null;
+  clearInterval(c.timer);
+  for (const id of [...c.peers.keys()]) closePeer(id, c);
+  c.meters.forEach((m) => { try { m.src.disconnect(); } catch (e) { /* ignore */ } });
+  c.stream.getTracks().forEach((t) => t.stop());
+  if (c.ctx) c.ctx.close().catch(() => {});
+  const panel = $('#call-panel'); if (panel) panel.remove();
+  if (callChannel) { try { await callChannel.untrack(); } catch (e) { /* ignore */ } }
+  if (state.user) renderUsers();
+  if (!quiet) toast('You left the Global Call.');
+}
+
+function toggleMute() {
+  if (!call) return;
+  call.muted = !call.muted;
+  call.stream.getAudioTracks().forEach((t) => { t.enabled = !call.muted; });
+  if (call.muted) call.speaking.delete(state.user.id);
+  if (callChannel) callChannel.track(callMeta()).catch(() => {});
+  renderCallPanel();
+}
+
+// ----- Connecting to the other people (peer to peer) -----
+function syncPeers() {
+  if (!call) return;
+  for (const id of callPeople.keys()) {
+    if (id === state.user.id || call.peers.has(id)) continue;
+    // To avoid two people calling each other at the same moment, the smaller id always makes the first call.
+    if (state.user.id < id) startPeer(id, true);
+  }
+  for (const id of [...call.peers.keys()]) if (!callPeople.has(id)) closePeer(id);
+}
+
+function startPeer(id, initiator) {
+  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+  const peer = { pc, queue: call.early.get(id) || [], hasRemote: false, audio: null, state: 'connecting' };
+  call.early.delete(id);
+  call.peers.set(id, peer);
+  call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
+
+  pc.onicecandidate = (e) => { if (e.candidate) sendSignal(id, 'ice', e.candidate.toJSON()); };
+  pc.ontrack = (e) => {
+    if (!peer.audio) { peer.audio = new Audio(); peer.audio.autoplay = true; }
+    peer.audio.srcObject = e.streams[0];
+    peer.audio.play().catch(() => {});
+    watchSpeaking(id, e.streams[0]);
+  };
+  pc.onconnectionstatechange = () => {
+    peer.state = pc.connectionState;
+    if (pc.connectionState === 'failed' && call && call.peers.get(id) === peer) {
+      closePeer(id);
+      toast('Lost connection to someone in the call. Trying again…', 'error');
+      setTimeout(syncPeers, 1500);
+    }
+    renderCallPanel();
+  };
+
+  if (initiator) {
+    pc.createOffer()
+      .then((o) => pc.setLocalDescription(o))
+      .then(() => sendSignal(id, 'offer', pc.localDescription.toJSON()))
+      .catch((e) => console.warn('Call offer failed', e));
+  }
+  return peer;
+}
+
+function closePeer(id, c = call) {
+  const peer = c && c.peers.get(id);
+  if (!peer) return;
+  c.peers.delete(id);
+  try { peer.pc.onconnectionstatechange = null; peer.pc.close(); } catch (e) { /* ignore */ }
+  if (peer.audio) { peer.audio.srcObject = null; peer.audio = null; }
+  const m = c.meters.get(id);
+  if (m) { try { m.src.disconnect(); } catch (e) { /* ignore */ } c.meters.delete(id); }
+  c.speaking.delete(id);
+  if (c === call) renderCallPanel();
+}
+
+async function flushIce(peer) {
+  const waiting = peer.queue.splice(0);
+  for (const cand of waiting) { try { await peer.pc.addIceCandidate(cand); } catch (e) { /* ignore */ } }
+}
+
+async function onCallSignal(m) {
+  if (!call || !m || m.to !== state.user.id || typeof m.from !== 'string' || m.from === state.user.id) return;
+  if (!/^[0-9a-f-]{36}$/.test(m.from) || !m.data || typeof m.data !== 'object') return;
+  const from = m.from;
+  try {
+    if (m.kind === 'offer') {
+      if (call.peers.has(from)) closePeer(from);
+      const peer = startPeer(from, false);
+      await peer.pc.setRemoteDescription(m.data);
+      peer.hasRemote = true;
+      await flushIce(peer);
+      const answer = await peer.pc.createAnswer();
+      await peer.pc.setLocalDescription(answer);
+      sendSignal(from, 'answer', peer.pc.localDescription.toJSON());
+    } else if (m.kind === 'answer') {
+      const peer = call.peers.get(from);
+      if (!peer || peer.hasRemote) return;
+      await peer.pc.setRemoteDescription(m.data);
+      peer.hasRemote = true;
+      await flushIce(peer);
+    } else if (m.kind === 'ice') {
+      const peer = call.peers.get(from);
+      if (!peer) {                                   // arrived before the offer: keep it for later
+        const list = call.early.get(from) || [];
+        if (list.length < 50) { list.push(m.data); call.early.set(from, list); }
+      } else if (peer.hasRemote) {
+        await peer.pc.addIceCandidate(m.data).catch(() => {});
+      } else {
+        peer.queue.push(m.data);
+      }
+    }
+  } catch (e) {
+    console.warn('Call signal problem', e);
+  }
+}
+
+// ----- Who is talking (green ring) -----
+function watchSpeaking(id, stream) {
+  if (!call) return;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    call.ctx = call.ctx || new Ctx();
+    if (call.ctx.state === 'suspended') call.ctx.resume().catch(() => {});
+    if (call.meters.has(id)) { try { call.meters.get(id).src.disconnect(); } catch (e) { /* ignore */ } }
+    const src = call.ctx.createMediaStreamSource(stream);
+    const an = call.ctx.createAnalyser();
+    an.fftSize = 512;
+    src.connect(an);
+    call.meters.set(id, { src, an, data: new Uint8Array(an.fftSize) });
+  } catch (e) { /* the call still works without the green rings */ }
+}
+
+function checkSpeaking() {
+  if (!call) return;
+  let changed = false;
+  call.meters.forEach((m, id) => {
+    m.an.getByteTimeDomainData(m.data);
+    let peak = 0;
+    for (let i = 0; i < m.data.length; i++) peak = Math.max(peak, Math.abs(m.data[i] - 128));
+    const talking = peak > 14 && !(id === state.user.id && call.muted);
+    if (talking !== call.speaking.has(id)) { talking ? call.speaking.add(id) : call.speaking.delete(id); changed = true; }
+  });
+  if (changed) document.querySelectorAll('#call-panel .call-row').forEach((row) => {
+    row.classList.toggle('speaking', call.speaking.has(row.dataset.id));
+  });
+}
+
+// ----- The call window -----
+function renderCallPanel() {
+  if (!call) return;
+  let panel = $('#call-panel');
+  if (!panel) { panel = el('div', { id: 'call-panel', class: 'call-panel', attrs: { role: 'region', 'aria-label': 'Global Call' } }); document.body.append(panel); }
+
+  const ids = [...callPeople.keys()].filter((id) => id !== state.user.id).sort();
+  ids.unshift(state.user.id);
+  const rows = ids.map((id) => {
+    const meta = callPeople.get(id) || {};
+    const isMe = id === state.user.id;
+    const p = state.profiles.get(id) || (isMe ? state.profile : { username: meta.username || '?' });
+    const peer = call.peers.get(id);
+    const status = isMe ? '' : (peer && peer.state === 'connected' ? '' : ' · connecting…');
+    return el('div', { class: 'call-row' + (call.speaking.has(id) ? ' speaking' : ''), attrs: { 'data-id': id } },
+      makeAvatar(p, 'sm'),
+      el('span', { class: 'call-name', text: nameOf(p) + (isMe ? ' (you)' : '') + status }),
+      (isMe ? call.muted : meta.muted) ? el('span', { class: 'call-muted', text: '🔇', attrs: { title: 'Muted' } }) : null,
+    );
+  });
+
+  panel.replaceChildren(
+    el('div', { class: 'call-head' }, phoneIcon(16),
+      el('strong', { text: 'Global Call' }),
+      el('span', { class: 'muted', text: ids.length + (ids.length === 1 ? ' person' : ' people') })),
+    el('div', { class: 'call-list' }, rows),
+    el('div', { class: 'call-actions' },
+      el('button', { class: 'btn btn-ghost', text: call.muted ? 'Unmute' : 'Mute', attrs: { type: 'button' }, on: { click: toggleMute } }),
+      el('button', { class: 'btn btn-leave', text: 'Leave', attrs: { type: 'button' }, on: { click: () => leaveCall() } }),
+    ),
+  );
 }
 
 // =====================================================================
