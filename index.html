@@ -332,6 +332,38 @@ input:focus, textarea:focus {
 .msg-author:hover { text-decoration: underline; }
 .msg.mine .msg-author { color: #aab2ff; }
 .msg-time { color: var(--muted); font-size: 12px; }
+.undo-slot { flex: none; align-self: flex-start; margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.undo-btn {
+  display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); background: var(--bg-3); color: var(--muted);
+  border-radius: 999px; padding: 3px 9px 3px 7px; font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.undo-btn:hover { color: var(--text); background: var(--bg-4); }
+.undo-ask { color: var(--text); }
+.undo-yes, .undo-no { border: 0; border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 600; }
+.undo-yes { background: #ef4444; color: #fff; }
+.undo-yes:hover { background: #dc2626; }
+.undo-yes:disabled { opacity: .6; }
+.undo-no { background: var(--bg-4); color: var(--text); }
+.typing-row { pointer-events: none; }
+.typing-row:hover { background: none; }
+.typing-avatars { display: flex; flex: none; }
+.typing-avatars .msg-avatar + .msg-avatar { margin-left: -14px; }
+.typing-avatars .avatar { box-shadow: 0 0 0 2px var(--bg-1, #1e1f22); }
+.typing-bubble {
+  align-self: center; display: inline-flex; align-items: center; gap: 5px;
+  padding: 11px 14px; border-radius: 18px; background: var(--bg-3); border: 1px solid var(--line);
+}
+.typing-bubble i {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--muted);
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+.typing-bubble i:nth-child(2) { animation-delay: .15s; }
+.typing-bubble i:nth-child(3) { animation-delay: .3s; }
+@keyframes typing-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: .55; } 30% { transform: translateY(-6px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .typing-bubble i { animation: typing-fade 1.4s ease-in-out infinite; }
+  @keyframes typing-fade { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+}
 .msg-text { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
 
 .empty {
@@ -409,6 +441,22 @@ input:focus, textarea:focus {
 .msg-img.loading { width: 220px; height: 150px; animation: shimmer 1.2s ease-in-out infinite; }
 @keyframes shimmer { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
 .msg-img-fail { margin-top: 4px; color: var(--muted); font-size: 13px; }
+
+.video-preview .vthumb { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; flex: none; background: #000; }
+.video-preview .vinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.video-preview .vname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.vbar { height: 6px; border-radius: 99px; background: var(--bg-4); overflow: hidden; }
+.vbar > i { display: block; height: 100%; width: 0; background: var(--accent, #8b5cf6); transition: width .15s linear; }
+.vbar[hidden] { display: none; }
+.msg-video-wrap {
+  margin-top: 4px; width: min(420px, 100%); aspect-ratio: 16 / 9; max-height: 360px;
+  border-radius: 12px; overflow: hidden; background: #000;
+}
+.msg-video-wrap.ready { aspect-ratio: auto; width: fit-content; max-width: min(420px, 100%); }
+.msg-video-wrap.loading { animation: shimmer 1.2s ease-in-out infinite; }
+.msg-video { display: block; max-width: 100%; width: auto; height: auto; max-height: 360px; background: #000; border-radius: 12px; }
+.msg-video-fail { margin-top: 4px; color: var(--muted); font-size: 13px; }
+.msg-video-fail a { color: inherit; text-decoration: underline; }
 
 .lightbox {
   position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 16px;
@@ -756,13 +804,26 @@ input:disabled { opacity: .6; cursor: not-allowed; }
           <span>Photo ready. Add a caption if you like, then send.</span>
           <button id="attach-remove" class="icon-btn" type="button" aria-label="Remove photo" title="Remove photo">✕</button>
         </div>
+        <div id="video-preview" class="attach-preview video-preview" hidden>
+          <video id="video-thumb" class="vthumb" muted playsinline preload="metadata"></video>
+          <div class="vinfo">
+            <span id="video-name" class="vname"></span>
+            <span id="video-status">Video ready. Add a caption if you like, then send.</span>
+            <div id="video-bar" class="vbar" hidden><i id="video-bar-fill"></i></div>
+          </div>
+          <button id="video-remove" class="icon-btn" type="button" aria-label="Remove video" title="Remove video">✕</button>
+        </div>
         <input id="image-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
+        <input id="video-input" type="file" accept="video/mp4,video/webm,.mp4,.webm" hidden />
         <div class="composer-box">
           <button id="emoji-btn" class="emoji-btn" type="button" aria-label="Open animated emoticons" title="Emoticons">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
           </button>
           <button id="attach-btn" class="emoji-btn" type="button" aria-label="Attach a photo" title="Send a photo">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+          </button>
+          <button id="video-btn" class="emoji-btn" type="button" aria-label="Attach a video" title="Send a video (up to 2 minutes, 50 MB)">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10.5l6-3.5v10l-6-3.5z"/></svg>
           </button>
           <textarea id="message-input" rows="1" maxlength="1000" placeholder="Write a message…" aria-label="Message"></textarea>
           <button id="send-btn" class="send-btn" type="submit" aria-label="Send message">
@@ -993,6 +1054,9 @@ function renderImage(path) {
 function withPhotoHint(message) {
   const raw = message || '';
   const tail = raw ? ' [Details: ' + raw + ']' : '';
+  if (/video_path/.test(raw)) {
+    return 'Videos need a one-time database update. Run supabase-videos.sql in Supabase (see README.md).' + tail;
+  }
   if (/image_path|avatar_path/.test(raw)) {
     return 'Photos need a one-time database update. Run supabase-photos.sql in Supabase (see README.md).' + tail;
   }
@@ -1003,6 +1067,157 @@ function withPhotoHint(message) {
     return 'Groups need a one-time database update. Run supabase-groups.sql in Supabase (see README.md).' + tail;
   }
   return message;
+}
+
+
+// =====================================================================
+//  VIDEOS
+// =====================================================================
+const VIDEO_MAX_BYTES = 50 * 1024 * 1024;   // 50 MB
+const VIDEO_MAX_SECONDS = 120;              // 2 minutes
+const VIDEO_TYPES = { mp4: 'video/mp4', webm: 'video/webm' };
+
+function videoExt(file) {
+  const m = /\.([a-z0-9]+)$/i.exec(file.name || '');
+  const ext = m ? m[1].toLowerCase() : '';
+  if (VIDEO_TYPES[ext]) return ext;
+  if (file.type === 'video/mp4') return 'mp4';
+  if (file.type === 'video/webm') return 'webm';
+  return '';
+}
+
+function formatSize(bytes) { return bytes >= 1048576 ? (bytes / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB'; }
+function formatDuration(sec) { sec = Math.round(sec); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
+
+/** Reads how long a video is, without uploading anything. */
+function readVideoDuration(url) {
+  return new Promise((resolve, reject) => {
+    const v = document.createElement('video');
+    v.preload = 'metadata'; v.muted = true; v.playsInline = true;
+    const done = (fn, val) => { clearTimeout(timer); v.removeAttribute('src'); v.load(); fn(val); };
+    const timer = setTimeout(() => done(reject, new Error('timeout')), 15000);
+    v.onerror = () => done(reject, new Error('unreadable'));
+    v.onloadedmetadata = () => {
+      if (v.duration === Infinity) {            // some WebM files do not store their length: seek to the end to find it
+        v.onseeked = () => done(resolve, v.duration);
+        v.currentTime = 1e101;
+      } else {
+        done(resolve, v.duration);
+      }
+    };
+    v.src = url;
+  });
+}
+
+async function prepareVideo(file) {
+  const ext = videoExt(file);
+  if (!ext) throw new Error('Only MP4 and WebM videos can be sent. (iPhone .mov files: choose "Most Compatible" in camera settings, or share them as MP4.)');
+  if (file.size > VIDEO_MAX_BYTES) throw new Error('That video is ' + formatSize(file.size) + '. Videos can be up to 50 MB.');
+  if (file.size < 1) throw new Error('That video file is empty.');
+  const url = URL.createObjectURL(file);
+  let duration;
+  try { duration = await readVideoDuration(url); }
+  catch (e) { URL.revokeObjectURL(url); throw new Error('That video could not be read. Try an MP4 (H.264) or WebM file.'); }
+  if (!isFinite(duration) || duration <= 0) { URL.revokeObjectURL(url); throw new Error('That video could not be read.'); }
+  if (duration > VIDEO_MAX_SECONDS + 0.5) {
+    URL.revokeObjectURL(url);
+    throw new Error('That video is ' + formatDuration(duration) + ' long. Videos can be up to 2 minutes.');
+  }
+  return { file, url, duration, name: file.name || ('video.' + ext), size: file.size, ext, type: VIDEO_TYPES[ext] };
+}
+
+const randomVideoName = (ext) => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + '.' + ext;
+
+function getChatVideoUrl(path) {
+  const key = 'v:' + path;
+  const hit = signedLinks.get(key);
+  if (hit && hit.until > Date.now()) return Promise.resolve(hit.url);
+  if (pendingLinks.has(key)) return pendingLinks.get(key);
+  const request = db.storage.from('chat-videos').createSignedUrl(path, 3600)
+    .then(({ data, error }) => {
+      if (error || !data) throw error || new Error('no link');
+      signedLinks.set(key, { url: data.signedUrl, until: Date.now() + 50 * 60 * 1000 });
+      return data.signedUrl;
+    })
+    .finally(() => pendingLinks.delete(key));
+  pendingLinks.set(key, request);
+  return request;
+}
+
+const videoObserver = ('IntersectionObserver' in window)
+  ? new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { videoObserver.unobserve(e.target); if (e.target._loadVideo) e.target._loadVideo(); } });
+    }, { rootMargin: '300px 0px' })
+  : null;
+
+/** A video inside a message. It only starts loading when it scrolls near the screen. */
+function renderVideo(path) {
+  const wrap = el('div', { class: 'msg-video-wrap loading' });
+  const fail = () => {
+    wrap.replaceWith(el('div', { class: 'msg-video-fail' }, '🎬 Video unavailable. ',
+      el('a', { text: 'Try again', attrs: { href: '#' }, on: { click: (ev) => {
+        ev.preventDefault(); signedLinks.delete('v:' + path);
+        ev.target.closest('.msg-video-fail').replaceWith(renderVideo(path));
+      } } })));
+  };
+  wrap._loadVideo = () => {
+    const video = el('video', { class: 'msg-video', attrs: { controls: '', playsinline: '', preload: 'metadata', 'webkit-playsinline': '' } });
+    video.setAttribute('playsinline', '');
+    let retried = false;
+    const useUrl = (url) => { video.src = url + '#t=0.001'; };
+    video.addEventListener('loadedmetadata', () => {
+      wrap.classList.remove('loading'); wrap.classList.add('ready');
+      if (state.stick) scrollToBottom();
+    });
+    video.addEventListener('error', () => {
+      if (retried) { fail(); return; }
+      retried = true;                      // the link may have expired: ask for a fresh one once
+      signedLinks.delete('v:' + path);
+      getChatVideoUrl(path).then(useUrl).catch(fail);
+    });
+    wrap.append(video);
+    getChatVideoUrl(path).then(useUrl).catch(fail);
+  };
+  if (videoObserver) videoObserver.observe(wrap); else setTimeout(() => wrap._loadVideo(), 0);
+  return wrap;
+}
+
+/** Uploads a video to Supabase Storage with a progress callback (the normal upload call cannot report progress). */
+async function uploadVideoWithProgress(path, prepared, onProgress, holder) {
+  const { data: sess } = await db.auth.getSession();
+  const token = sess && sess.session && sess.session.access_token;
+  if (!token) throw Object.assign(new Error('Please sign in again.'), { status: 401 });
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    holder.xhr = xhr;
+    xhr.open('POST', SUPABASE_URL + '/storage/v1/object/chat-videos/' + path.split('/').map(encodeURIComponent).join('/'));
+    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+    xhr.setRequestHeader('apikey', SUPABASE_PUBLISHABLE_KEY);
+    xhr.setRequestHeader('x-upsert', 'false');
+    xhr.setRequestHeader('cache-control', 'max-age=3600');
+    xhr.setRequestHeader('Content-Type', prepared.type);
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) { onProgress(1); resolve(); return; }
+      let msg = ''; try { msg = (JSON.parse(xhr.responseText) || {}).message || ''; } catch (e) { msg = xhr.responseText || ''; }
+      reject(Object.assign(new Error(msg || ('HTTP ' + xhr.status)), { status: xhr.status }));
+    };
+    xhr.onerror = () => reject(Object.assign(new Error('network'), { network: true }));
+    xhr.onabort = () => reject(Object.assign(new Error('cancelled'), { cancelled: true }));
+    xhr.send(prepared.file);
+  });
+}
+
+function friendlyVideoError(error) {
+  const msg = (error && error.message) || '';
+  const status = error && error.status;
+  if (error && error.network) return 'Video upload failed: check your internet connection and try again.';
+  if (status === 413 || /too large|exceed|maximum allowed size/i.test(msg)) return 'That video is too big. Videos can be up to 50 MB.';
+  if (/bucket not found/i.test(msg) || status === 404) return 'Videos are not set up yet. Run supabase-videos.sql in Supabase (see README.md).';
+  if (/mime|not supported|invalid/i.test(msg) && status !== 403) return 'Only MP4 and WebM videos can be sent.';
+  if (status === 401) return 'Please sign in again, then retry.';
+  if (status === 403 || /row-level security|violates|unauthorized|not allowed/i.test(msg)) return 'Video not sent. You may be sending too many videos (limit: 5 every 10 minutes). Wait a bit and try again.';
+  return 'Video upload failed. Please try again.';
 }
 
 /** Turns message text into text + animated emoticon images. Only known emoticon names are accepted. */
@@ -1107,6 +1322,9 @@ function freshState() {
     awayCount: 0,          // messages that arrived while the tab was hidden
     search: '',
     lastSendAt: 0,
+    undoUntil: new Map(),  // message id -> time when its Undo button stops working (messages I just sent)
+    pendingVideo: null,    // video chosen but not sent yet
+    uploadingVideo: false,
     pendingImage: null,    // photo chosen but not sent yet
     stick: true,           // is the person looking at the newest messages?
     sending: false,
@@ -1152,8 +1370,9 @@ function friendlyAuthError(error) {
 
 function friendlySendError(error) {
   const msg = (error && error.message) || '';
-  if (/slow down|limit reached|repeat the same|invalid photo/i.test(msg)) return msg;
+  if (/slow down|limit reached|repeat the same|invalid photo|invalid attachment/i.test(msg)) return msg;
   if (/row-level security/i.test(msg)) return 'You are not allowed to send that message.';
+  if (/video_path/i.test(msg)) return 'Videos need a one-time database update. Run supabase-videos.sql in Supabase (see README.md).';
   if (/content_length/i.test(msg)) return 'Messages must be between 1 and ' + MAX_LEN + ' characters.';
   return 'Message not sent. Please try again.';
 }
@@ -1386,6 +1605,7 @@ async function startApp(user) {
   await loadGroups();
   joinPresence();
   joinCallChannel();
+  joinTypingChannel();
   await openChat('global');
 }
 
@@ -1398,9 +1618,12 @@ function stopApp() {
     callPeople = new Map();
     if (state.dbChannel) db.removeChannel(state.dbChannel);
     if (state.presenceChannel) db.removeChannel(state.presenceChannel);
+    leaveTypingChannel();
     if (state.groupsChannel) db.removeChannel(state.groupsChannel);
   }
   clearPendingImage();
+  if (state.videoHolder && state.videoHolder.xhr) state.videoHolder.xhr.abort();
+  clearPendingVideo();
   signedLinks.clear();
   state = freshState();
   $('#messages').replaceChildren();
@@ -1544,9 +1767,11 @@ function showView(view) {
 }
 
 function openShop() {
+  stopTyping();
   state.chat = { type: 'shop', id: 'shop' };
   state.loadToken += 1;          // ignore any chat that was still loading
   clearPendingImage();
+  if (!state.uploadingVideo) clearPendingVideo();
   closeEmojiPanel();
   closeSidebar();
   showView('shop');
@@ -1885,6 +2110,211 @@ function joinPresence() {
   state.presenceChannel = channel;
 }
 
+
+// =====================================================================
+//  TYPING INDICATOR  ("... is typing", sent over a free Supabase broadcast channel; nothing is saved)
+// =====================================================================
+const TYPING_SEND_GAP_MS = 2500;   // while you type we say "still typing" this often
+const TYPING_EXPIRE_MS = 5000;     // no news for this long = they stopped
+const typers = new Map();          // chat key -> Map(user id -> expiry timer)
+let typingChannel = null, typingReady = false;
+let typingLastSent = 0, typingTarget = null;
+
+function currentTypingTarget() {
+  const c = state.chat;
+  if (c.type === 'global') return { scope: 'global', key: 'global' };
+  if (c.type === 'group') return { scope: 'group', gid: c.id, key: c.id };
+  if (c.type === 'dm') return { scope: 'dm', to: c.id, key: c.id };
+  return null;
+}
+
+function joinTypingChannel() {
+  typingReady = false;
+  typingChannel = db.channel('chatworld-typing', { config: { broadcast: { self: false } } });
+  typingChannel
+    .on('broadcast', { event: 'typing' }, ({ payload }) => onTypingSignal(payload))
+    .subscribe((status) => { typingReady = status === 'SUBSCRIBED'; });
+}
+
+function leaveTypingChannel() {
+  if (typingChannel && db) db.removeChannel(typingChannel);
+  typingChannel = null; typingReady = false; typingTarget = null; typingLastSent = 0;
+  typers.forEach((m) => m.forEach((t) => clearTimeout(t)));
+  typers.clear();
+}
+
+function sendTypingSignal(target, on) {
+  if (!typingChannel || !typingReady || !target || !state.user) return;
+  typingChannel.send({ type: 'broadcast', event: 'typing', payload: {
+    from: state.user.id, on, scope: target.scope, to: target.to || null, gid: target.gid || null,
+  } });
+}
+
+/** Called whenever the message box changes. */
+function noticeTyping() {
+  const hasText = $('#message-input').value.trim() !== '';
+  if (!hasText || isBlockedDm()) { stopTyping(); return; }
+  const target = currentTypingTarget();
+  if (!target) return;
+  const changed = !typingTarget || typingTarget.key !== target.key;
+  if (changed && typingTarget) sendTypingSignal(typingTarget, false);   // moved to another chat
+  if (changed || Date.now() - typingLastSent >= TYPING_SEND_GAP_MS) {
+    typingTarget = target;
+    typingLastSent = Date.now();
+    sendTypingSignal(target, true);
+  }
+}
+
+/** Tell the chat we are no longer typing (sent a message, emptied the box, or left the chat). */
+function stopTyping() {
+  if (typingTarget) sendTypingSignal(typingTarget, false);
+  typingTarget = null;
+  typingLastSent = 0;
+}
+
+function removeTyper(key, uid) {
+  const m = typers.get(key);
+  if (!m || !m.has(uid)) return;
+  clearTimeout(m.get(uid));
+  m.delete(uid);
+  if (!m.size) typers.delete(key);
+  if (key === chatKey()) renderTyping();
+}
+
+function onTypingSignal(d) {
+  if (!d || typeof d.from !== 'string' || !state.user || d.from === state.user.id) return;
+  if (state.blocked.has(d.from)) return;
+  let key = null;
+  if (d.scope === 'global') key = 'global';
+  else if (d.scope === 'dm' && d.to === state.user.id) key = d.from;
+  else if (d.scope === 'group' && typeof d.gid === 'string' && state.groups.has(d.gid)) key = d.gid;
+  if (!key) return;
+  if (!d.on) { removeTyper(key, d.from); return; }
+  if (!typers.has(key)) typers.set(key, new Map());
+  const m = typers.get(key);
+  clearTimeout(m.get(d.from));
+  m.set(d.from, setTimeout(() => removeTyper(key, d.from), TYPING_EXPIRE_MS));
+  if (key === chatKey()) {
+    ensureProfiles([d.from]).then(() => { if (typers.get(key) && typers.get(key).has(d.from)) renderTyping(); });
+  }
+}
+
+/** Shows (or hides) the animated "typing" row at the bottom of the open chat. */
+function renderTyping() {
+  const box = $('#messages');
+  const old = box.querySelector('.typing-row');
+  const ids = state.chat.type === 'shop' ? [] : Array.from((typers.get(chatKey()) || new Map()).keys());
+  if (!ids.length) { if (old) old.remove(); return; }
+  const people = ids.slice(0, 3).map(profileOf);
+  const names = ids.map((id) => nameOf(profileOf(id)));
+  const label = names.length === 1 ? names[0] + ' is typing' : names.length === 2 ? names.join(' and ') + ' are typing' : 'Several people are typing';
+  const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 140;
+  const row = el('div', { class: 'msg typing-row', attrs: { role: 'status', 'aria-label': label, title: label } },
+    el('div', { class: 'typing-avatars' }, ...people.map((p) => el('span', { class: 'msg-avatar' }, makeAvatar(p)))),
+    el('div', { class: 'typing-bubble' }, el('i'), el('i'), el('i')));
+  if (old) old.remove();
+  box.append(row);
+  if (nearBottom) scrollToBottom();
+}
+
+
+// =====================================================================
+//  UNDO  (take back a message you just sent, within 15 seconds)
+// =====================================================================
+const UNDO_SECONDS = 15;
+
+function undoLeft(id) {
+  const until = state.undoUntil.get(id);
+  return until ? Math.ceil((until - Date.now()) / 1000) : 0;
+}
+
+function makeUndoSlot(id) {
+  const slot = el('div', { class: 'undo-slot', attrs: { 'data-mid': String(id) } });
+  showUndoButton(slot, id);
+  return slot;
+}
+
+/** Adds the Undo button to a message that is already on screen. */
+function attachUndoSlot(id) {
+  if (undoLeft(id) <= 0) return;
+  const row = $('#messages').querySelector('.msg[data-mid="' + id + '"]');
+  if (row && !row.querySelector('.undo-slot')) row.append(makeUndoSlot(id));
+}
+
+function showUndoButton(slot, id) {
+  const left = Math.max(0, undoLeft(id));
+  const btn = el('button', {
+    class: 'undo-btn', attrs: { type: 'button', 'aria-label': 'Undo this message', title: 'Undo this message (' + left + 's left)' },
+    on: { click: () => askUndo(slot, id) },
+  });
+  btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
+  btn.append(el('span', { class: 'undo-left', text: left + 's' }));
+  slot.replaceChildren(btn);
+  slot.dataset.mode = 'button';
+}
+
+/** "Are you sure?" step. */
+function askUndo(slot, id) {
+  slot.dataset.mode = 'ask';
+  slot.replaceChildren(
+    el('span', { class: 'undo-ask', text: 'Delete this message?' }),
+    el('button', { class: 'undo-yes', text: 'Yes, undo', attrs: { type: 'button' }, on: { click: (e) => confirmUndo(slot, id, e.currentTarget) } }),
+    el('button', { class: 'undo-no', text: 'Keep', attrs: { type: 'button' }, on: { click: () => showUndoButton(slot, id) } }),
+  );
+}
+
+function friendlyUndoError(error) {
+  const msg = (error && error.message) || '';
+  if (/too late|already gone|limit reached|only undo your own|sign in again/i.test(msg)) return msg;
+  if (/undo_message|schema cache|could not find the function|PGRST202/i.test(msg)) return 'Undo needs a one-time database update. Run supabase-undo.sql in Supabase (see README.md).';
+  return 'Could not undo that message. Please try again.';
+}
+
+async function confirmUndo(slot, id, yesBtn) {
+  if (undoLeft(id) <= 0) { slot.remove(); toast('Too late to undo: messages can only be undone in the first ' + UNDO_SECONDS + ' seconds.', 'error'); return; }
+  yesBtn.disabled = true; yesBtn.textContent = 'Undoing…';
+  slot.dataset.busy = '1';
+  const { data, error } = await db.rpc('undo_message', { mid: id });
+  delete slot.dataset.busy;
+  if (error) {
+    toast(friendlyUndoError(error), 'error');
+    if (/too late|already gone/i.test(error.message || '')) { state.undoUntil.delete(id); slot.remove(); }
+    else if (slot.isConnected) showUndoButton(slot, id);
+    return;
+  }
+  state.undoUntil.delete(id);
+  removeMessageLocally(id);
+  // Clean up the photo/video file too (best effort; the message itself is already gone).
+  if (data && data.image_path) db.storage.from('chat-images').remove([data.image_path]).catch(() => {});
+  if (data && data.video_path) db.storage.from('chat-videos').remove([data.video_path]).catch(() => {});
+  toast('Message undone.', 'success');
+}
+
+/** Takes a message off the screen (used when I undo, and when someone else undoes in a chat I am looking at). */
+function removeMessageLocally(id) {
+  const idx = state.messages.findIndex((m) => String(m.id) === String(id));
+  if (idx < 0) return;
+  state.messages.splice(idx, 1);
+  state.seen.delete(id);
+  const box = $('#messages');
+  const keep = box.scrollTop, stick = state.stick;
+  renderMessages();
+  if (stick) scrollToBottom(); else box.scrollTop = keep;
+}
+
+/** Runs twice a second: counts the seconds down and removes Undo buttons that ran out of time. */
+function tickUndo() {
+  document.querySelectorAll('.undo-slot').forEach((slot) => {
+    if (slot.dataset.busy) return;
+    const id = Number(slot.dataset.mid);
+    const left = undoLeft(id);
+    if (left <= 0) { slot.remove(); state.undoUntil.delete(id); return; }
+    const t = slot.querySelector('.undo-left');
+    if (t) { t.textContent = left + 's'; const b = slot.querySelector('.undo-btn'); if (b) b.title = 'Undo this message (' + left + 's left)'; }
+  });
+}
+setInterval(tickUndo, 500);
+
 // =====================================================================
 //  REAL-TIME DATABASE EVENTS  (new messages, new people, profile changes)
 // =====================================================================
@@ -1894,6 +2324,8 @@ function subscribeRealtime() {
   channel
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
       (payload) => onNewMessage(payload.new))
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' },
+      (payload) => { if (payload.old && payload.old.id != null) removeMessageLocally(payload.old.id); })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' },
       (payload) => { state.profiles.set(payload.new.id, payload.new); renderUsers(); })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' },
@@ -1922,6 +2354,7 @@ function onNewMessage(m) {
   const key = messageKey(m);
   if (!key) return;
   const mine = m.sender_id === state.user.id;
+  if (!mine) removeTyper(key, m.sender_id);
 
   if (key === chatKey()) {
     addMessage(m);
@@ -1944,9 +2377,11 @@ function updateTitle() {
 // =====================================================================
 async function openChat(type, id = null) {
   if (type === 'shop') { openShop(); return; }
+  stopTyping();            // tell the chat we just left that we stopped typing
   showView('chat');
   state.chat = { type, id };
   clearPendingImage();   // a photo chosen for one chat is not carried over to another
+  if (!state.uploadingVideo) clearPendingVideo();
   state.stick = true;
   state.unread.delete(type === 'global' ? 'global' : id);
   state.messages = [];
@@ -1969,7 +2404,7 @@ async function openChat(type, id = null) {
 
 function fetchMessages(before = null) {
   let q = db.from('messages')
-    .select('id, sender_id, recipient_id, group_id, content, image_path, created_at')
+    .select('*')
     .order('created_at', { ascending: false })
     .limit(PAGE_SIZE);
   if (before) q = q.lt('created_at', before);
@@ -2117,7 +2552,7 @@ function buildMessageNodes(m, prev) {
 
   const p = profileOf(m.sender_id);
   const mine = m.sender_id === state.user.id;
-  const row = el('div', { class: 'msg' + (grouped ? ' grouped' : '') + (mine ? ' mine' : '') });
+  const row = el('div', { class: 'msg' + (grouped ? ' grouped' : '') + (mine ? ' mine' : ''), attrs: { 'data-mid': String(m.id) } });
 
   if (grouped) {
     row.append(el('span', { class: 'msg-gutter', text: formatTime(m.created_at) }));
@@ -2138,7 +2573,9 @@ function buildMessageNodes(m, prev) {
   }
   if (m.content) body.append(renderContent(m.content)); // text is added as plain text => safe from HTML injection
   if (m.image_path) body.append(renderImage(m.image_path));
+  if (m.video_path) body.append(renderVideo(m.video_path));
   row.append(body);
+  if (mine && undoLeft(m.id) > 0) row.append(makeUndoSlot(m.id));
 
   nodes.push(row);
   return nodes;
@@ -2151,13 +2588,14 @@ function renderMessages() {
   if (state.hasMore) {
     box.append(el('button', { class: 'load-more', text: 'Load older messages', attrs: { type: 'button' }, on: { click: loadOlder } }));
   }
-  if (!state.messages.length) { box.append(emptyState()); return; }
+  if (!state.messages.length) { box.append(emptyState()); renderTyping(); return; }
 
   let prev = null;
   for (const m of state.messages) {
     box.append(...buildMessageNodes(m, prev));
     prev = m;
   }
+  renderTyping();
 }
 
 function scrollToBottom() {
@@ -2179,7 +2617,9 @@ async function addMessage(m) {
 
   const empty = box.querySelector('.empty');
   if (empty) empty.remove();
+  const typingRow = box.querySelector('.typing-row');
   box.append(...buildMessageNodes(m, prev));
+  if (typingRow) box.append(typingRow);   // keep the typing dots below the newest message
 
   if (nearBottom || m.sender_id === state.user.id) scrollToBottom();
 }
@@ -2199,12 +2639,41 @@ async function choosePhotoForChat(file) {
   try {
     const prepared = await prepareImage(file, { maxSide: CHAT_IMG_MAX });
     clearPendingImage();
+    if (!state.uploadingVideo) clearPendingVideo();
     state.pendingImage = prepared;
     $('#attach-thumb').src = prepared.url;
     $('#attach-preview').hidden = false;
     $('#message-input').focus();
   } catch (err) {
     toast(err.message || 'That picture could not be used.', 'error');
+  }
+}
+
+function clearPendingVideo(keepUrl = false) {
+  const v = state.pendingVideo;
+  if (v && !keepUrl) URL.revokeObjectURL(v.url);
+  state.pendingVideo = null;
+  $('#video-preview').hidden = true;
+  $('#video-bar').hidden = true;
+  $('#video-bar-fill').style.width = '0';
+  const t = $('#video-thumb'); t.removeAttribute('src'); try { t.load(); } catch (e) {}
+}
+
+async function chooseVideoForChat(file) {
+  if (!file) return;
+  if (state.uploadingVideo) { toast('Please wait for the current video to finish uploading.'); return; }
+  try {
+    const prepared = await prepareVideo(file);
+    clearPendingVideo();
+    clearPendingImage();                       // one attachment per message
+    state.pendingVideo = prepared;
+    $('#video-thumb').src = prepared.url + '#t=0.001';
+    $('#video-name').textContent = prepared.name;
+    $('#video-status').textContent = formatDuration(prepared.duration) + ' · ' + formatSize(prepared.size) + ' · ready. Add a caption if you like, then send.';
+    $('#video-preview').hidden = false;
+    $('#message-input').focus();
+  } catch (err) {
+    toast(err.message || 'That video could not be used.', 'error');
   }
 }
 
@@ -2219,8 +2688,9 @@ function friendlyUploadError(error) {
 async function sendMessage(textOverride) {
   const input = $('#message-input');
   const usingImage = typeof textOverride !== 'string' && state.pendingImage ? state.pendingImage : null;
+  const usingVideo = typeof textOverride !== 'string' && state.pendingVideo ? state.pendingVideo : null;
   const text = (typeof textOverride === 'string' ? textOverride : input.value).trim();
-  if ((!text && !usingImage) || state.sending) return;
+  if ((!text && !usingImage && !usingVideo) || state.sending) return;
   if (isBlockedDm()) { toast('You blocked this person. Unblock them in their profile to chat.', 'error'); return; }
 
   if (text.length > MAX_LEN) { toast('Messages can be up to ' + MAX_LEN + ' characters.', 'error'); return; }
@@ -2251,6 +2721,35 @@ async function sendMessage(textOverride) {
     }
   }
 
+  let videoPath = null;
+  if (usingVideo) {
+    const me = state.user.id;
+    videoPath = (groupId ? 'group/' + groupId + '/' + me : recipient ? 'dm/' + me + '/' + recipient : 'global/' + me) + '/' + randomVideoName(usingVideo.ext);
+    const holder = {};
+    state.uploadingVideo = true;
+    state.videoHolder = holder;
+    const bar = $('#video-bar'), fill = $('#video-bar-fill'), status = $('#video-status');
+    bar.hidden = false; fill.style.width = '0';
+    $('#video-remove').title = 'Cancel upload';
+    try {
+      await uploadVideoWithProgress(videoPath, usingVideo, (f) => {
+        fill.style.width = Math.round(f * 100) + '%';
+        status.textContent = f >= 1 ? 'Finishing up…' : 'Uploading… ' + Math.round(f * 100) + '%';
+      }, holder);
+    } catch (err) {
+      state.uploadingVideo = false; state.videoHolder = null;
+      state.sending = false;
+      $('#send-btn').disabled = false;
+      $('#video-remove').title = 'Remove video';
+      bar.hidden = true; fill.style.width = '0';
+      status.textContent = formatDuration(usingVideo.duration) + ' · ' + formatSize(usingVideo.size) + ' · ready. Add a caption if you like, then send.';
+      if (!err.cancelled) toast(friendlyVideoError(err), 'error');
+      return;
+    }
+    state.uploadingVideo = false; state.videoHolder = null;
+    $('#video-remove').title = 'Remove video';
+  }
+
   const row = {
     sender_id: state.user.id,
     recipient_id: recipient,
@@ -2258,12 +2757,20 @@ async function sendMessage(textOverride) {
   };
   if (groupId) row.group_id = groupId;
   if (imagePath) row.image_path = imagePath;
+  if (videoPath) row.video_path = videoPath;
   const { data, error } = await db.from('messages').insert(row).select().single();
 
   state.sending = false;
   $('#send-btn').disabled = false;
 
-  if (error) { toast(friendlySendError(error), 'error'); return; }
+  if (error) {
+    if (usingVideo) {
+      $('#video-bar').hidden = true;
+      $('#video-status').textContent = 'Not sent yet. Press send to try again.';
+    }
+    toast(friendlySendError(error), 'error');
+    return;
+  }
 
   state.lastSendAt = Date.now();
   if (typeof textOverride !== 'string') { input.value = ''; autosize(); }
@@ -2272,10 +2779,17 @@ async function sendMessage(textOverride) {
     signedLinks.set(imagePath, { url: usingImage.url, until: Date.now() + 50 * 60 * 1000 });
     if (state.pendingImage === usingImage) clearPendingImage(true);
   }
-  addMessage(data); // the real-time event for the same message is ignored (already seen)
+  if (usingVideo) {
+    signedLinks.set('v:' + videoPath, { url: usingVideo.url, until: Date.now() + 50 * 60 * 1000 });
+    if (state.pendingVideo === usingVideo) clearPendingVideo(true);
+  }
+  if (data && data.id != null) state.undoUntil.set(data.id, Date.now() + UNDO_SECONDS * 1000);
+  await addMessage(data); // the real-time event for the same message is ignored (already seen)
+  attachUndoSlot(data.id);   // (the live update may have shown the message before this point)
 }
 
 function autosize() {
+  noticeTyping();
   const ta = $('#message-input');
   ta.style.height = 'auto';
   ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
@@ -2993,6 +3507,7 @@ function bindUI() {
   $('#call-btn').innerHTML = phoneSvg(20);
   $('#call-btn').addEventListener('click', () => { if (state.chat.type === 'dm') startPrivateCall(state.chat.id); });
   window.addEventListener('pagehide', () => {
+    stopTyping();
     if (call && call.kind === 'private') sendSignal(call.with, call.phase === 'calling' ? 'cancel' : 'hangup');
   });
   // Photos in chat
@@ -3003,6 +3518,17 @@ function bindUI() {
     choosePhotoForChat(file);
   });
   $('#attach-remove').addEventListener('click', () => clearPendingImage());
+  // Videos in chat
+  $('#video-btn').addEventListener('click', () => $('#video-input').click());
+  $('#video-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    chooseVideoForChat(file);
+  });
+  $('#video-remove').addEventListener('click', () => {
+    if (state.uploadingVideo && state.videoHolder && state.videoHolder.xhr) { state.videoHolder.xhr.abort(); return; }
+    clearPendingVideo();
+  });
   $('#messages').addEventListener('scroll', (e) => {
     const box = e.currentTarget;
     state.stick = box.scrollHeight - box.scrollTop - box.clientHeight < 160;
@@ -3133,4 +3659,3 @@ init();
 
 </body>
 </html>
-<!-- Triggering a fresh GitHub Pages rebuild -->
