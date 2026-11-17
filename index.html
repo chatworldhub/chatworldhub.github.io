@@ -594,6 +594,25 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .inline-form .btn, .member-row .btn { flex: none; width: auto; }
 .modal-card .form .btn.small { margin-top: 0; }
 .modal-card .form .btn-primary.small { margin-top: 8px; }
+
+/* ---------- Rename + block ---------- */
+.rename-label { align-self: flex-start; margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.btn-block { background: var(--red); color: #fff; }
+.btn-block:hover:not(:disabled) { filter: brightness(1.1); }
+.blocked-note { color: var(--red); font-weight: 600; margin: 4px 0; }
+.startup-problem { display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; max-width: 380px; padding: 24px; font-size: 15px; color: var(--text); }
+.startup-problem h3 { margin: 0; font-size: 18px; }
+.startup-problem p { margin: 0 0 6px; color: var(--muted); line-height: 1.5; }
+.startup-problem .btn { width: 100%; }
+
+/* ---------- Shop ---------- */
+.shop-icon {
+  width: 36px; height: 36px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+}
+.shop-page { flex: 1; min-height: 0; }
+.messages[hidden], .composer[hidden], .shop-page[hidden] { display: none; }
 </style>
 
   <!-- Supabase JavaScript SDK (free, loaded from a public CDN) -->
@@ -727,6 +746,9 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 
       <div id="messages" class="messages" aria-live="polite"></div>
 
+      <!-- The Shop page (empty for now - things will be added here later) -->
+      <div id="shop-page" class="shop-page" hidden></div>
+
       <form id="composer" class="composer" autocomplete="off">
         <div id="emoji-panel" class="emoji-panel" hidden></div>
         <div id="attach-preview" class="attach-preview" hidden>
@@ -845,7 +867,11 @@ function el(tag, opts = {}, ...kids) {
 
 const safeColor = (c) => (/^#[0-9a-fA-F]{6}$/.test(c || '') ? c : '#5865f2');
 /** The name people see: the display name if there is one, otherwise the username. */
-const nameOf = (p) => ((p && p.display_name && p.display_name.trim()) || (p && p.username) || '?');
+// A person is shown by the nickname I gave them (only I see it), else their display name, else their username.
+const nameOf = (p) => {
+  const nick = p && p.id && state && state.nicknames && state.nicknames.get(p.id);
+  return nick || (p && p.display_name && p.display_name.trim()) || (p && p.username) || '?';
+};
 const byName = (a, b) => nameOf(a).localeCompare(nameOf(b), undefined, { sensitivity: 'base' });
 
 /** Public web address of a profile picture (the "avatars" storage folder is readable by link). */
@@ -1049,7 +1075,11 @@ const keyIsSecret = keyOk && keyLooksSecret(SUPABASE_PUBLISHABLE_KEY);
 
 let db = null; // the Supabase client
 if (urlOk && keyOk && !keyIsSecret && window.supabase) {
-  db = window.supabase.createClient(SUPABASE_URL.trim(), SUPABASE_PUBLISHABLE_KEY.trim());
+  // Stay logged in: the login is saved in this browser and renewed automatically, so uploading a new
+  // version of this file never logs anyone out (people only log out when they press the logout button).
+  db = window.supabase.createClient(SUPABASE_URL.trim(), SUPABASE_PUBLISHABLE_KEY.trim(), {
+    auth: { persistSession: true, autoRefreshToken: true },
+  });
 }
 
 // ---------- App state ----------
@@ -1066,6 +1096,10 @@ function freshState() {
     groupsError: '',
     groupsChannel: null,
     openGroupInfo: null,   // id of the group whose info window is open
+    nicknames: new Map(),  // person id -> the name I gave them (only I see it)
+    blocked: new Set(),    // people I have blocked
+    friendsReady: false,   // false until the nicknames / blocks tables answer
+    friendsError: '',
     messages: [],          // messages in the open chat (oldest first)
     seen: new Set(),       // message ids already shown (prevents doubles)
     hasMore: false,
@@ -1312,6 +1346,22 @@ async function fetchOwnProfile(userId) {
   return null;
 }
 
+function showStartupProblem(user) {
+  $('#app').hidden = true;
+  $('#auth-screen').hidden = true;
+  const splash = $('#splash');
+  splash.hidden = false;
+  splash.replaceChildren(el('div', { class: 'startup-problem' },
+    el('h3', { text: 'ChatWorld could not load your profile' }),
+    el('p', { text: 'You are still logged in. This usually fixes itself in a moment, or once the site owner has finished a database update.' }),
+    el('button', { class: 'btn btn-primary', text: 'Try again', attrs: { type: 'button' }, on: { click: () => {
+      splash.replaceChildren(el('span', { class: 'spinner' }));
+      startApp(user);
+    } } }),
+    el('button', { class: 'btn btn-ghost', text: 'Log out', attrs: { type: 'button' }, on: { click: () => db.auth.signOut() } }),
+  ));
+}
+
 async function startApp(user) {
   if (state.user && state.user.id === user.id) return;
   state = freshState();
@@ -1320,8 +1370,9 @@ async function startApp(user) {
 
   const profile = await fetchOwnProfile(user.id);
   if (!profile) {
-    toast('Could not load your profile. Did you run supabase.sql?', 'error');
-    await db.auth.signOut();
+    // Do NOT log the person out (a temporary problem or a half-finished update should not cost them their login).
+    state = freshState();
+    showStartupProblem(user);
     return;
   }
   state.profile = profile;
@@ -1329,6 +1380,7 @@ async function startApp(user) {
   renderMe();
 
   await loadUsers();
+  await loadFriends();
   subscribeRealtime();
   subscribeGroupsRealtime();
   await loadGroups();
@@ -1428,6 +1480,9 @@ function renderUsers() {
   }, phoneIcon(), el('span', { class: 'name', text: 'Global Call' }),
   callCount ? el('span', { class: 'call-count', text: callCount + ' in call' }) : null));
 
+  // Shop
+  list.append(chatItem({ key: 'shop', avatar: shopIcon(), name: 'Shop', onClick: () => openShop() }));
+
   // Groups
   list.append(el('div', { class: 'section-label with-action' },
     el('span', { text: 'Groups' }),
@@ -1466,6 +1521,38 @@ function renderUsers() {
   off.forEach((p) => list.append(personItem(p, false)));
 
   list.scrollTop = keepScroll;
+}
+
+// =====================================================================
+//  SHOP  (an empty page for now - things will be added here later)
+// =====================================================================
+/** The Shop icon: a white shopping bag on an orange circle. */
+function shopIcon() {
+  const icon = el('span', { class: 'shop-icon', attrs: { 'aria-hidden': 'true' } });
+  icon.innerHTML =
+    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M5.5 8h13l1 12.5h-15z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
+  return icon;
+}
+
+/** Shows either the chat (messages + message box) or the Shop page. */
+function showView(view) {
+  const shop = view === 'shop';
+  $('#messages').hidden = shop;
+  $('#composer').hidden = shop;
+  $('#shop-page').hidden = !shop;
+}
+
+function openShop() {
+  state.chat = { type: 'shop', id: 'shop' };
+  state.loadToken += 1;          // ignore any chat that was still loading
+  clearPendingImage();
+  closeEmojiPanel();
+  closeSidebar();
+  showView('shop');
+  renderHeader();
+  renderUsers();
+  updateTitle();
 }
 
 // =====================================================================
@@ -1700,6 +1787,81 @@ function openGroupInfo(gid) {
 }
 
 // =====================================================================
+//  NICKNAMES + BLOCKING  (both are private: only you can see them)
+// =====================================================================
+const notFromBlocked = (m) => m.sender_id === state.user.id || !state.blocked.has(m.sender_id);
+const isBlockedDm = () => state.chat.type === 'dm' && state.blocked.has(state.chat.id);
+
+function friendsErrorText(error) {
+  const msg = (error && error.message) || '';
+  if (/relation .*(nicknames|blocks)|schema cache|could not find/i.test(msg)) {
+    return 'Nicknames and blocking need a one-time database update. Run supabase-friends.sql in Supabase (see README.md).';
+  }
+  return msg || 'Something went wrong. Please try again.';
+}
+
+async function loadFriends() {
+  const n = await db.from('nicknames').select('target_id, nickname');
+  const b = await db.from('blocks').select('blocked_id');
+  const error = n.error || b.error;
+  if (error) { state.friendsReady = false; state.friendsError = friendsErrorText(error); return; }
+  state.friendsReady = true;
+  state.friendsError = '';
+  state.nicknames = new Map((n.data || []).map((r) => [r.target_id, r.nickname]));
+  state.blocked = new Set((b.data || []).map((r) => r.blocked_id));
+}
+
+/** Greys out the message box in a private chat with someone I blocked. */
+function updateComposerLock() {
+  const locked = isBlockedDm();
+  const input = $('#message-input');
+  input.disabled = locked;
+  $('#send-btn').disabled = locked;
+  if (locked) input.placeholder = 'You blocked ' + nameOf(profileOf(state.chat.id)) + '. Unblock them in their profile to chat.';
+}
+
+/** Gives someone a nickname that only I can see. An empty name removes it. Returns an error text, or '' when fine. */
+async function setNickname(id, value) {
+  if (!state.friendsReady) return state.friendsError || 'Nicknames are not ready yet.';
+  const nick = value.trim().replace(/\s+/g, ' ');
+  if (nick.length > 30) return 'A nickname can be up to 30 characters.';
+  let res;
+  if (!nick) res = await db.from('nicknames').delete().eq('owner_id', state.user.id).eq('target_id', id);
+  else res = await db.from('nicknames').upsert({ owner_id: state.user.id, target_id: id, nickname: nick, updated_at: new Date().toISOString() }, { onConflict: 'owner_id,target_id' });
+  if (res.error) return friendsErrorText(res.error);
+  if (nick) state.nicknames.set(id, nick); else state.nicknames.delete(id);
+  renderUsers(); renderHeader(); renderMessages(); renderMe();
+  if (state.chat.type !== 'global') $('#message-input').placeholder = 'Message ' + (state.chat.type === 'group' ? ((state.groups.get(state.chat.id) || {}).name || 'group') : nameOf(profileOf(state.chat.id)));
+  updateComposerLock();
+  if (call) renderCallPanel();
+  return '';
+}
+
+/** Blocks or unblocks someone. Returns an error text, or '' when fine. */
+async function setBlocked(id, block) {
+  if (!state.friendsReady) return state.friendsError || 'Blocking is not ready yet.';
+  const res = block
+    ? await db.from('blocks').insert({ blocker_id: state.user.id, blocked_id: id })
+    : await db.from('blocks').delete().eq('blocker_id', state.user.id).eq('blocked_id', id);
+  if (res.error && !/duplicate key/i.test(res.error.message || '')) return friendsErrorText(res.error);
+
+  if (block) {
+    state.blocked.add(id);
+    // Hang up / hide anything that is happening with them right now.
+    if (incoming && incoming.from === id) dismissIncoming();
+    if (call && call.kind === 'private' && call.with === id) endPrivate('Call ended.');
+    else if (call && call.kind === 'global') closePeer(id);
+  } else {
+    state.blocked.delete(id);
+    if (call && call.kind === 'global') syncPeers();
+  }
+  toast(block ? 'Blocked. They cannot message or call you.' : 'Unblocked. They can message and call you again.', 'success');
+  renderUsers();
+  await openChat(state.chat.type, state.chat.id);   // reload the open chat so their messages disappear / come back
+  return '';
+}
+
+// =====================================================================
 //  PRESENCE  (who is online right now)
 // =====================================================================
 function joinPresence() {
@@ -1755,6 +1917,7 @@ function subscribeRealtime() {
 }
 
 function onNewMessage(m) {
+  if (!notFromBlocked(m)) return;   // I blocked this person
   if (m.group_id && !state.groups.has(m.group_id)) { scheduleGroupsRefresh(); return; }   // a group I was just added to
   const key = messageKey(m);
   if (!key) return;
@@ -1780,6 +1943,8 @@ function updateTitle() {
 //  OPENING A CHAT + MESSAGE HISTORY
 // =====================================================================
 async function openChat(type, id = null) {
+  if (type === 'shop') { openShop(); return; }
+  showView('chat');
   state.chat = { type, id };
   clearPendingImage();   // a photo chosen for one chat is not carried over to another
   state.stick = true;
@@ -1794,6 +1959,7 @@ async function openChat(type, id = null) {
 
   const name = type === 'global' ? 'Global Chat' : type === 'group' ? ((state.groups.get(id) || {}).name || 'group') : nameOf(profileOf(id));
   $('#message-input').placeholder = 'Message ' + name;
+  updateComposerLock();
 
   $('#messages').replaceChildren(el('div', { class: 'empty' }, el('span', { class: 'big', text: '⏳' }), el('span', { text: 'Loading messages…' })));
   await loadMessages();
@@ -1834,7 +2000,7 @@ async function loadMessages() {
   await ensureProfiles(data.map((m) => m.sender_id));
   if (token !== state.loadToken) return;
 
-  state.messages = data.slice().reverse();
+  state.messages = data.slice().reverse().filter(notFromBlocked);
   state.seen = new Set(state.messages.map((m) => m.id));
   state.hasMore = data.length === PAGE_SIZE;
   renderMessages();
@@ -1854,7 +2020,7 @@ async function loadOlder() {
   const oldHeight = box.scrollHeight;
   const oldTop = box.scrollTop;
 
-  const older = data.slice().reverse().filter((m) => !state.seen.has(m.id));
+  const older = data.slice().reverse().filter((m) => !state.seen.has(m.id) && notFromBlocked(m));
   older.forEach((m) => state.seen.add(m.id));
   state.messages = [...older, ...state.messages];
   state.hasMore = data.length === PAGE_SIZE;
@@ -1875,6 +2041,11 @@ function renderHeader() {
     box.append(
       globeIcon(),
       el('div', { class: 'title-text' }, el('h2', { text: 'Global Chat' }), el('p', { id: 'chat-sub' })),
+    );
+  } else if (state.chat.type === 'shop') {
+    box.append(
+      shopIcon(),
+      el('div', { class: 'title-text' }, el('h2', { text: 'Shop' }), el('p', { id: 'chat-sub' })),
     );
   } else if (state.chat.type === 'group') {
     const g = state.groups.get(state.chat.id) || { id: state.chat.id, name: 'Group' };
@@ -1904,6 +2075,8 @@ function updateHeaderSub() {
   if (!sub) return;
   if (state.chat.type === 'global') {
     sub.textContent = 'Public room · everyone can read and write here';
+  } else if (state.chat.type === 'shop') {
+    sub.textContent = '';
   } else if (state.chat.type === 'group') {
     const ids = memberIds(state.chat.id);
     const names = ids.map((id) => (id === state.user.id ? 'You' : nameOf(profileOf(id))));
@@ -2048,6 +2221,7 @@ async function sendMessage(textOverride) {
   const usingImage = typeof textOverride !== 'string' && state.pendingImage ? state.pendingImage : null;
   const text = (typeof textOverride === 'string' ? textOverride : input.value).trim();
   if ((!text && !usingImage) || state.sending) return;
+  if (isBlockedDm()) { toast('You blocked this person. Unblock them in their profile to chat.', 'error'); return; }
 
   if (text.length > MAX_LEN) { toast('Messages can be up to ' + MAX_LEN + ' characters.', 'error'); return; }
 
@@ -2158,17 +2332,48 @@ function openProfile(id) {
   });
 
   if (!mine) {
+    const nick = state.nicknames.get(p.id) || '';
+    const isBlocked = state.blocked.has(p.id);
+    const realName = (p.display_name && p.display_name.trim()) || p.username;
+    const nickInput = el('input', { attrs: { type: 'text', maxlength: '30', autocomplete: 'off', placeholder: realName } });
+    nickInput.value = nick;
+    const nickErr = el('p', { class: 'form-error', attrs: { role: 'alert' } });
+    const saveNick = async (value) => {
+      nickErr.textContent = '';
+      const err = await setNickname(p.id, value);
+      if (err) { nickErr.textContent = err; return; }
+      toast(value.trim() ? 'Renamed. Only you can see this name.' : 'Name reset.', 'success');
+      openProfile(p.id);
+    };
     card.append(
       closeBtn,
       makeAvatar(p, 'xl'),
       el('h3', { text: nameOf(p) }),
+      ...(nick ? [el('p', { class: 'muted', text: 'Their name: ' + realName })] : []),
       el('p', { class: 'muted', text: '@' + p.username }),
-      el('p', { class: 'muted', text: state.online.has(p.id) ? '🟢 Online now' : '⚪ Offline' }),
+      isBlocked ? el('p', { class: 'blocked-note', text: '🚫 You blocked this person' })
+                : el('p', { class: 'muted', text: state.online.has(p.id) ? '🟢 Online now' : '⚪ Offline' }),
       el('p', { class: 'bio', text: p.bio || 'This person has not written a bio yet.' }),
+      el('label', { class: 'rename-label', text: 'Rename (only you can see this)' }),
+      el('div', { class: 'inline-form' }, nickInput,
+        el('button', { class: 'btn btn-ghost small', text: 'Save', attrs: { type: 'button' }, on: { click: () => saveNick(nickInput.value) } }),
+        nick ? el('button', { class: 'btn btn-ghost small', text: 'Reset', attrs: { type: 'button' }, on: { click: () => saveNick('') } }) : null),
+      nickErr,
       el('button', {
         class: 'btn btn-primary', text: 'Send a private message', attrs: { type: 'button' },
         on: { click: () => { closeModal(); openChat('dm', p.id); } },
       }),
+      isBlocked
+        ? el('button', { class: 'btn btn-ghost', text: 'Unblock', attrs: { type: 'button' }, on: { click: async () => {
+            const err = await setBlocked(p.id, false);
+            if (err) toast(err, 'error'); else openProfile(p.id);
+          } } })
+        : el('button', { class: 'btn btn-block', text: 'Block', attrs: { type: 'button' }, on: { click: async () => {
+            if (!confirm('Block ' + nameOf(p) + '?\n\nThey will not be able to message or call you, and you will not see their messages. You can unblock them any time.')) return;
+            const err = await setBlocked(p.id, true);
+            if (err) toast(err, 'error'); else openProfile(p.id);
+          } } }),
+      el('p', { class: 'field-note', text: 'Blocked people cannot message or call you. You will not see their messages anywhere.' }),
     );
   } else {
     let chosen = safeColor(p.avatar_color);
@@ -2486,7 +2691,7 @@ function toggleMute() {
 function syncPeers() {
   if (!call || call.kind === 'private') return;
   for (const id of callPeople.keys()) {
-    if (id === state.user.id || call.peers.has(id)) continue;
+    if (id === state.user.id || call.peers.has(id) || state.blocked.has(id)) continue;
     // To avoid two people calling each other at the same moment, the smaller id always makes the first call.
     if (state.user.id < id) startPeer(id, true);
   }
@@ -2550,6 +2755,7 @@ async function flushIce(peer) {
 function onSignal(m) {
   if (!m || m.to !== state.user.id || typeof m.from !== 'string' || m.from === state.user.id) return;
   if (!/^[0-9a-f-]{36}$/.test(m.from)) return;
+  if (state.blocked.has(m.from)) return;      // I blocked them: ignore their calls completely (they are not told)
   if (m.kind === 'offer' || m.kind === 'answer' || m.kind === 'ice') onCallSignal(m);
   else onPrivateSignal(m);
 }
@@ -2670,6 +2876,7 @@ async function startPrivateCall(id) {
   if (call || incoming) { toast('Finish your current call first.', 'error'); return; }
   if (!callChannel) { toast('Calls are not ready yet. Try again in a moment.', 'error'); return; }
   const p = profileOf(id);
+  if (state.blocked.has(id)) { toast('You blocked ' + nameOf(p) + '. Unblock them in their profile to call.', 'error'); return; }
   if (!state.online.has(id)) { toast(nameOf(p) + ' is offline right now, so they cannot get a call.', 'error'); return; }
   const stream = await getMic();
   if (!stream) return;
@@ -2914,7 +3121,7 @@ init();
 <script>
   setTimeout(function () {
     var s = document.getElementById('splash');
-    if (s && !s.hidden) {
+    if (s && !s.hidden && !s.querySelector('.startup-problem')) {
       s.innerHTML = '<div style="text-align:center;padding:24px;max-width:430px;line-height:1.55">' +
         '<p style="font-size:18px;font-weight:700;margin:10px 0">ChatWorld could not start</p>' +
         '<p style="color:#9aa1ad;font-size:15px">Most likely the two Supabase lines near the top of the code in <b>index.html</b> were edited incorrectly ' +
