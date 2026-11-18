@@ -332,195 +332,6 @@ input:focus, textarea:focus {
 .msg-author:hover { text-decoration: underline; }
 .msg.mine .msg-author { color: #aab2ff; }
 .msg-time { color: var(--muted); font-size: 12px; }
-/* =====================================================================
-   SHOP + COSMETICS  (everything below only applies to people who equip items)
-   ===================================================================== */
-
-/* ---- Orb balance (top bar) ---- */
-.orb-pill { border: 0; cursor: pointer; position: relative; color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; transition: background .15s, transform .15s; }
-.orb-pill[hidden] { display: none; }
-.orb-pill:hover { background: var(--bg-4); }
-.orb {
-  width: 14px; height: 14px; border-radius: 50%; flex: none;
-  background: radial-gradient(circle at 32% 28%, #fff7c2 0%, #fbbf24 38%, #d97706 100%);
-  box-shadow: 0 0 8px rgba(251, 191, 36, .55);
-}
-.orb-pill.orb-gain { animation: orb-pop .6s ease-out; }
-.orb-pill.orb-gain .orb { animation: orb-glow .6s ease-out; }
-.orb-pill.orb-spend { animation: orb-shake .45s ease-out; }
-@keyframes orb-pop { 0% { transform: scale(1); } 30% { transform: scale(1.18); background: rgba(251,191,36,.25); } 100% { transform: scale(1); } }
-@keyframes orb-glow { 0% { box-shadow: 0 0 8px rgba(251,191,36,.55); } 35% { box-shadow: 0 0 18px 5px rgba(251,191,36,.9); } 100% { box-shadow: 0 0 8px rgba(251,191,36,.55); } }
-@keyframes orb-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
-.orb-float {
-  position: absolute; right: 8px; top: 100%; font-size: 13px; font-weight: 800; pointer-events: none; z-index: 5;
-  animation: orb-float 1.1s ease-out forwards;
-}
-.orb-float.up { color: #fbbf24; }
-.orb-float.down { color: #f87171; }
-@keyframes orb-float { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-22px); } }
-
-/* ---- Shop page ---- */
-.shop-page { overflow-y: auto; padding: 18px max(14px, calc((100% - 980px) / 2)) 28px; }
-.shop-top { display: flex; flex-wrap: wrap; gap: 14px; align-items: stretch; margin-bottom: 14px; }
-.shop-balance { flex: 1 1 220px; display: flex; flex-direction: column; justify-content: center; gap: 4px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
-.shop-balance .big { display: flex; align-items: center; gap: 10px; font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.shop-balance .big .orb { width: 24px; height: 24px; }
-.shop-balance small { color: var(--muted); font-size: 13px; }
-.shop-preview {
-  flex: 2 1 360px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
-  display: flex; flex-direction: column; min-width: 0;
-}
-.sp-title { display: flex; align-items: center; gap: 8px; padding: 9px 14px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); }
-.sp-title button { margin-left: auto; border: 0; background: var(--bg-3); color: var(--text); border-radius: 999px; padding: 3px 10px; font-size: 12px; text-transform: none; letter-spacing: 0; }
-.sp-stage { background: var(--bg-1); color: var(--text); display: flex; flex-direction: column; }
-.sp-card { display: flex; align-items: center; gap: 16px; padding: 22px 20px 16px; background: var(--bg-2); }
-.sp-name { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; flex-wrap: wrap; }
-.sp-card small { color: var(--muted); display: block; margin-top: 2px; }
-.sp-chat { padding: 14px 20px 18px; display: flex; gap: 12px; align-items: flex-start; }
-.sp-chat .msg-head { align-items: center; }
-.shop-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 12px; scrollbar-width: none; }
-.shop-tabs::-webkit-scrollbar { display: none; }
-.shop-tab { flex: none; border: 1px solid var(--line); background: var(--bg-2); color: var(--muted); border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 600; }
-.shop-tab:hover { color: var(--text); background: var(--bg-3); }
-.shop-tab.active { color: #fff; background: var(--accent-grad); border-color: transparent; }
-.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
-.shop-card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-.shop-card.equipped { border-color: #22c55e; box-shadow: 0 0 0 1px rgba(34, 197, 94, .35); }
-.shop-card.previewing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.shop-swatch { height: 84px; border-radius: 12px; background: var(--bg-1); display: grid; place-items: center; overflow: hidden; position: relative; padding: 6px; text-align: center; }
-.shop-swatch .avatar { width: 52px; height: 52px; font-size: 22px; }
-.shop-swatch.is-bg { padding: 0; }
-.shop-swatch.is-theme { padding: 0; align-items: stretch; }
-.theme-mini { width: 100%; height: 100%; background: var(--bg-1); color: var(--text); padding: 10px; display: flex; flex-direction: column; gap: 6px; justify-content: center; border-radius: 12px; }
-.theme-mini i { display: block; height: 10px; border-radius: 6px; background: var(--bg-3); }
-.theme-mini i:nth-child(1) { width: 70%; } .theme-mini i:nth-child(2) { width: 48%; align-self: flex-end; background: var(--accent-grad); }
-.shop-name { font-weight: 700; font-size: 15px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.shop-price { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 13px; color: #fbbf24; font-variant-numeric: tabular-nums; }
-.shop-price .orb { width: 11px; height: 11px; box-shadow: none; }
-.shop-owned { font-size: 12px; font-weight: 700; color: #4ade80; }
-.shop-actions { display: flex; gap: 8px; }
-.shop-actions button { flex: 1; border: 0; border-radius: 10px; padding: 8px 6px; font-size: 13px; font-weight: 700; background: var(--bg-3); color: var(--text); }
-.shop-actions button:hover:not(:disabled) { background: var(--bg-4); }
-.shop-actions .buy { background: var(--accent-grad); color: #fff; }
-.shop-actions .buy:hover:not(:disabled) { filter: brightness(1.1); background: var(--accent-grad); }
-.shop-actions .buy.poor { opacity: .5; }
-.shop-actions .equip { background: #16a34a; color: #fff; }
-.shop-actions .equip:hover { background: #15803d; }
-.shop-actions .unequip { background: var(--bg-4); }
-.shop-note { color: var(--muted); font-size: 14px; padding: 30px 10px; text-align: center; }
-
-/* ---- Username tags: small, rectangular, slightly raised ---- */
-.utag {
-  display: inline-block; flex: none; font-size: 10px; font-weight: 800; letter-spacing: .07em; line-height: 1;
-  padding: 3px 6px 3px; border-radius: 4px; border: 1px solid; vertical-align: middle; text-transform: uppercase;
-  -webkit-text-fill-color: currentColor; font-family: inherit;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .22);
-  transform: translateY(-1px); user-select: none;
-}
-.i-tag-vip    { color: #fbbf24; background: #3a2a06; border-color: #b7791f; }
-.i-tag-pro    { color: #93c5fd; background: #10264a; border-color: #3b82f6; }
-.i-tag-og     { color: #86efac; background: #0d2f1b; border-color: #22a24f; }
-.i-tag-king   { color: #fde047; background: #3d3204; border-color: #ca9a04; }
-.i-tag-angel  { color: #e0f2fe; background: #1b3550; border-color: #7dd3fc; }
-.i-tag-diva   { color: #f9a8d4; background: #4a1230; border-color: #ec4899; }
-.i-tag-queen  { color: #e9d5ff; background: #3a1559; border-color: #a855f7; }
-.i-tag-cutie  { color: #fbcfe8; background: #4d1f3a; border-color: #f472b6; }
-.i-tag-royal  { color: #c7d2fe; background: #1e1b5c; border-color: #6366f1; }
-.i-tag-star   { color: #fef08a; background: #3a3306; border-color: #eab308; }
-
-/* ---- Animated avatar frames (a ring drawn inside the picture's edge) ---- */
-.avatar[class*="i-frame-"]::after {
-  content: ''; position: absolute; inset: 0; border-radius: 50%; padding: 3px; pointer-events: none;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-}
-.avatar.sm[class*="i-frame-"]::after { padding: 2.5px; }
-.avatar.xl[class*="i-frame-"]::after { padding: 5px; }
-.i-frame-neon::after    { background: conic-gradient(from 0deg, #22c55e, #06b6d4, #a3e635, #22c55e); animation: ring-spin 3s linear infinite; filter: drop-shadow(0 0 3px #22c55e); }
-.i-frame-ice::after     { background: conic-gradient(from 0deg, #e0f2fe, #38bdf8, #ffffff, #7dd3fc, #e0f2fe); animation: ring-spin 4s linear infinite; }
-.i-frame-fire::after    { background: conic-gradient(from 0deg, #ef4444, #f97316, #facc15, #f97316, #ef4444); animation: ring-spin 1.6s linear infinite, ring-flicker .5s ease-in-out infinite alternate; }
-.i-frame-rainbow::after { background: conic-gradient(from 0deg, #ff4d6d, #ffb703, #80ed99, #4cc9f0, #b5179e, #ff4d6d); animation: ring-spin 2.2s linear infinite; }
-.i-frame-gold::after    { background: conic-gradient(from 0deg, #b7791f, #fde68a, #f59e0b, #fff7d6, #b7791f); animation: ring-spin 3.5s linear infinite; }
-@keyframes ring-spin { to { transform: rotate(360deg); } }
-@keyframes ring-flicker { from { opacity: .8; } to { opacity: 1; } }
-
-/* ---- Name effects ---- */
-.fx { -webkit-background-clip: text; background-clip: text; }
-.fx.i-fx-glow    { color: #bae6fd !important; text-shadow: 0 0 6px #38bdf8, 0 0 14px rgba(56, 189, 248, .7); animation: fx-pulse 2.2s ease-in-out infinite; }
-.fx.i-fx-frost   { background-image: linear-gradient(90deg, #7dd3fc, #ffffff, #a5f3fc, #7dd3fc); background-size: 250% 100%; -webkit-text-fill-color: transparent; animation: fx-slide 3s linear infinite; }
-.fx.i-fx-fire    { background-image: linear-gradient(90deg, #ef4444, #f97316, #facc15, #f97316, #ef4444); background-size: 250% 100%; -webkit-text-fill-color: transparent; animation: fx-slide 1.8s linear infinite; }
-.fx.i-fx-gold    { background-image: linear-gradient(90deg, #b7791f, #fde68a, #f59e0b, #fff7d6, #b7791f); background-size: 250% 100%; -webkit-text-fill-color: transparent; animation: fx-slide 3s linear infinite; }
-.fx.i-fx-rainbow { background-image: linear-gradient(90deg, #ff4d6d, #ffb703, #80ed99, #4cc9f0, #b5179e, #ff4d6d); background-size: 250% 100%; -webkit-text-fill-color: transparent; animation: fx-slide 3s linear infinite; }
-@keyframes fx-slide { to { background-position: -250% 0; } }
-@keyframes fx-pulse { 50% { text-shadow: 0 0 3px #38bdf8, 0 0 8px rgba(56, 189, 248, .5); } }
-
-/* ---- Message styles (shown to everyone) ---- */
-.msg-body[class*="i-style-"] > .msg-text { display: block; width: fit-content; max-width: 100%; padding: 6px 12px; border-radius: 14px; margin-top: 3px; }
-.msg-body.i-style-glass > .msg-text  { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px); }
-.msg-body.i-style-candy > .msg-text  { background: linear-gradient(135deg, #ff9ec7, #ffc27a); color: #3b1030; font-weight: 600; }
-.msg-body.i-style-neon > .msg-text   { background: rgba(6, 182, 212, .08); border: 1px solid #22d3ee; color: #cffafe; box-shadow: 0 0 10px rgba(34, 211, 238, .45), inset 0 0 8px rgba(34, 211, 238, .15); }
-.msg-body.i-style-retro > .msg-text  { background: #04130a; border: 1px solid #166534; color: #4ade80; font-family: ui-monospace, Menlo, Consolas, monospace; border-radius: 6px; text-shadow: 0 0 6px rgba(74, 222, 128, .6); }
-
-/* ---- Profile backgrounds (the profile window of that person) ---- */
-.modal-card[class*="i-bg-"] { background-size: 300% 300%; animation: pop .18s ease-out, bg-shift 12s ease-in-out infinite; color: #fff; }
-.modal-card[class*="i-bg-"] .muted, .modal-card[class*="i-bg-"] .field-note, .modal-card[class*="i-bg-"] .rename-label { color: rgba(255,255,255,.75); }
-.modal-card.i-bg-aurora { background-image: linear-gradient(135deg, #0b3d3a, #1d2b64 35%, #5b2a86 65%, #0f766e); }
-.modal-card.i-bg-sunset { background-image: linear-gradient(135deg, #3b1c4a, #8a2f5a 40%, #c2503a 75%, #5a2a4d); }
-.modal-card.i-bg-ocean  { background-image: linear-gradient(135deg, #021b3a, #0a4a7a 45%, #06647e 70%, #03254a); }
-.modal-card.i-bg-sakura { background-image: linear-gradient(135deg, #3d1534, #8a3b6a 45%, #b5527f 70%, #4a1a3d); }
-.modal-card.i-bg-matrix { background-color: #020a04; background-image: repeating-linear-gradient(0deg, rgba(34,197,94,.10) 0 2px, transparent 2px 6px), linear-gradient(135deg, #020a04, #063d1a 50%, #020a04); }
-@keyframes bg-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-.sp-card[class*="i-bg-"] { background-size: 300% 300%; animation: bg-shift 12s ease-in-out infinite; color: #fff; }
-.sp-card.i-bg-aurora { background-image: linear-gradient(135deg, #0b3d3a, #1d2b64 35%, #5b2a86 65%, #0f766e); }
-.sp-card.i-bg-sunset { background-image: linear-gradient(135deg, #3b1c4a, #8a2f5a 40%, #c2503a 75%, #5a2a4d); }
-.sp-card.i-bg-ocean  { background-image: linear-gradient(135deg, #021b3a, #0a4a7a 45%, #06647e 70%, #03254a); }
-.sp-card.i-bg-sakura { background-image: linear-gradient(135deg, #3d1534, #8a3b6a 45%, #b5527f 70%, #4a1a3d); }
-.sp-card.i-bg-matrix { background-color: #020a04; background-image: repeating-linear-gradient(0deg, rgba(34,197,94,.10) 0 2px, transparent 2px 6px), linear-gradient(135deg, #020a04, #063d1a 50%, #020a04); }
-.shop-swatch.is-bg > div { width: 100%; height: 100%; }
-.shop-swatch.is-bg .i-bg-aurora { background: linear-gradient(135deg, #0b3d3a, #1d2b64 35%, #5b2a86 65%, #0f766e); background-size: 300% 300%; animation: bg-shift 8s ease-in-out infinite; }
-.shop-swatch.is-bg .i-bg-sunset { background: linear-gradient(135deg, #3b1c4a, #8a2f5a 40%, #c2503a 75%, #5a2a4d); background-size: 300% 300%; animation: bg-shift 8s ease-in-out infinite; }
-.shop-swatch.is-bg .i-bg-ocean  { background: linear-gradient(135deg, #021b3a, #0a4a7a 45%, #06647e 70%, #03254a); background-size: 300% 300%; animation: bg-shift 8s ease-in-out infinite; }
-.shop-swatch.is-bg .i-bg-sakura { background: linear-gradient(135deg, #3d1534, #8a3b6a 45%, #b5527f 70%, #4a1a3d); background-size: 300% 300%; animation: bg-shift 8s ease-in-out infinite; }
-.shop-swatch.is-bg .i-bg-matrix { background: repeating-linear-gradient(0deg, rgba(34,197,94,.14) 0 2px, transparent 2px 6px), linear-gradient(135deg, #020a04, #063d1a 50%, #020a04); }
-
-/* ---- Profile decorations (around the big picture in a profile window) ---- */
-.deco-wrap { position: relative; display: inline-block; flex: none; }
-.deco { position: absolute; inset: 0; pointer-events: none; }
-.deco span { position: absolute; line-height: 1; }
-.deco-crown span { left: 50%; top: -24px; font-size: 30px; transform: translateX(-50%) rotate(-8deg); animation: deco-bob 2.4s ease-in-out infinite; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
-.deco-halo span { left: 18%; right: 18%; top: -14px; height: 14px; border: 4px solid #fde68a; border-radius: 50%; box-shadow: 0 0 12px #fde68a, inset 0 0 6px #fde68a; animation: deco-bob 2.8s ease-in-out infinite; }
-.deco-sparkles span { font-size: 16px; animation: deco-twinkle 1.8s ease-in-out infinite; }
-.deco-sparkles span:nth-child(1) { left: -10px; top: 4px; } .deco-sparkles span:nth-child(2) { right: -8px; top: 14px; animation-delay: .5s; }
-.deco-sparkles span:nth-child(3) { left: 2px; bottom: -6px; animation-delay: 1s; } .deco-sparkles span:nth-child(4) { right: 4px; bottom: -4px; animation-delay: 1.4s; font-size: 12px; }
-.deco-hearts span { font-size: 15px; opacity: 0; animation: deco-rise 3s ease-in infinite; bottom: 10%; }
-.deco-hearts span:nth-child(1) { left: -8px; } .deco-hearts span:nth-child(2) { left: 45%; animation-delay: -1s; } .deco-hearts span:nth-child(3) { right: -8px; animation-delay: -2s; }
-.deco-stars { animation: ring-spin 7s linear infinite; inset: -8px; }
-.deco-stars span { font-size: 15px; }
-.deco-stars span:nth-child(1) { left: 50%; top: -4px; } .deco-stars span:nth-child(2) { right: -4px; top: 50%; }
-.deco-stars span:nth-child(3) { left: 50%; bottom: -4px; } .deco-stars span:nth-child(4) { left: -4px; top: 50%; }
-@keyframes deco-bob { 0%, 100% { margin-top: 0; } 50% { margin-top: -4px; } }
-@keyframes deco-twinkle { 0%, 100% { opacity: .25; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.15); } }
-@keyframes deco-rise { 0% { opacity: 0; transform: translateY(8px) scale(.7); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-46px) scale(1.1); } }
-.shop-swatch .deco-wrap { transform: scale(.7); }
-
-/* ---- Chat themes (change how the chat area looks for the person wearing them) ---- */
-.i-theme-cyberpunk { --bg-0: #08040f; --bg-1: #0c0716; --bg-2: #140b26; --bg-3: #1e1236; --bg-4: #2e1a52; --line: rgba(255, 43, 214, .22); --text: #f6ecff; --muted: #b79bd9; --accent: #ff2bd6; --accent-2: #00e5ff; --accent-grad: linear-gradient(135deg, #ff2bd6, #00e5ff); }
-.i-theme-cyberpunk, .i-theme-cyberpunk .messages { background-image: linear-gradient(rgba(0,229,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,43,214,.045) 1px, transparent 1px); background-size: 34px 34px; background-color: var(--bg-1); }
-.i-theme-galaxy { --bg-0: #070718; --bg-1: #0a0a22; --bg-2: #11113a; --bg-3: #1a1a52; --bg-4: #28286e; --line: rgba(160, 150, 255, .2); --text: #ecebff; --muted: #a9a7d9; --accent: #7c6cff; --accent-2: #c084fc; --accent-grad: linear-gradient(135deg, #5b6bff, #b05cff); }
-.i-theme-galaxy, .i-theme-galaxy .messages { background-color: var(--bg-1); background-image: radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent), radial-gradient(1px 1px at 90px 80px, #cfd0ff, transparent), radial-gradient(1.5px 1.5px at 150px 20px, #fff, transparent), radial-gradient(1px 1px at 60px 140px, #e0c3ff, transparent), radial-gradient(ellipse at 20% 0%, rgba(124,108,255,.25), transparent 60%), radial-gradient(ellipse at 90% 100%, rgba(192,132,252,.2), transparent 55%); background-size: 180px 180px, 180px 180px, 180px 180px, 180px 180px, 100% 100%, 100% 100%; }
-.i-theme-royal { --bg-0: #0f0b05; --bg-1: #14100a; --bg-2: #1e180d; --bg-3: #2b2212; --bg-4: #3d3019; --line: rgba(245, 197, 66, .22); --text: #fdf3d6; --muted: #c9b277; --accent: #f5c542; --accent-2: #d99a1a; --accent-grad: linear-gradient(135deg, #f5c542, #c98a10); }
-.i-theme-royal, .i-theme-royal .messages { background-color: var(--bg-1); background-image: radial-gradient(ellipse at 50% -10%, rgba(245,197,66,.14), transparent 60%); }
-.i-theme-pastel { --bg-0: #fff7fb; --bg-1: #fdf2f8; --bg-2: #fbe4f1; --bg-3: #f7d4ea; --bg-4: #efc0de; --line: rgba(140, 80, 160, .18); --text: #4a3358; --muted: #8b6f9c; --accent: #c084fc; --accent-2: #f472b6; --accent-grad: linear-gradient(135deg, #f9a8d4, #c4b5fd); }
-.i-theme-pastel, .i-theme-pastel .messages { background-color: var(--bg-1); background-image: radial-gradient(ellipse at 15% 0%, rgba(196,181,253,.35), transparent 55%), radial-gradient(ellipse at 90% 100%, rgba(249,168,212,.35), transparent 55%); }
-.main[class*="i-theme-"] { color: var(--text); }
-.i-theme-cyberpunk .chat-header { background: rgba(12, 7, 22, .92); }
-.i-theme-galaxy .chat-header { background: rgba(10, 10, 34, .92); }
-.i-theme-royal .chat-header { background: rgba(20, 16, 10, .92); }
-.i-theme-pastel .chat-header { background: rgba(253, 242, 248, .92); }
-.i-theme-pastel .msg.mine .msg-author { color: #8b5cf6; }
-.i-theme-pastel .pill, .i-theme-pastel .icon-btn { color: var(--muted); }
-.i-theme-pastel .btn-primary { color: #4a3358; }
-
 .undo-slot { flex: none; align-self: flex-start; margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 .undo-btn {
   display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); background: var(--bg-3); color: var(--muted);
@@ -850,6 +661,42 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 }
 .shop-page { flex: 1; min-height: 0; }
 .messages[hidden], .composer[hidden], .shop-page[hidden] { display: none; }
+
+/* ---------- Announcements ---------- */
+.announce-icon {
+  width: 36px; height: 36px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, #f43f5e, #f97316);
+}
+.announce-page { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.announce-page[hidden] { display: none; }
+.announce-list { flex: 1; overflow-y: auto; min-height: 0; overscroll-behavior: contain;
+  padding: 18px max(14px, calc((100% - 920px) / 2)) 14px; display: flex; flex-direction: column; gap: 12px; }
+.ann-card { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; animation: pop .18s ease-out; }
+.ann-card.fresh { border-color: rgba(244, 63, 94, 0.45); }
+.ann-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.ann-head .avatar { width: 34px; height: 34px; }
+.ann-who { font-weight: 700; }
+.ann-badge { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #fff;
+  background: linear-gradient(135deg, #f43f5e, #f97316); border-radius: 5px; padding: 2px 6px; margin-left: 6px; vertical-align: 1px; }
+.ann-time { color: var(--muted); font-size: 12px; margin-left: auto; }
+.ann-card .msg-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+.ann-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.ann-react { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--bg-3); color: var(--muted);
+  border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.ann-react:hover { background: var(--bg-4); color: var(--text); }
+.ann-react:disabled { opacity: .6; cursor: wait; }
+.ann-react.on.up { color: #fff; background: rgba(35, 165, 90, .28); border-color: var(--green); }
+.ann-react.on.down { color: #fff; background: rgba(242, 63, 67, .26); border-color: var(--red); }
+.ann-del { margin-left: auto; border: 0; background: none; color: var(--muted); font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+.ann-del:hover { color: var(--red); background: rgba(242, 63, 67, .1); }
+.ann-compose { border-top: 1px solid var(--line); padding: 12px max(14px, calc((100% - 920px) / 2)) 14px; background: var(--bg-1); }
+.ann-compose .composer-box { align-items: flex-end; }
+.ann-compose .hint { color: var(--muted); font-size: 12px; margin: 6px 4px 0; }
+.ann-note { text-align: center; color: var(--muted); font-size: 13px; padding: 10px; border-top: 1px solid var(--line); background: var(--bg-1); }
+.ann-empty { margin: auto; text-align: center; color: var(--muted); }
+.ann-empty .big { font-size: 40px; display: block; margin-bottom: 8px; }
+.ann-empty strong { display: block; color: var(--text); margin-bottom: 4px; }
 </style>
 
   <!-- Supabase JavaScript SDK (free, loaded from a public CDN) -->
@@ -964,9 +811,6 @@ input:disabled { opacity: .6; cursor: not-allowed; }
             <small>Edit profile</small>
           </span>
         </button>
-        <button id="logout-btn" class="icon-btn" type="button" title="Log out" aria-label="Log out">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-        </button>
       </div>
     </aside>
 
@@ -978,14 +822,28 @@ input:disabled { opacity: .6; cursor: not-allowed; }
         </button>
         <div id="chat-title" class="chat-title"></div>
         <button id="call-btn" class="call-btn" type="button" title="Start a voice call" aria-label="Start a voice call" hidden></button>
-        <button id="orb-pill" class="pill orb-pill" type="button" title="Your Orbs: open the Shop" aria-label="Your Orbs: open the Shop" hidden><span class="orb"></span><span id="orb-count">0</span></button>
         <div id="online-pill" class="pill"><span class="dot"></span><span id="online-count">0 online</span></div>
       </header>
 
       <div id="messages" class="messages" aria-live="polite"></div>
 
-      <!-- The Shop page -->
+      <!-- The Shop page (empty for now - things will be added here later) -->
       <div id="shop-page" class="shop-page" hidden></div>
+
+      <!-- The Announcements page -->
+      <div id="announce-page" class="announce-page" hidden>
+        <div id="announce-list" class="announce-list" aria-live="polite"></div>
+        <form id="announce-compose" class="ann-compose" autocomplete="off" hidden>
+          <div class="composer-box">
+            <textarea id="announce-input" rows="2" maxlength="2000" placeholder="Write an announcement for everyone…" aria-label="Announcement"></textarea>
+            <button id="announce-send" class="send-btn" type="submit" aria-label="Post announcement" title="Post announcement">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+          <div class="hint">Only you can post here. Everyone can read, like and dislike. Press Enter to post (Shift+Enter for a new line).</div>
+        </form>
+        <div id="announce-note" class="ann-note" hidden>📢 Only <strong>xxx</strong> can post announcements. You can like or dislike them.</div>
+      </div>
 
       <form id="composer" class="composer" autocomplete="off">
         <div id="emoji-panel" class="emoji-panel" hidden></div>
@@ -1138,8 +996,6 @@ function makeAvatar(profile, extra = '') {
     text: (Array.from(name)[0] || '?').toUpperCase(),
     style: { background: safeColor(profile && profile.avatar_color) },
   });
-  const frame = profile && profile.id ? cosOf(profile.id).frame : null;
-  if (validCos(frame, 'frame_')) node.classList.add(cosClass(frame));
   // A photo (if there is one) covers the coloured letter. If it cannot load, the letter stays.
   const src = profile && (profile.avatar_preview || (profile.avatar_path ? avatarUrl(profile.avatar_path) : ''));
   if (src) {
@@ -1514,9 +1370,6 @@ function freshState() {
     awayCount: 0,          // messages that arrived while the tab was hidden
     search: '',
     lastSendAt: 0,
-    shop: null,            // the Shop: Orb balance, items I own, what I wear (null until it has loaded)
-    cosmetics: new Map(),  // person id -> the cosmetics they wear (everyone can see these)
-    shopChannel: null,
     undoUntil: new Map(),  // message id -> time when its Undo button stops working (messages I just sent)
     pendingVideo: null,    // video chosen but not sent yet
     uploadingVideo: false,
@@ -1772,7 +1625,6 @@ function showStartupProblem(user) {
       splash.replaceChildren(el('span', { class: 'spinner' }));
       startApp(user);
     } } }),
-    el('button', { class: 'btn btn-ghost', text: 'Log out', attrs: { type: 'button' }, on: { click: () => db.auth.signOut() } }),
   ));
 }
 
@@ -1801,7 +1653,7 @@ async function startApp(user) {
   joinPresence();
   joinCallChannel();
   joinTypingChannel();
-  try { await loadShop(); } catch (e) { /* the Shop is optional: chat keeps working without it */ }
+  subscribeAnnouncements();
   await openChat('global');
 }
 
@@ -1815,17 +1667,14 @@ function stopApp() {
     if (state.dbChannel) db.removeChannel(state.dbChannel);
     if (state.presenceChannel) db.removeChannel(state.presenceChannel);
     leaveTypingChannel();
-    if (state.shopChannel) db.removeChannel(state.shopChannel);
     if (state.groupsChannel) db.removeChannel(state.groupsChannel);
+    unsubscribeAnnouncements();
   }
   clearPendingImage();
   if (state.videoHolder && state.videoHolder.xhr) state.videoHolder.xhr.abort();
   clearPendingVideo();
   signedLinks.clear();
-  stopEarning();
   state = freshState();
-  applyTheme();
-  renderOrbPill();
   $('#messages').replaceChildren();
   $('#user-list').replaceChildren();
   $('#app').classList.remove('sidebar-open');
@@ -1833,11 +1682,6 @@ function stopApp() {
   document.title = 'ChatWorld';
 }
 
-async function logout() {
-  await db.auth.signOut();
-  stopApp();
-  showAuth();
-}
 
 // =====================================================================
 //  PEOPLE
@@ -1882,6 +1726,13 @@ function renderUsers() {
 
   // Global chat
   list.append(el('div', { class: 'section-label', text: 'Public' }));
+  list.append(chatItem({
+    key: 'announce',
+    avatar: announceIcon(),
+    name: 'Announcements',
+    badge: state.unread.get('announce') || 0,
+    onClick: () => openAnnouncements(),
+  }));
   list.append(chatItem({
     key: 'global',
     avatar: globeIcon(),
@@ -1947,7 +1798,7 @@ function renderUsers() {
 }
 
 // =====================================================================
-//  SHOP  (the page itself; Orbs, items and cosmetics are further below)
+//  SHOP  (an empty page for now - things will be added here later)
 // =====================================================================
 /** The Shop icon: a white shopping bag on an orange circle. */
 function shopIcon() {
@@ -1961,9 +1812,11 @@ function shopIcon() {
 /** Shows either the chat (messages + message box) or the Shop page. */
 function showView(view) {
   const shop = view === 'shop';
-  $('#messages').hidden = shop;
-  $('#composer').hidden = shop;
+  const announce = view === 'announce';
+  $('#messages').hidden = shop || announce;
+  $('#composer').hidden = shop || announce;
   $('#shop-page').hidden = !shop;
+  $('#announce-page').hidden = !announce;
 }
 
 function openShop() {
@@ -1974,351 +1827,186 @@ function openShop() {
   if (!state.uploadingVideo) clearPendingVideo();
   closeEmojiPanel();
   closeSidebar();
-  if (state.shop && !state.shop.error) state.shop.preview = {};
   showView('shop');
   renderHeader();
-  renderShop();
   renderUsers();
   updateTitle();
 }
 
 // =====================================================================
-//  ORBS, THE SHOP AND COSMETICS
-//  - Orbs are counted and stored by Supabase (the server), never by the browser.
-//  - What people buy/equip is stored in Supabase too, and everybody can see what others wear.
+//  ANNOUNCEMENTS  (only "xxx" can post - everyone can read, like and dislike)
 // =====================================================================
-const COSMETIC_SLOTS = [
-  { slot: 'frame', label: 'Avatar frames' },
-  { slot: 'background', label: 'Profile backgrounds' },
-  { slot: 'decoration', label: 'Profile decorations' },
-  { slot: 'theme', label: 'Chat themes' },
-  { slot: 'style', label: 'Message styles' },
-  { slot: 'name_effect', label: 'Name effects' },
-  { slot: 'tag', label: 'Tags' },
-];
-// Only ids on this list are ever turned into CSS classes (so nobody can inject anything through the database).
-const COSMETIC_IDS = new Set([
-  'frame_neon', 'frame_ice', 'frame_fire', 'frame_rainbow', 'frame_gold',
-  'bg_aurora', 'bg_sunset', 'bg_ocean', 'bg_sakura', 'bg_matrix',
-  'deco_sparkles', 'deco_hearts', 'deco_stars', 'deco_halo', 'deco_crown',
-  'theme_pastel', 'theme_cyberpunk', 'theme_galaxy', 'theme_royal',
-  'style_glass', 'style_candy', 'style_neon', 'style_retro',
-  'fx_glow', 'fx_frost', 'fx_fire', 'fx_gold', 'fx_rainbow',
-  'tag_cutie', 'tag_star', 'tag_vip', 'tag_pro', 'tag_og', 'tag_angel', 'tag_diva', 'tag_queen', 'tag_king', 'tag_royal',
-]);
-const COSMETIC_FIELDS = COSMETIC_SLOTS.map((s) => s.slot);
-const validCos = (id, prefix) => typeof id === 'string' && COSMETIC_IDS.has(id) && (!prefix || id.startsWith(prefix));
-const cosClass = (id) => (validCos(id) ? 'i-' + id.replace(/_/g, '-') : '');
-const cosOf = (uid) => (state && state.cosmetics && state.cosmetics.get(uid)) || {};
+const ANNOUNCER = 'xxx';
+let ann = { items: [], mine: new Map(), channel: null, loaded: false, error: '' };
 
-/** A small rectangular tag such as VIP or KING (or nothing). */
-function tagEl(id) {
-  if (!validCos(id, 'tag_')) return null;
-  return el('span', { class: 'utag ' + cosClass(id), text: id.slice(4).toUpperCase() });
-}
-const fxClass = (id) => (validCos(id, 'fx_') ? 'fx ' + cosClass(id) : '');
-const fxSpan = (text, id) => el('span', { class: fxClass(id), text });
-const styleClass = (id) => (validCos(id, 'style_') ? cosClass(id) : '');
-const bgClass = (id) => (validCos(id, 'bg_') ? cosClass(id) : '');
+const isAnnouncer = () => !!(state.profile && String(state.profile.username || '').toLowerCase() === ANNOUNCER);
 
-/** Animated things around a big profile picture. */
-function decoEl(id) {
-  if (!validCos(id, 'deco_')) return null;
-  const glyphs = { deco_crown: ['👑'], deco_halo: [''], deco_sparkles: ['✨', '✨', '✨', '✨'], deco_hearts: ['💖', '💗', '💖'], deco_stars: ['⭐', '⭐', '⭐', '⭐'] }[id] || [];
-  return el('div', { class: 'deco ' + id.replace(/_/g, '-'), attrs: { 'aria-hidden': 'true' } }, ...glyphs.map((g) => el('span', { text: g })));
-}
-function withDeco(avatarNode, id) {
-  const d = decoEl(id);
-  return d ? el('span', { class: 'deco-wrap' }, avatarNode, d) : avatarNode;
-}
-/** The big picture in someone's profile window (with their decoration). */
-function profileAvatar(p) {
-  return withDeco(makeAvatar(p, 'xl'), cosOf(p.id).decoration);
-}
-/** An avatar that wears a chosen frame (used for previews: it ignores what the person really wears). */
-function frameAvatar(p, size, frameId) {
-  const a = makeAvatar({ ...p, id: null }, size);
-  if (validCos(frameId, 'frame_')) a.classList.add(cosClass(frameId));
-  return a;
+/** The Announcements icon: a white megaphone on a red-orange circle. */
+function announceIcon() {
+  const icon = el('span', { class: 'announce-icon', attrs: { 'aria-hidden': 'true' } });
+  icon.innerHTML =
+    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M3 10v4a1 1 0 0 0 1 1h3l8 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M19 9.5a4 4 0 0 1 0 5"/></svg>';
+  return icon;
 }
 
-const itemById = (id) => (state.shop && state.shop.catalog || []).find((i) => i.id === id);
-const itemName = (id) => { const it = itemById(id); return it ? it.name : String(id || '').replace(/^[a-z]+_/, ''); };
+function annErrorText(error) {
+  const msg = (error && error.message) || '';
+  if (/schema cache|does not exist|could not find/i.test(msg)) {
+    return 'Announcements need a one-time database update. Run supabase-announcements.sql in your Supabase project (see README Part 21).';
+  }
+  return 'Could not reach announcements right now. ' + msg;
+}
 
-/** Re-draws things that show other people's cosmetics, keeping the scroll position. */
-function refreshCosmeticViews() {
-  if (!state.user) return;
+async function loadAnnouncements() {
+  ann.error = '';
+  const { data, error } = await db.from('announcements')
+    .select('id, author_id, content, likes, dislikes, created_at')
+    .order('created_at', { ascending: false }).limit(100);
+  if (error) { ann.error = annErrorText(error); ann.items = []; ann.loaded = true; return; }
+  ann.items = data || [];
+  const ids = [...new Set(ann.items.map((a) => a.author_id))].filter((id) => !state.profiles.has(id));
+  if (ids.length) {
+    const res = await db.from('profiles').select('*').in('id', ids);
+    (res.data || []).forEach((pr) => state.profiles.set(pr.id, pr));
+  }
+  ann.mine = new Map();
+  const votes = await db.from('announcement_reactions').select('announcement_id, value');
+  (votes.data || []).forEach((v) => ann.mine.set(v.announcement_id, v.value));
+  ann.loaded = true;
+}
+
+function annCard(a, fresh) {
+  const author = profileOf(a.author_id);
+  const mine = ann.mine.get(a.id) || 0;
+  const react = (value, label, icon, cls) => el('button', {
+    class: 'ann-react ' + cls + (mine === value ? ' on' : ''),
+    attrs: { type: 'button', 'aria-pressed': String(mine === value), 'aria-label': label, 'data-vote': String(value) },
+    on: { click: () => reactToAnnouncement(a.id, mine === value ? 0 : value) },
+  }, el('span', { text: icon }), el('span', { class: 'n', text: String(value === 1 ? a.likes : a.dislikes) }));
+
+  return el('article', { class: 'ann-card' + (fresh ? ' fresh' : ''), attrs: { 'data-id': String(a.id) } },
+    el('div', { class: 'ann-head' },
+      makeAvatar(author, 'sm'),
+      el('span', { class: 'ann-who' }, el('span', { text: nameOf(author) }), el('span', { class: 'ann-badge', text: 'Official' })),
+      el('span', { class: 'ann-time', text: formatDay(new Date(a.created_at)) + ' · ' + formatTime(a.created_at) })),
+    renderContent(a.content),
+    el('div', { class: 'ann-actions' },
+      react(1, 'Like', '👍', 'up'),
+      react(-1, 'Dislike', '👎', 'down'),
+      isAnnouncer() ? el('button', { class: 'ann-del', text: 'Delete', attrs: { type: 'button' }, on: { click: () => deleteAnnouncement(a.id) } }) : null));
+}
+
+function renderAnnouncements(freshId = null) {
+  const list = $('#announce-list');
+  list.replaceChildren();
+  if (ann.error) {
+    list.append(el('div', { class: 'ann-empty' }, el('span', { class: 'big', text: '🛠️' }), el('strong', { text: 'Announcements are not ready yet' }), el('span', { text: ann.error })));
+  } else if (!ann.loaded) {
+    list.append(el('div', { class: 'ann-empty', text: 'Loading…' }));
+  } else if (!ann.items.length) {
+    list.append(el('div', { class: 'ann-empty' }, el('span', { class: 'big', text: '📢' }), el('strong', { text: 'No announcements yet' }),
+      el('span', { text: isAnnouncer() ? 'Write the first one below.' : 'Official news will appear here.' })));
+  } else {
+    ann.items.forEach((a) => list.append(annCard(a, a.id === freshId)));
+  }
+  $('#announce-compose').hidden = !isAnnouncer() || !!ann.error;
+  $('#announce-note').hidden = isAnnouncer();
+}
+
+async function openAnnouncements() {
+  stopTyping();
+  state.chat = { type: 'announce', id: 'announce' };
+  state.loadToken += 1;
+  clearPendingImage();
+  if (!state.uploadingVideo) clearPendingVideo();
+  closeEmojiPanel();
+  closeSidebar();
+  state.unread.delete('announce');
+  showView('announce');
   renderHeader();
-  if (state.chat.type === 'shop') { renderShop(); return; }
-  const box = $('#messages');
-  const keep = box.scrollTop, stick = state.stick;
-  renderMessages();
-  if (stick) scrollToBottom(); else box.scrollTop = keep;
+  renderUsers();
+  updateTitle();
+  renderAnnouncements();
+  await loadAnnouncements();
+  if (state.chat.type === 'announce') { renderAnnouncements(); }
 }
 
-/** Puts my chat theme on the chat area. */
-function applyTheme() {
-  const main = document.querySelector('.main');
-  if (!main) return;
-  Array.from(main.classList).filter((c) => c.startsWith('i-theme-')).forEach((c) => main.classList.remove(c));
-  const t = state.user ? cosOf(state.user.id).theme : null;
-  if (validCos(t, 'theme_')) main.classList.add(cosClass(t));
+async function reactToAnnouncement(id, value) {
+  const buttons = document.querySelectorAll('.ann-card[data-id="' + id + '"] .ann-react');
+  buttons.forEach((b) => { b.disabled = true; });
+  const { data, error } = await db.rpc('react_announcement', { p_id: id, p_value: value });
+  if (error) {
+    toast(/gone/i.test(error.message || '') ? 'That announcement was removed.' : annErrorText(error), 'error');
+    buttons.forEach((b) => { b.disabled = false; });
+    return;
+  }
+  const a = ann.items.find((x) => x.id === id);
+  if (a && data) { a.likes = data.likes; a.dislikes = data.dislikes; }
+  if (value === 0) ann.mine.delete(id); else ann.mine.set(id, value);
+  if (state.chat.type === 'announce') replaceAnnCard(id);
 }
 
-function pickCos(row) {
-  const out = {};
-  COSMETIC_FIELDS.forEach((f) => { out[f] = row && validCos(row[f]) ? row[f] : null; });
-  return out;
+function replaceAnnCard(id) {
+  const a = ann.items.find((x) => x.id === id);
+  const old = document.querySelector('.ann-card[data-id="' + id + '"]');
+  if (a && old) old.replaceWith(annCard(a, false));
 }
 
-async function loadCosmetics() {
-  const { data, error } = await db.from('player_equipped').select('*').limit(5000);
-  if (error || !data) return;
-  data.forEach((r) => state.cosmetics.set(r.user_id, pickCos(r)));
+async function postAnnouncement() {
+  const input = $('#announce-input');
+  const text = input.value.trim();
+  if (!text || !isAnnouncer()) return;
+  const btn = $('#announce-send');
+  btn.disabled = true;
+  const { data, error } = await db.from('announcements').insert({ author_id: state.user.id, content: text }).select().single();
+  btn.disabled = false;
+  if (error) { toast(annErrorText(error), 'error'); return; }
+  input.value = '';
+  input.style.height = '';
+  if (data && !ann.items.some((x) => x.id === data.id)) ann.items.unshift(data);
+  if (state.chat.type === 'announce') renderAnnouncements(data && data.id);
 }
 
-function subscribeShopRealtime() {
-  const s = state;
-  s.shopChannel = db.channel('chatworld-shop')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'player_equipped' }, (payload) => {
-      if (state !== s || !payload.new || !payload.new.user_id) return;
-      const uid = payload.new.user_id;
-      state.cosmetics.set(uid, pickCos(payload.new));
-      if (uid === state.user.id && state.shop) { state.shop.equipped = pickCos(payload.new); applyTheme(); }
-      refreshCosmeticViews();
+async function deleteAnnouncement(id) {
+  if (!isAnnouncer() || !window.confirm('Delete this announcement for everyone?')) return;
+  const { error } = await db.from('announcements').delete().eq('id', id);
+  if (error) { toast(annErrorText(error), 'error'); return; }
+  ann.items = ann.items.filter((x) => x.id !== id);
+  if (state.chat.type === 'announce') renderAnnouncements();
+}
+
+/** Live updates: a new announcement, new like counts, or a deleted one. */
+function subscribeAnnouncements() {
+  unsubscribeAnnouncements();
+  ann = { items: [], mine: new Map(), channel: null, loaded: false, error: '' };
+  ann.channel = db.channel('chatworld-announce')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, (payload) => {
+      const viewing = state.chat.type === 'announce';
+      if (payload.eventType === 'INSERT') {
+        const a = payload.new;
+        if (ann.items.some((x) => x.id === a.id)) return;
+        if (!state.profiles.has(a.author_id)) {
+          db.from('profiles').select('*').eq('id', a.author_id).single().then((r) => { if (r.data) { state.profiles.set(r.data.id, r.data); } if (state.chat.type === 'announce') renderAnnouncements(); });
+        }
+        ann.items.unshift(a);
+        if (viewing) renderAnnouncements(a.id);
+        else if (a.author_id !== state.user.id) { state.unread.set('announce', (state.unread.get('announce') || 0) + 1); renderUsers(); updateTitle(); }
+      } else if (payload.eventType === 'UPDATE') {
+        const a = ann.items.find((x) => x.id === payload.new.id);
+        if (a) { a.likes = payload.new.likes; a.dislikes = payload.new.dislikes; if (viewing) replaceAnnCard(a.id); }
+      } else if (payload.eventType === 'DELETE') {
+        const id = payload.old && payload.old.id;
+        if (id == null) return;
+        ann.items = ann.items.filter((x) => x.id !== id);
+        if (viewing) renderAnnouncements();
+      }
     })
     .subscribe();
 }
-
-async function loadShop() {
-  const s = state;
-  const [cat, st] = await Promise.all([
-    db.from('shop_items').select('id, slot, name, price, sort').order('sort', { ascending: true }),
-    db.rpc('shop_state'),
-  ]);
-  if (state !== s) return;
-  if (cat.error || st.error || !st.data) {
-    state.shop = { error: (cat.error || st.error || { message: 'no answer' }).message };
-    renderOrbPill();
-    return;
-  }
-  const equipped = pickCos(st.data.equipped);
-  state.shop = {
-    catalog: cat.data || [], balance: Number(st.data.balance) || 0,
-    owned: new Set(st.data.owned || []), equipped, tab: 'frame', preview: {}, error: null,
-  };
-  state.cosmetics.set(state.user.id, { ...equipped });
-  await loadCosmetics();
-  if (state !== s) return;
-  subscribeShopRealtime();
-  applyTheme();
-  renderOrbPill();
-  startEarning();
-  if (state.chat.type === 'shop') renderShop();
-}
-
-// ---------- The Orb balance at the top ----------
-let orbCountToken = 0;
-function renderOrbPill() {
-  const pill = $('#orb-pill');
-  const ok = !!(state.user && state.shop && !state.shop.error);
-  pill.hidden = !ok;
-  if (ok) $('#orb-count').textContent = state.shop.balance.toLocaleString();
-}
-
-function floatOrb(text, up) {
-  const pill = $('#orb-pill');
-  const tag = el('span', { class: 'orb-float ' + (up ? 'up' : 'down'), text });
-  pill.append(tag);
-  setTimeout(() => tag.remove(), 1200);
-}
-
-/** Changes the balance everywhere, with a small animation. */
-function setBalance(n) {
-  const s = state.shop;
-  if (!s) return;
-  const old = s.balance;
-  s.balance = n;
-  const pill = $('#orb-pill'), count = $('#orb-count');
-  const token = ++orbCountToken;
-  if (Math.abs(n - old) > 3) {
-    const t0 = performance.now();
-    const step = (t) => {
-      if (token !== orbCountToken) return;
-      const k = Math.min(1, (t - t0) / 450);
-      count.textContent = Math.round(old + (n - old) * k).toLocaleString();
-      if (k < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-    setTimeout(() => { if (token === orbCountToken) count.textContent = n.toLocaleString(); }, 600);
-  } else {
-    count.textContent = n.toLocaleString();
-  }
-  if (n !== old) {
-    pill.classList.remove('orb-gain', 'orb-spend');
-    void pill.offsetWidth;                       // restart the animation
-    pill.classList.add(n > old ? 'orb-gain' : 'orb-spend');
-    floatOrb((n > old ? '+' : '−') + Math.abs(n - old).toLocaleString(), n > old);
-    setTimeout(() => pill.classList.remove('orb-gain', 'orb-spend'), 700);
-  }
-  if (state.chat.type === 'shop') renderShop();
-}
-
-// ---------- Earning: 2 Orbs per minute while the tab is visible ----------
-let orbTimer = 0;
-function startEarning() {
-  stopEarning();
-  orbTimer = setInterval(() => orbBeat(true), 15000);
-  orbBeat(true);
-}
-function stopEarning() { clearInterval(orbTimer); orbTimer = 0; }
-
-/** Tells the server "I am here" (or "I am leaving"). The server does all the counting. */
-async function orbBeat(active) {
-  const s = state;
-  if (!s.user || !s.shop || s.shop.error) return;
-  if (active && document.visibilityState !== 'visible') return;   // hidden tab = no Orbs
-  const { data, error } = await db.rpc('shop_heartbeat', { p_active: active });
-  if (error || !data || state !== s || state.shop !== s.shop) return;
-  const bal = Number(data.balance);
-  if (Number.isFinite(bal) && bal !== state.shop.balance) setBalance(bal);
-}
-
-// ---------- Buying and equipping ----------
-function friendlyShopError(error) {
-  const msg = (error && error.message) || '';
-  if (/not enough orbs|already own|buy this item first|does not fit|does not exist|sign in again/i.test(msg)) return msg;
-  if (/schema cache|could not find the function|does not exist/i.test(msg)) return 'The Shop needs a one-time database update. Run supabase-shop.sql in Supabase (see README.md).';
-  return 'Something went wrong. Please try again.';
-}
-
-async function buyItem(id) {
-  const s = state.shop, it = itemById(id);
-  if (!s || !it || s.owned.has(id)) return;
-  if (s.balance < it.price) {
-    toast('Not enough Orbs yet: you need ' + (it.price - s.balance).toLocaleString() + ' more. You earn 2 every minute.', 'error');
-    return;
-  }
-  if (!confirm('Buy "' + it.name + '" for ' + it.price.toLocaleString() + ' Orbs?')) return;
-  const { data, error } = await db.rpc('buy_item', { p_item: id });
-  if (error) { toast(friendlyShopError(error), 'error'); return; }
-  s.owned.add(id);
-  toast('You bought ' + it.name + '! 🎉', 'success');
-  setBalance(Number(data.balance));
-}
-
-async function equipItem(slot, id) {            // id = null means "take it off"
-  const s = state.shop;
-  if (!s) return;
-  const { data, error } = await db.rpc('equip_item', { p_slot: slot, p_item: id });
-  if (error) { toast(friendlyShopError(error), 'error'); return; }
-  s.equipped = pickCos(data);
-  delete s.preview[slot];
-  state.cosmetics.set(state.user.id, { ...s.equipped });
-  applyTheme();
-  toast(id ? itemName(id) + ' equipped.' : 'Removed.', 'success');
-  refreshCosmeticViews();
-}
-
-// ---------- The Shop page ----------
-function swatchFor(it) {
-  const p = state.profile;
-  const box = el('div', { class: 'shop-swatch' });
-  if (it.slot === 'frame') box.append(frameAvatar(p, '', it.id));
-  else if (it.slot === 'background') { box.classList.add('is-bg'); box.append(el('div', { class: cosClass(it.id) })); }
-  else if (it.slot === 'decoration') { const a = makeAvatar({ ...p, id: null }, ''); box.append(withDeco(a, it.id)); }
-  else if (it.slot === 'theme') { box.classList.add('is-theme'); box.append(el('div', { class: 'theme-mini ' + cosClass(it.id) }, el('i'), el('i'))); }
-  else if (it.slot === 'style') box.append(el('div', { class: 'msg-body ' + styleClass(it.id), style: { textAlign: 'left' } }, el('div', { class: 'msg-text', text: 'Hello there! 👋' })));
-  else if (it.slot === 'name_effect') box.append(el('b', { style: { fontSize: '17px' } }, fxSpan(nameOf(p), it.id)));
-  else if (it.slot === 'tag') box.append(el('span', { style: { transform: 'scale(1.5)' } }, tagEl(it.id)));
-  return box;
-}
-
-function buildPreview(eff) {
-  const p = state.profile;
-  const stage = el('div', { class: 'sp-stage ' + (validCos(eff.theme, 'theme_') ? cosClass(eff.theme) : '') });
-  const card = el('div', { class: 'sp-card ' + bgClass(eff.background) },
-    withDeco(frameAvatar(p, 'xl', eff.frame), eff.decoration),
-    el('div', {},
-      el('div', { class: 'sp-name' }, fxSpan(nameOf(p), eff.name_effect), tagEl(eff.tag)),
-      el('small', { text: '@' + p.username })));
-  const chat = el('div', { class: 'sp-chat' },
-    el('span', { class: 'msg-avatar' }, frameAvatar(p, '', eff.frame)),
-    el('div', { class: 'msg-body ' + styleClass(eff.style) },
-      el('div', { class: 'msg-head' }, fxSpan(nameOf(p), eff.name_effect), tagEl(eff.tag), el('span', { class: 'msg-time', text: 'now' })),
-      el('div', { class: 'msg-text', text: 'This is how your messages look ✨' })));
-  stage.append(card, chat);
-  return stage;
-}
-
-function renderShop() {
-  if (state.chat.type !== 'shop') return;
-  const page = $('#shop-page');
-  const keep = page.scrollTop;
-  page.replaceChildren();
-  const s = state.shop;
-  if (!s) { page.append(el('div', { class: 'shop-note', text: 'Loading the Shop…' })); return; }
-  if (s.error) {
-    page.append(el('div', { class: 'shop-note' },
-      el('p', { text: 'The Shop needs a one-time database update.' }),
-      el('p', { text: 'Run supabase-shop.sql in Supabase (see README.md), then refresh this page.' }),
-      el('p', { class: 'muted', text: '[Details: ' + s.error + ']' }),
-      el('p', { class: 'muted', text: 'This site is connected to the Supabase project: ' + (SUPABASE_URL.trim().replace(/^https?:\/\//, '').split('.')[0]) })));
-    return;
-  }
-
-  const eff = { ...s.equipped, ...s.preview };
-  const previewing = Object.keys(s.preview);
-
-  page.append(el('div', { class: 'shop-top' },
-    el('div', { class: 'shop-balance' },
-      el('div', { class: 'big' }, el('span', { class: 'orb' }), el('span', { text: s.balance.toLocaleString() })),
-      el('small', { text: 'Your Orbs. You earn 2 every minute while ChatWorld is open and visible.' })),
-    el('div', { class: 'shop-preview' },
-      el('div', { class: 'sp-title' }, 'Preview',
-        previewing.length ? el('button', { attrs: { type: 'button' }, text: 'Clear preview', on: { click: () => { s.preview = {}; renderShop(); } } }) : null),
-      buildPreview(eff))));
-
-  page.append(el('div', { class: 'shop-tabs', attrs: { role: 'tablist' } },
-    ...COSMETIC_SLOTS.map((t) => el('button', {
-      class: 'shop-tab' + (s.tab === t.slot ? ' active' : ''), text: t.label, attrs: { type: 'button', role: 'tab' },
-      on: { click: () => { s.tab = t.slot; renderShop(); page.scrollTop = 0; } },
-    }))));
-
-  const items = s.catalog.filter((i) => i.slot === s.tab && COSMETIC_IDS.has(i.id));
-  const grid = el('div', { class: 'shop-grid' });
-  if (!items.length) grid.append(el('div', { class: 'shop-note', text: 'Nothing here yet.' }));
-  for (const it of items) {
-    const owned = s.owned.has(it.id);
-    const equipped = s.equipped[it.slot] === it.id;
-    const isPrev = s.preview[it.slot] === it.id;
-    const actions = el('div', { class: 'shop-actions' },
-      el('button', {
-        attrs: { type: 'button' }, text: isPrev ? 'Stop preview' : 'Preview',
-        on: { click: () => { if (isPrev) delete s.preview[it.slot]; else s.preview[it.slot] = it.id; renderShop(); } },
-      }));
-    if (!owned) {
-      const afford = s.balance >= it.price;
-      actions.append(el('button', {
-        class: 'buy' + (afford ? '' : ' poor'), text: 'Buy',
-        attrs: { type: 'button', title: afford ? 'Buy for ' + it.price + ' Orbs' : 'You need ' + (it.price - s.balance) + ' more Orbs' },
-        on: { click: () => buyItem(it.id) },
-      }));
-    } else if (equipped) {
-      actions.append(el('button', { class: 'unequip', attrs: { type: 'button' }, text: 'Unequip', on: { click: () => equipItem(it.slot, null) } }));
-    } else {
-      actions.append(el('button', { class: 'equip', attrs: { type: 'button' }, text: 'Equip', on: { click: () => equipItem(it.slot, it.id) } }));
-    }
-    grid.append(el('div', { class: 'shop-card' + (equipped ? ' equipped' : '') + (isPrev ? ' previewing' : '') },
-      swatchFor(it),
-      el('div', { class: 'shop-name' }, el('span', { text: it.name }),
-        owned
-          ? el('span', { class: 'shop-owned', text: equipped ? 'Equipped' : 'Owned' })
-          : el('span', { class: 'shop-price' }, el('span', { class: 'orb' }), String(it.price.toLocaleString()))),
-      actions));
-  }
-  page.append(grid);
-  page.scrollTop = keep;
+function unsubscribeAnnouncements() {
+  if (ann.channel && db) db.removeChannel(ann.channel);
+  ann.channel = null;
 }
 
 // =====================================================================
@@ -2744,7 +2432,7 @@ function onTypingSignal(d) {
 function renderTyping() {
   const box = $('#messages');
   const old = box.querySelector('.typing-row');
-  const ids = state.chat.type === 'shop' ? [] : Array.from((typers.get(chatKey()) || new Map()).keys());
+  const ids = (state.chat.type === 'shop' || state.chat.type === 'announce') ? [] : Array.from((typers.get(chatKey()) || new Map()).keys());
   if (!ids.length) { if (old) old.remove(); return; }
   const people = ids.slice(0, 3).map(profileOf);
   const names = ids.map((id) => nameOf(profileOf(id)));
@@ -2918,6 +2606,7 @@ function updateTitle() {
 // =====================================================================
 async function openChat(type, id = null) {
   if (type === 'shop') { openShop(); return; }
+  if (type === 'announce') { openAnnouncements(); return; }
   stopTyping();            // tell the chat we just left that we stopped typing
   showView('chat');
   state.chat = { type, id };
@@ -3018,6 +2707,11 @@ function renderHeader() {
       globeIcon(),
       el('div', { class: 'title-text' }, el('h2', { text: 'Global Chat' }), el('p', { id: 'chat-sub' })),
     );
+  } else if (state.chat.type === 'announce') {
+    box.append(
+      announceIcon(),
+      el('div', { class: 'title-text' }, el('h2', { text: 'Announcements' }), el('p', { id: 'chat-sub' })),
+    );
   } else if (state.chat.type === 'shop') {
     box.append(
       shopIcon(),
@@ -3035,7 +2729,7 @@ function renderHeader() {
     const p = profileOf(state.chat.id);
     box.append(
       makeAvatar(p, 'sm'),
-      el('div', { class: 'title-text' }, el('h2', {}, fxSpan(nameOf(p), cosOf(p.id).name_effect), tagEl(cosOf(p.id).tag)), el('p', { id: 'chat-sub' })),
+      el('div', { class: 'title-text' }, el('h2', { text: nameOf(p) }), el('p', { id: 'chat-sub' })),
     );
     box.classList.add('clickable');
     box.onclick = () => openProfile(p.id);
@@ -3051,6 +2745,8 @@ function updateHeaderSub() {
   if (!sub) return;
   if (state.chat.type === 'global') {
     sub.textContent = 'Public room · everyone can read and write here';
+  } else if (state.chat.type === 'announce') {
+    sub.textContent = 'Official news · everyone can read, like and dislike';
   } else if (state.chat.type === 'shop') {
     sub.textContent = '';
   } else if (state.chat.type === 'group') {
@@ -3104,11 +2800,10 @@ function buildMessageNodes(m, prev) {
     }, makeAvatar(p)));
   }
 
-  const body = el('div', { class: 'msg-body ' + styleClass(cosOf(m.sender_id).style) });
+  const body = el('div', { class: 'msg-body' });
   if (!grouped) {
     body.append(el('div', { class: 'msg-head' },
-      el('button', { class: 'msg-author ' + fxClass(cosOf(p.id).name_effect), text: nameOf(p), attrs: { type: 'button' }, on: { click: () => openProfile(p.id) } }),
-      tagEl(cosOf(p.id).tag),
+      el('button', { class: 'msg-author', text: nameOf(p), attrs: { type: 'button' }, on: { click: () => openProfile(p.id) } }),
       p.display_name ? el('span', { class: 'msg-handle', text: '@' + p.username }) : null,
       el('span', { class: 'msg-time', text: formatTime(m.created_at) }),
     ));
@@ -3382,7 +3077,6 @@ function openProfile(id) {
 
   const card = $('#modal-card');
   card.replaceChildren();
-  card.className = 'modal-card ' + (mine ? '' : bgClass(cosOf(id).background));
   const closeBtn = el('button', {
     class: 'icon-btn modal-close', text: '✕',
     attrs: { type: 'button', 'aria-label': 'Close' }, on: { click: closeModal },
@@ -3404,11 +3098,10 @@ function openProfile(id) {
     };
     card.append(
       closeBtn,
-      profileAvatar(p),
-      el('h3', {}, fxSpan(nameOf(p), cosOf(p.id).name_effect), ...(cosOf(p.id).tag ? [document.createTextNode(' '), tagEl(cosOf(p.id).tag)] : [])),
+      makeAvatar(p, 'xl'),
+      el('h3', { text: nameOf(p) }),
       ...(nick ? [el('p', { class: 'muted', text: 'Their name: ' + realName })] : []),
       el('p', { class: 'muted', text: '@' + p.username }),
-      ...(validCos(cosOf(p.id).theme) ? [el('p', { class: 'muted', text: 'Chat theme: ' + itemName(cosOf(p.id).theme) })] : []),
       isBlocked ? el('p', { class: 'blocked-note', text: '🚫 You blocked this person' })
                 : el('p', { class: 'muted', text: state.online.has(p.id) ? '🟢 Online now' : '⚪ Offline' }),
       el('p', { class: 'bio', text: p.bio || 'This person has not written a bio yet.' }),
@@ -3611,7 +3304,6 @@ function closeModal() {
   state.openGroupInfo = null;
   $('#modal').hidden = true;
   $('#modal-card').replaceChildren();
-  $('#modal-card').className = 'modal-card';
 }
 
 // =====================================================================
@@ -4048,13 +3740,15 @@ function closeSidebar() { $('#app').classList.remove('sidebar-open'); }
 //  WIRING EVERYTHING UP
 // =====================================================================
 function bindUI() {
-  $('#orb-pill').addEventListener('click', () => openShop());
   // Call button (top right of a private chat)
   $('#call-btn').innerHTML = phoneSvg(20);
+  $('#announce-compose').addEventListener('submit', (e) => { e.preventDefault(); postAnnouncement(); });
+  $('#announce-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); postAnnouncement(); }
+  });
   $('#call-btn').addEventListener('click', () => { if (state.chat.type === 'dm') startPrivateCall(state.chat.id); });
   window.addEventListener('pagehide', () => {
     stopTyping();
-    orbBeat(false);
     if (call && call.kind === 'private') sendSignal(call.with, call.phase === 'calling' ? 'cancel' : 'hangup');
   });
   // Photos in chat
@@ -4109,8 +3803,6 @@ function bindUI() {
     $('#login-form').addEventListener('submit', (e) => e.preventDefault());
     $('#signup-form').addEventListener('submit', (e) => e.preventDefault());
   }
-
-  $('#logout-btn').addEventListener('click', logout);
   $('#me-btn').addEventListener('click', () => { if (state.user) openProfile(state.user.id); });
   $('#menu-btn').addEventListener('click', openSidebar);
   $('#sidebar-close').addEventListener('click', closeSidebar);
@@ -4145,7 +3837,6 @@ function bindUI() {
 
   // Catch up on messages after the tab was hidden for a while
   document.addEventListener('visibilitychange', () => {
-    if (state.user) orbBeat(!document.hidden);   // Orbs only count while the tab is visible
     if (document.hidden) { state.hiddenAt = Date.now(); return; }
     state.awayCount = 0;
     updateTitle();
