@@ -15,7 +15,6 @@ Welcome to ChatWorld — a place to meet people and chat with others around the 
 - Online status indicators
 - Animated emojis
 - User blocking and nicknames
-- An in-app shop
 
  ⚙️ Technology
 - Frontend: HTML, CSS and JavaScript
