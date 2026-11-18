@@ -1853,14 +1853,15 @@ function announceIcon() {
 function annErrorText(error) {
   const msg = (error && error.message) || '';
   if (/schema cache|does not exist|could not find/i.test(msg)) {
-    return 'Announcements need a one-time database update. Run supabase-announcements.sql in your Supabase project (see README Part 21).';
+    const ref = (SUPABASE_URL.match(/\/\/([a-z0-9]+)\./) || [])[1] || '?';
+    return 'Announcements need a one-time database update. Run supabase-announcements.sql in the Supabase project "' + ref + '" (see README Part 21). [Details: ' + msg + ']';
   }
   return 'Could not reach announcements right now. ' + msg;
 }
 
 async function loadAnnouncements() {
   ann.error = '';
-  const { data, error } = await db.from('announcements')
+  const { data, error } = await db.from('chat_announcements')
     .select('id, author_id, content, likes, dislikes, created_at')
     .order('created_at', { ascending: false }).limit(100);
   if (error) { ann.error = annErrorText(error); ann.items = []; ann.loaded = true; return; }
@@ -1871,7 +1872,7 @@ async function loadAnnouncements() {
     (res.data || []).forEach((pr) => state.profiles.set(pr.id, pr));
   }
   ann.mine = new Map();
-  const votes = await db.from('announcement_reactions').select('announcement_id, value');
+  const votes = await db.from('chat_announcement_reactions').select('announcement_id, value');
   (votes.data || []).forEach((v) => ann.mine.set(v.announcement_id, v.value));
   ann.loaded = true;
 }
@@ -1959,7 +1960,7 @@ async function postAnnouncement() {
   if (!text || !isAnnouncer()) return;
   const btn = $('#announce-send');
   btn.disabled = true;
-  const { data, error } = await db.from('announcements').insert({ author_id: state.user.id, content: text }).select().single();
+  const { data, error } = await db.from('chat_announcements').insert({ author_id: state.user.id, content: text }).select().single();
   btn.disabled = false;
   if (error) { toast(annErrorText(error), 'error'); return; }
   input.value = '';
@@ -1970,7 +1971,7 @@ async function postAnnouncement() {
 
 async function deleteAnnouncement(id) {
   if (!isAnnouncer() || !window.confirm('Delete this announcement for everyone?')) return;
-  const { error } = await db.from('announcements').delete().eq('id', id);
+  const { error } = await db.from('chat_announcements').delete().eq('id', id);
   if (error) { toast(annErrorText(error), 'error'); return; }
   ann.items = ann.items.filter((x) => x.id !== id);
   if (state.chat.type === 'announce') renderAnnouncements();
@@ -1981,7 +1982,7 @@ function subscribeAnnouncements() {
   unsubscribeAnnouncements();
   ann = { items: [], mine: new Map(), channel: null, loaded: false, error: '' };
   ann.channel = db.channel('chatworld-announce')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, (payload) => {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_announcements' }, (payload) => {
       const viewing = state.chat.type === 'announce';
       if (payload.eventType === 'INSERT') {
         const a = payload.new;
