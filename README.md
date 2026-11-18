@@ -29,3 +29,5 @@ ChatWorld uses Supabase to manage user accounts, profiles, messages and uploaded
 Visit the published ChatWorld website, create an account and start chatting!
 
 Thanks for checking out ChatWorld!
+
+Minicon Emojis: Copyright (c) 2026 Tanzim Siam (tanximsiam)
