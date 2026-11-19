@@ -142,6 +142,7 @@ input:focus, textarea:focus {
 .brand-logo { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-grad); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 22px; flex: none; }
 .brand-sm h1 { font-size: 18px; }
 .brand-sm .brand-logo { width: 30px; height: 30px; border-radius: 9px; font-size: 16px; }
+.made-by { font-size: 13px; font-weight: 600; letter-spacing: .02em; color: var(--muted); white-space: nowrap; }
 
 /* ---------- Login / sign-up ---------- */
 .auth-screen {
@@ -612,6 +613,75 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .incoming-call .inc-text span { color: var(--muted); font-size: 13px; }
 .incoming-call .btn { padding: 9px 12px; }
 
+/* ---------- Video calls (FaceTime style) ---------- */
+.call-choose { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 8px; }
+.call-opt { display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; padding: 12px 14px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--bg-3); color: var(--text); cursor: pointer; transition: background .15s; }
+.call-opt:hover:not(:disabled) { background: var(--bg-4); }
+.call-opt:disabled { opacity: .45; cursor: not-allowed; }
+.call-opt .oi { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.call-opt.voice .oi { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+.call-opt.video .oi { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.call-opt strong { display: block; }
+.call-opt .s { color: var(--muted); font-size: 13px; }
+.call-switch { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--bg-1); border: 1px solid var(--line); }
+.call-switch .t { flex: 1; text-align: left; font-size: 14px; }
+.sw { position: relative; width: 42px; height: 24px; border-radius: 12px; border: 0; background: var(--bg-4); cursor: pointer; flex: none; transition: background .15s; }
+.sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.sw.on { background: var(--green); }
+.sw.on::after { transform: translateX(18px); }
+.call-count.off { background: rgba(255, 255, 255, .08); color: var(--muted); }
+
+.call-panel.video { top: auto; bottom: 16px; right: 16px; width: min(560px, calc(100vw - 32px)); max-height: none; padding: 0; overflow: hidden;
+  background: #0b0c0f; border-radius: 18px; display: flex; flex-direction: column; }
+.call-panel.video.full { inset: 0; width: auto; border-radius: 0; }
+.vhead { display: flex; align-items: center; gap: 8px; padding: 10px 14px; color: #fff; }
+.vhead .muted { margin-left: auto; color: #a8aebb; font-size: 13px; }
+.vgrid { position: relative; display: grid; gap: 6px; padding: 0 8px; height: min(380px, 52vh); grid-template-columns: 1fr; grid-auto-rows: 1fr; }
+.call-panel.full .vgrid { height: auto; flex: 1; min-height: 0; }
+.vgrid[data-count="3"], .vgrid[data-count="4"] { grid-template-columns: 1fr 1fr; }
+.vgrid[data-count="5"], .vgrid[data-count="6"], .vgrid[data-count="7"], .vgrid[data-count="8"] { grid-template-columns: repeat(3, 1fr); }
+.vtile { position: relative; overflow: hidden; border-radius: 14px; background: #1a1c23; min-height: 0; display: grid; place-items: center; }
+.vtile video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; display: none; }
+.vtile.cam video { display: block; }
+.vtile.me video { transform: scaleX(-1); }
+.vtile.cam .vph { display: none; }
+.vph .avatar { width: 72px; height: 72px; font-size: 28px; }
+.vname { position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 16px); padding: 3px 8px; border-radius: 8px;
+  background: rgba(0, 0, 0, .55); color: #fff; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vtile.speaking { box-shadow: inset 0 0 0 3px var(--green); }
+.vgrid[data-count="2"] .vtile.me { position: absolute; right: 16px; bottom: 8px; width: 28%; aspect-ratio: 3 / 4; z-index: 2; box-shadow: 0 6px 20px rgba(0, 0, 0, .5); }
+.vcontrols { display: flex; justify-content: center; gap: 14px; padding: 12px; }
+.vbtn { position: relative; width: 48px; height: 48px; border-radius: 50%; border: 0; display: grid; place-items: center;
+  background: rgba(255, 255, 255, .14); color: #fff; cursor: pointer; transition: background .15s; }
+.vbtn:hover { background: rgba(255, 255, 255, .24); }
+.vbtn.off { background: #fff; color: #111; }
+.vbtn.off.slash::after { content: ''; position: absolute; width: 28px; height: 2px; background: #111; transform: rotate(-45deg); }
+.vbtn.end { background: var(--red); color: #fff; }
+.vbtn.end svg { transform: rotate(135deg); }
+@media (max-width: 700px) {
+  .call-panel.video { inset: 0; width: auto; border-radius: 0; }
+  .call-panel.video .vgrid { height: auto; flex: 1; min-height: 0; }
+}
+
+/* ---------- Replies ---------- */
+.msg-actions { margin-top: 2px; }
+.reply-btn { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; color: var(--muted); font-size: 12px; font-weight: 600;
+  padding: 2px 6px 2px 0; border-radius: 6px; cursor: pointer; }
+.reply-btn:hover, .reply-btn:focus-visible { color: var(--text); }
+.reply-quote { display: block; width: fit-content; max-width: min(100%, 520px); text-align: left; border: 0; border-left: 3px solid var(--accent);
+  background: rgba(255, 255, 255, .04); border-radius: 0 8px 8px 0; padding: 4px 10px; margin: 2px 0 4px; color: var(--muted); font-size: 13px; cursor: pointer; }
+.reply-quote:hover { background: rgba(255, 255, 255, .07); }
+.reply-quote strong { color: var(--text); font-weight: 600; margin-right: 6px; }
+.reply-quote .rq-text { overflow-wrap: anywhere; }
+.reply-quote.gone { cursor: default; font-style: italic; }
+.reply-bar { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; padding: 8px 10px 8px 12px; border-radius: 0 12px 12px 0;
+  border-left: 3px solid var(--accent); background: var(--bg-3); font-size: 13px; color: var(--muted); }
+.reply-bar .rb-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reply-bar strong { color: var(--text); margin-right: 6px; }
+.msg.flash { animation: flashmsg 1.6s ease-out; }
+@keyframes flashmsg { 0% { background: rgba(88, 101, 242, .38); } 100% { background: rgba(88, 101, 242, 0); } }
+
 /* ---------- Groups ---------- */
 .group-icon {
   width: 36px; height: 36px; flex: none; border-radius: 50%;
@@ -653,14 +723,7 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .startup-problem p { margin: 0 0 6px; color: var(--muted); line-height: 1.5; }
 .startup-problem .btn { width: 100%; }
 
-/* ---------- Shop ---------- */
-.shop-icon {
-  width: 36px; height: 36px; flex: none; border-radius: 50%;
-  display: grid; place-items: center;
-  background: linear-gradient(135deg, #f59e0b, #ea580c);
-}
-.shop-page { flex: 1; min-height: 0; }
-.messages[hidden], .composer[hidden], .shop-page[hidden] { display: none; }
+.messages[hidden], .composer[hidden] { display: none; }
 
 /* ---------- Announcements ---------- */
 .announce-icon {
@@ -791,6 +854,7 @@ input:disabled { opacity: .6; cursor: not-allowed; }
         <div class="brand brand-sm">
           <span class="logo-img logo-sm" role="img" aria-label="ChatWorld"></span>
           <h1 class="sr-only">ChatWorld</h1>
+          <span class="made-by">Made By Isaac</span>
         </div>
         <button id="sidebar-close" class="icon-btn only-mobile" type="button" aria-label="Close menu">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -821,14 +885,11 @@ input:disabled { opacity: .6; cursor: not-allowed; }
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div id="chat-title" class="chat-title"></div>
-        <button id="call-btn" class="call-btn" type="button" title="Start a voice call" aria-label="Start a voice call" hidden></button>
+        <button id="call-btn" class="call-btn" type="button" title="Call (voice or FaceTime video)" aria-label="Call" hidden></button>
         <div id="online-pill" class="pill"><span class="dot"></span><span id="online-count">0 online</span></div>
       </header>
 
       <div id="messages" class="messages" aria-live="polite"></div>
-
-      <!-- The Shop page (empty for now - things will be added here later) -->
-      <div id="shop-page" class="shop-page" hidden></div>
 
       <!-- The Announcements page -->
       <div id="announce-page" class="announce-page" hidden>
@@ -847,6 +908,10 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 
       <form id="composer" class="composer" autocomplete="off">
         <div id="emoji-panel" class="emoji-panel" hidden></div>
+        <div id="reply-bar" class="reply-bar" hidden>
+          <span class="rb-text"><strong id="reply-name"></strong><span id="reply-text"></span></span>
+          <button id="reply-cancel" class="icon-btn" type="button" aria-label="Cancel reply" title="Cancel reply">✕</button>
+        </div>
         <div id="attach-preview" class="attach-preview" hidden>
           <img id="attach-thumb" alt="Selected photo" />
           <span>Photo ready. Add a caption if you like, then send.</span>
@@ -918,7 +983,18 @@ const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
 // Supabase only accepts sign-up addresses whose domain can receive email, so the hidden address
 // uses a mail domain that can. No email is ever sent to it (people only type a username).
 const LOGIN_DOMAIN = 'gmail.com';
-const toLoginEmail = (username) => username.trim().toLowerCase() + '@' + LOGIN_DOMAIN;
+const toLoginEmail = (username) => username.trim().toLowerCase() + '@' + LOGIN_DOMAIN;   // the OLD style (still used by accounts made before random addresses)
+
+// New accounts get a random hidden address instead (needs supabase-randomemail.sql). The login looks it up by username.
+const RANDOM_DOMAINS = ['outlook.com', 'yahoo.com', 'proton.me', 'icloud.com', 'aol.com', 'zoho.com', 'gmx.com', 'mail.com'];
+function randomLoginEmail() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  const letters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let name = 'u';
+  for (let i = 0; i < 15; i++) name += letters[bytes[i] % letters.length];
+  return name + '@' + RANDOM_DOMAINS[bytes[20] % RANDOM_DOMAINS.length];
+}
 const COLORS = ['#5865f2', '#8b5cf6', '#ec4899', '#ef4444', '#f97316',
                 '#eab308', '#22c55e', '#14b8a6', '#0ea5e9', '#64748b'];
 
@@ -1420,6 +1496,8 @@ function friendlySendError(error) {
   const msg = (error && error.message) || '';
   if (/slow down|limit reached|repeat the same|invalid photo|invalid attachment/i.test(msg)) return msg;
   if (/row-level security/i.test(msg)) return 'You are not allowed to send that message.';
+  if (/reply_to/i.test(msg)) return 'Replies need a one-time database update. Run supabase-replies.sql in Supabase (see README.md).';
+  if (/replying to is gone|same chat/i.test(msg)) return msg;
   if (/video_path/i.test(msg)) return 'Videos need a one-time database update. Run supabase-videos.sql in Supabase (see README.md).';
   if (/content_length/i.test(msg)) return 'Messages must be between 1 and ' + MAX_LEN + ' characters.';
   return 'Message not sent. Please try again.';
@@ -1576,11 +1654,18 @@ async function handleSignup(e) {
     return;
   }
 
-  const { data, error } = await db.auth.signUp({
-    email: toLoginEmail(username),
+  // Use a random hidden address only if the database knows how to find it again at login (supabase-randomemail.sql).
+  let randomReady = false;
+  try { const r = await db.rpc('random_email_ready'); randomReady = !!(r && r.data === true); } catch (e2) { randomReady = false; }
+  const signUpWith = (email) => db.auth.signUp({
+    email,
     password,
     options: { data: display ? { username, display_name: display } : { username } },
   });
+  let { data, error } = await signUpWith(randomReady ? randomLoginEmail() : toLoginEmail(username));
+  if (error && randomReady && /invalid.*email|email.*invalid|not authorized/i.test(error.message || '')) {
+    ({ data, error } = await signUpWith(toLoginEmail(username)));     // that mail domain was refused: use the older address style
+  }
   setBusy(form, false);
 
   if (error) { err.textContent = friendlyAuthError(error); return; }
@@ -1654,7 +1739,7 @@ async function startApp(user) {
   joinCallChannel();
   joinTypingChannel();
   subscribeAnnouncements();
-  await openChat('global');
+  await openAnnouncements();     // ChatWorld opens on the Announcements tab
 }
 
 function stopApp() {
@@ -1744,18 +1829,15 @@ function renderUsers() {
   // Global Call (voice) sits right under Global Chat
   const callCount = callPeople.size;
   list.append(el('button', {
-    class: 'chat-item' + (call ? ' in-call' : ''),
+    class: 'chat-item' + (call && call.kind === 'global' ? ' in-call' : ''),
     attrs: { type: 'button' },
     on: { click: () => {
       closeSidebar();
-      if (call) toast('You are already in the call. Use the Leave button on the call window.');
-      else openCallConfirm();
+      openCallChooser({ kind: 'global' });
     } },
   }, phoneIcon(), el('span', { class: 'name', text: 'Global Call' }),
-  callCount ? el('span', { class: 'call-count', text: callCount + ' in call' }) : null));
-
-  // Shop
-  list.append(chatItem({ key: 'shop', avatar: shopIcon(), name: 'Shop', onClick: () => openShop() }));
+  !callsOn() ? el('span', { class: 'call-count off', text: 'Off' })
+    : callCount ? el('span', { class: 'call-count', text: callCount + ' in call' }) : null));
 
   // Groups
   list.append(el('div', { class: 'section-label with-action' },
@@ -1797,40 +1879,12 @@ function renderUsers() {
   list.scrollTop = keepScroll;
 }
 
-// =====================================================================
-//  SHOP  (an empty page for now - things will be added here later)
-// =====================================================================
-/** The Shop icon: a white shopping bag on an orange circle. */
-function shopIcon() {
-  const icon = el('span', { class: 'shop-icon', attrs: { 'aria-hidden': 'true' } });
-  icon.innerHTML =
-    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
-    '<path d="M5.5 8h13l1 12.5h-15z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
-  return icon;
-}
-
-/** Shows either the chat (messages + message box) or the Shop page. */
+/** Shows either the chat (messages + message box) or the Announcements page. */
 function showView(view) {
-  const shop = view === 'shop';
   const announce = view === 'announce';
-  $('#messages').hidden = shop || announce;
-  $('#composer').hidden = shop || announce;
-  $('#shop-page').hidden = !shop;
+  $('#messages').hidden = announce;
+  $('#composer').hidden = announce;
   $('#announce-page').hidden = !announce;
-}
-
-function openShop() {
-  stopTyping();
-  state.chat = { type: 'shop', id: 'shop' };
-  state.loadToken += 1;          // ignore any chat that was still loading
-  clearPendingImage();
-  if (!state.uploadingVideo) clearPendingVideo();
-  closeEmojiPanel();
-  closeSidebar();
-  showView('shop');
-  renderHeader();
-  renderUsers();
-  updateTitle();
 }
 
 // =====================================================================
@@ -2433,7 +2487,7 @@ function onTypingSignal(d) {
 function renderTyping() {
   const box = $('#messages');
   const old = box.querySelector('.typing-row');
-  const ids = (state.chat.type === 'shop' || state.chat.type === 'announce') ? [] : Array.from((typers.get(chatKey()) || new Map()).keys());
+  const ids = state.chat.type === 'announce' ? [] : Array.from((typers.get(chatKey()) || new Map()).keys());
   if (!ids.length) { if (old) old.remove(); return; }
   const people = ids.slice(0, 3).map(profileOf);
   const names = ids.map((id) => nameOf(profileOf(id)));
@@ -2522,6 +2576,8 @@ async function confirmUndo(slot, id, yesBtn) {
 
 /** Takes a message off the screen (used when I undo, and when someone else undoes in a chat I am looking at). */
 function removeMessageLocally(id) {
+  replyCache.set(String(id), null); updateQuotes(String(id), null);
+  if (replyTo && String(replyTo.id) === String(id)) clearReply();
   const idx = state.messages.findIndex((m) => String(m.id) === String(id));
   if (idx < 0) return;
   state.messages.splice(idx, 1);
@@ -2606,9 +2662,9 @@ function updateTitle() {
 //  OPENING A CHAT + MESSAGE HISTORY
 // =====================================================================
 async function openChat(type, id = null) {
-  if (type === 'shop') { openShop(); return; }
   if (type === 'announce') { openAnnouncements(); return; }
   stopTyping();            // tell the chat we just left that we stopped typing
+  clearReply();            // a reply belongs to one chat only
   showView('chat');
   state.chat = { type, id };
   clearPendingImage();   // a photo chosen for one chat is not carried over to another
@@ -2713,11 +2769,6 @@ function renderHeader() {
       announceIcon(),
       el('div', { class: 'title-text' }, el('h2', { text: 'Announcements' }), el('p', { id: 'chat-sub' })),
     );
-  } else if (state.chat.type === 'shop') {
-    box.append(
-      shopIcon(),
-      el('div', { class: 'title-text' }, el('h2', { text: 'Shop' }), el('p', { id: 'chat-sub' })),
-    );
   } else if (state.chat.type === 'group') {
     const g = state.groups.get(state.chat.id) || { id: state.chat.id, name: 'Group' };
     box.append(
@@ -2735,7 +2786,7 @@ function renderHeader() {
     box.classList.add('clickable');
     box.onclick = () => openProfile(p.id);
   }
-  $('#call-btn').hidden = state.chat.type !== 'dm';
+  $('#call-btn').hidden = state.chat.type !== 'dm' && state.chat.type !== 'group';
   updateHeaderSub();
 }
 
@@ -2748,8 +2799,6 @@ function updateHeaderSub() {
     sub.textContent = 'Public room · everyone can read and write here';
   } else if (state.chat.type === 'announce') {
     sub.textContent = 'Official news · everyone can read, like and dislike';
-  } else if (state.chat.type === 'shop') {
-    sub.textContent = '';
   } else if (state.chat.type === 'group') {
     const ids = memberIds(state.chat.id);
     const names = ids.map((id) => (id === state.user.id ? 'You' : nameOf(profileOf(id))));
@@ -2809,9 +2858,11 @@ function buildMessageNodes(m, prev) {
       el('span', { class: 'msg-time', text: formatTime(m.created_at) }),
     ));
   }
+  if (m.reply_to != null) body.append(buildQuote(m.reply_to));
   if (m.content) body.append(renderContent(m.content)); // text is added as plain text => safe from HTML injection
   if (m.image_path) body.append(renderImage(m.image_path));
   if (m.video_path) body.append(renderVideo(m.video_path));
+  body.append(replyButton(m, p));
   row.append(body);
   if (mine && undoLeft(m.id) > 0) row.append(makeUndoSlot(m.id));
 
@@ -2860,6 +2911,88 @@ async function addMessage(m) {
   if (typingRow) box.append(typingRow);   // keep the typing dots below the newest message
 
   if (nearBottom || m.sender_id === state.user.id) scrollToBottom();
+}
+
+// =====================================================================
+//  REPLIES  (answer one particular message)
+// =====================================================================
+let replyTo = null;                    // the message I am about to reply to: { id, sender, text }
+const replyCache = new Map();          // id -> message, or null when it is gone
+const replyFetching = new Set();
+
+/** A short one-line version of a message (used inside quotes). */
+function previewText(m) {
+  let t = String(m.content || '').replace(MINICON_TOKEN, '🙂').replace(/\s+/g, ' ').trim();
+  if (!t) t = m.image_path ? '📷 Photo' : m.video_path ? '🎬 Video' : '';
+  return t.length > 90 ? t.slice(0, 90) + '…' : t;
+}
+
+function startReply(m) {
+  replyTo = { id: m.id, sender: m.sender_id, text: previewText(m) };
+  $('#reply-name').textContent = 'Replying to ' + nameOf(profileOf(m.sender_id));
+  $('#reply-text').textContent = replyTo.text;
+  $('#reply-bar').hidden = false;
+  $('#message-input').focus();
+}
+
+function clearReply() {
+  replyTo = null;
+  const bar = $('#reply-bar'); if (bar) bar.hidden = true;
+}
+
+/** Fills a quote box above a reply. msg: a message, null (gone) or undefined (still loading). */
+function fillQuote(q, msg) {
+  q.classList.remove('gone');
+  if (msg === undefined) { q.replaceChildren(el('span', { class: 'rq-text', text: 'Loading…' })); return; }
+  if (msg === null) { q.classList.add('gone'); q.replaceChildren(el('span', { class: 'rq-text', text: 'Original message was deleted' })); return; }
+  if (state.blocked.has(msg.sender_id)) { q.classList.add('gone'); q.replaceChildren(el('span', { class: 'rq-text', text: 'Message from someone you blocked' })); return; }
+  q.replaceChildren(el('strong', { text: nameOf(profileOf(msg.sender_id)) }), el('span', { class: 'rq-text', text: previewText(msg) }));
+}
+
+function updateQuotes(id, msg) {
+  document.querySelectorAll('.reply-quote[data-rid="' + id + '"]').forEach((q) => fillQuote(q, msg));
+}
+
+async function fetchReplyTarget(id) {
+  const key = String(id);
+  if (replyFetching.has(key)) return;
+  replyFetching.add(key);
+  try {
+    const { data, error } = await db.from('messages').select('*').eq('id', id).maybeSingle();
+    if (error) return;                         // maybe offline: try again next time it is drawn
+    if (data) await ensureProfiles([data.sender_id]);
+    replyCache.set(key, data || null);
+    updateQuotes(key, data || null);
+  } finally { replyFetching.delete(key); }
+}
+
+function buildQuote(id) {
+  const key = String(id);
+  const loaded = state.messages.find((x) => String(x.id) === key);
+  const known = loaded || (replyCache.has(key) ? replyCache.get(key) : undefined);
+  const q = el('button', { class: 'reply-quote', attrs: { type: 'button', 'data-rid': key, title: 'Go to the original message' }, on: { click: () => jumpToMessage(key) } });
+  fillQuote(q, known);
+  if (known === undefined) fetchReplyTarget(id);
+  return q;
+}
+
+function jumpToMessage(id) {
+  const row = $('#messages').querySelector('.msg[data-mid="' + id + '"]');
+  if (!row) {
+    const gone = replyCache.get(String(id)) === null;
+    toast(gone ? 'That message was deleted.' : 'That message is further up. Press "Load older messages" to find it.');
+    return;
+  }
+  row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash');
+  setTimeout(() => row.classList.remove('flash'), 1700);
+}
+
+function replyButton(m, p) {
+  const btn = el('button', { class: 'reply-btn', attrs: { type: 'button', 'aria-label': 'Reply to ' + nameOf(p), title: 'Reply' }, on: { click: () => startReply(m) } });
+  btn.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
+  btn.append(el('span', { text: 'Reply' }));
+  return el('div', { class: 'msg-actions' }, btn);
 }
 
 // =====================================================================
@@ -2944,6 +3077,7 @@ async function sendMessage(textOverride) {
   // Remember where this message is going, in case the person switches chats while a photo uploads.
   const recipient = state.chat.type === 'dm' ? state.chat.id : null;
   const groupId = state.chat.type === 'group' ? state.chat.id : null;
+  const replying = replyTo;
 
   let imagePath = null;
   if (usingImage) {
@@ -2996,6 +3130,7 @@ async function sendMessage(textOverride) {
   if (groupId) row.group_id = groupId;
   if (imagePath) row.image_path = imagePath;
   if (videoPath) row.video_path = videoPath;
+  if (replying) row.reply_to = replying.id;
   const { data, error } = await db.from('messages').insert(row).select().single();
 
   state.sending = false;
@@ -3011,6 +3146,7 @@ async function sendMessage(textOverride) {
   }
 
   state.lastSendAt = Date.now();
+  if (replyTo === replying) clearReply();
   if (typeof textOverride !== 'string') { input.value = ''; autosize(); }
   if (usingImage) {
     // Show our own photo straight away from this device (no need to download it again).
@@ -3342,30 +3478,81 @@ function onCallPresence() {
   if (!callChannel || !state.user) return;
   callPeople = new Map(Object.entries(callChannel.presenceState()).map(([id, metas]) => [id, metas[0] || {}]));
   renderUsers();
-  if (call) { syncPeers(); renderCallPanel(); }
+  if (call && call.kind === 'global') { syncPeers(); renderCallPanel(); }
 }
 
-const callMeta = () => ({ username: state.profile.username, muted: !!(call && call.muted) });
+const callMeta = () => ({ username: state.profile.username, muted: !!(call && call.muted), cam: !!(call && call.cam && call.cam.on) });
+const roomChannel = () => (call && call.kind === 'group' ? call.room : callChannel);
+const roomPeople = () => (call && call.kind === 'group' ? call.people : callPeople);
 
 function sendSignal(to, kind, data) {
-  if (!callChannel) return;
-  callChannel.send({ type: 'broadcast', event: 'signal', payload: { from: state.user.id, to, kind, data } });
+  // Connection notes inside a group call travel on that group's own channel; everything else on the main call channel.
+  const ch = (call && call.kind === 'group' && (kind === 'offer' || kind === 'answer' || kind === 'ice')) ? call.room : callChannel;
+  if (!ch) return;
+  ch.send({ type: 'broadcast', event: 'signal', payload: { from: state.user.id, to, kind, data } });
 }
 
 // ----- Opening / leaving -----
-function openCallConfirm() {
-  const n = callPeople.size;
+// ----- Calls on/off (kept on this device) -----
+const CALLS_KEY = 'chatworld-calls-on';
+function callsOn() { try { return localStorage.getItem(CALLS_KEY) !== '0'; } catch (e) { return true; } }
+function setCallsOn(on) {
+  try { localStorage.setItem(CALLS_KEY, on ? '1' : '0'); } catch (e) { /* ignore */ }
+  if (!on) { dismissIncoming(); if (call) leaveCall(true); }
+  if (state.user) renderUsers();
+}
+
+const VIDEO_MAX = 4;   // video from many people at once is heavy, so cameras are limited to 4 people
+const CAMERA = { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24, max: 30 }, facingMode: 'user' };
+const camSvg = (c = '#fff', size = 20) => '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="' + c + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10.5l6-3.5v10l-6-3.5z"/></svg>';
+const micSvg = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+const fsSvg = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+
+/** The window you get when you press a call button: voice call or FaceTime (video) call. */
+function openCallChooser(t) {
+  if (call || incoming) {
+    toast(call && call.kind === 'global' ? 'You are already in the call. Use the Leave button on the call window.' : 'Finish your current call first.', 'error');
+    return;
+  }
+  const on = callsOn();
+  let title, sub;
+  if (t.kind === 'global') {
+    const n = callPeople.size;
+    title = 'Global Call';
+    sub = n ? n + (n === 1 ? ' person is' : ' people are') + ' in the call right now. Starting joins you to it.' : 'A call that anyone on ChatWorld can join.';
+  } else if (t.kind === 'group') {
+    const g = state.groups.get(t.id) || { name: 'this group' };
+    title = 'Call ' + g.name;
+    sub = 'Rings everyone from this group who is online.';
+  } else {
+    title = 'Call ' + nameOf(profileOf(t.id));
+    sub = state.online.has(t.id) ? 'They are online.' : 'They are offline right now, so they cannot get a call.';
+  }
+  const go = (video) => {
+    closeModal();
+    if (t.kind === 'global') joinCall(video);
+    else if (t.kind === 'group') startGroupCall(t.id, video);
+    else startPrivateCall(t.id, video);
+  };
+  const opt = (cls, icon, strong, small, video) => {
+    const b = el('button', { class: 'call-opt ' + cls, attrs: { type: 'button' }, on: { click: () => go(video) } },
+      el('span', { class: 'oi' }), el('span', {}, el('strong', { text: strong }), el('span', { class: 's', text: small })));
+    b.querySelector('.oi').innerHTML = icon;
+    b.disabled = !on;
+    return b;
+  };
+  const sw = el('button', { class: 'sw' + (on ? ' on' : ''), attrs: { type: 'button', role: 'switch', 'aria-checked': String(on), 'aria-label': 'Calls on this device' },
+    on: { click: () => { setCallsOn(!on); openCallChooser(t); } } });
   const card = $('#modal-card');
   card.replaceChildren(
     phoneIcon(26),
-    el('h3', { text: 'Start Global Call?' }),
-    el('p', { class: 'muted', text: n
-      ? n + (n === 1 ? ' person is' : ' people are') + ' in the call right now. Starting joins you to it.'
-      : 'A voice call that anyone on ChatWorld can join. Your browser will ask to use your microphone.' }),
-    el('div', { class: 'call-actions' },
-      el('button', { class: 'btn btn-ghost', text: 'Cancel', attrs: { type: 'button' }, on: { click: closeModal } }),
-      el('button', { class: 'btn btn-call', text: 'Start Call', attrs: { type: 'button' }, on: { click: () => { closeModal(); joinCall(); } } }),
-    ),
+    el('h3', { text: title }),
+    el('p', { class: 'muted', text: on ? sub : 'Calls are turned off on this device. Turn them on to call or get called.' }),
+    el('div', { class: 'call-choose' },
+      opt('voice', phoneSvg(20), 'Voice call', 'Audio only. You can turn your camera on later.', false),
+      opt('video', camSvg('#fff', 20), 'FaceTime video call', 'Camera and microphone. You can turn the camera off any time.', true)),
+    el('div', { class: 'call-switch' }, el('span', { class: 't', text: 'Calls ' + (on ? 'on' : 'off') + ' (' + (on ? 'you can call and get called' : 'nobody can ring you') + ')' }), sw),
+    el('div', { class: 'call-actions' }, el('button', { class: 'btn btn-ghost', text: 'Cancel', attrs: { type: 'button' }, on: { click: closeModal } })),
   );
   card.querySelector('.phone-icon').classList.add('big');
   $('#modal').hidden = false;
@@ -3386,24 +3573,50 @@ async function getMic() {
   }
 }
 
+/** Microphone (and the camera too for a video call). Falls back to voice only if the camera cannot be used. */
+async function getMedia(wantVideo) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection) {
+    toast('This browser cannot do calls. Try Chrome, Edge, Firefox or Safari.', 'error'); return null;
+  }
+  if (wantVideo) {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: CAMERA });
+      const cam = s.getVideoTracks()[0] || null;
+      if (cam) s.removeTrack(cam);          // the camera is kept apart so it can be switched on and off
+      return { stream: s, cam };
+    } catch (e) {
+      const s = await getMic();
+      if (!s) return null;
+      toast('The camera could not be used, so you joined with voice only. You can try the Camera button again.', 'error');
+      return { stream: s, cam: null };
+    }
+  }
+  const s = await getMic();
+  return s ? { stream: s, cam: null } : null;
+}
+
 /** Sets up the "I am in a call" state. kind is 'global' or 'private'. */
-function makeCall(stream, kind) {
+function makeCall(stream, kind, opts = {}) {
+  const cam = opts.cam || null;
   call = { kind, stream, peers: new Map(), early: new Map(), muted: false, ctx: null, meters: new Map(), speaking: new Set(), timer: null,
-           with: null, phase: 'connecting', otherMuted: false, ringTimer: null };
+           with: null, phase: 'connecting', otherMuted: false, otherCam: false, ringTimer: null,
+           gid: opts.gid || null, room: null, people: new Map(),
+           cam: { track: cam, on: !!cam }, videoUI: !!opts.video, full: false, ui: null, tiles: new Map() };
+  if (cam) cam.onended = () => { if (call && call.cam.track === cam) stopCamera(); };
   watchSpeaking(state.user.id, stream);
   call.timer = setInterval(checkSpeaking, 200);
   return call;
 }
 
-async function joinCall() {
+async function joinCall(video = false) {
   if (call || !callChannel) return;
+  if (!callsOn()) { toast('Calls are turned off. Turn them on from the call button.', 'error'); return; }
   if (callPeople.size >= CALL_MAX) { toast('The call is full (' + CALL_MAX + ' people). Try again soon.', 'error'); return; }
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection) {
-    toast('This browser cannot do voice calls. Try Chrome, Edge, Firefox or Safari.', 'error'); return;
-  }
-  const stream = await getMic();
-  if (!stream) return;
-  makeCall(stream, 'global');
+  if (video && callPeople.size >= VIDEO_MAX) { toast('This call already has ' + callPeople.size + ' people, so you joined with voice only (cameras are limited to ' + VIDEO_MAX + ').'); video = false; }
+  const media = await getMedia(video);
+  if (!media) return;
+  if (call) { media.stream.getTracks().forEach((t) => t.stop()); if (media.cam) media.cam.stop(); return; }
+  makeCall(media.stream, 'global', { cam: media.cam, video });
   try { await callChannel.track(callMeta()); } catch (e) { /* the sync event will still arrive */ }
   renderCallPanel();
   renderUsers();
@@ -3422,11 +3635,13 @@ async function leaveCall(quiet, remoteEnded) {
   for (const id of [...c.peers.keys()]) closePeer(id, c);
   c.meters.forEach((m) => { try { m.src.disconnect(); } catch (e) { /* ignore */ } });
   c.stream.getTracks().forEach((t) => t.stop());
+  if (c.cam.track) { c.cam.track.onended = null; c.cam.track.stop(); }
   if (c.ctx) c.ctx.close().catch(() => {});
   const panel = $('#call-panel'); if (panel) panel.remove();
   if (c.kind === 'global' && callChannel) { try { await callChannel.untrack(); } catch (e) { /* ignore */ } }
+  if (c.kind === 'group' && c.room) { try { await c.room.untrack(); } catch (e) { /* ignore */ } if (db) db.removeChannel(c.room); }
   if (state.user) renderUsers();
-  if (!quiet) toast(c.kind === 'private' ? 'Call ended.' : 'You left the Global Call.');
+  if (!quiet) toast(c.kind === 'private' ? 'Call ended.' : c.kind === 'group' ? 'You left the group call.' : 'You left the Global Call.');
 }
 
 function toggleMute() {
@@ -3435,39 +3650,89 @@ function toggleMute() {
   call.stream.getAudioTracks().forEach((t) => { t.enabled = !call.muted; });
   if (call.muted) call.speaking.delete(state.user.id);
   if (call.kind === 'private') sendSignal(call.with, 'mute', { muted: call.muted });
-  else if (callChannel) callChannel.track(callMeta()).catch(() => {});
+  else { const ch = roomChannel(); if (ch) ch.track(callMeta()).catch(() => {}); }
   renderCallPanel();
 }
+
+// ----- Camera on / off -----
+function announceCam() {
+  if (!call) return;
+  if (call.kind === 'private') sendSignal(call.with, 'cam', { on: call.cam.on });
+  else { const ch = roomChannel(); if (ch) ch.track(callMeta()).catch(() => {}); }
+}
+
+async function startCamera() {
+  if (!call || call.cam.on) return;
+  const size = call.kind === 'private' ? 2 : roomPeople().size;
+  if (size > VIDEO_MAX) { toast('Cameras are limited to calls with ' + VIDEO_MAX + ' people or fewer, to keep video smooth.', 'error'); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('This browser cannot use a camera.', 'error'); return; }
+  let s;
+  try { s = await navigator.mediaDevices.getUserMedia({ video: CAMERA }); }
+  catch (e) {
+    toast(e && e.name === 'NotAllowedError' ? 'Camera is blocked. Allow the camera for this site in your browser, then try again.' : 'Could not use a camera. Is one plugged in?', 'error');
+    return;
+  }
+  const t = s.getVideoTracks()[0];
+  if (!call || !t || call.cam.on) { s.getTracks().forEach((x) => x.stop()); return; }
+  t.onended = () => { if (call && call.cam.track === t) stopCamera(); };
+  call.cam = { track: t, on: true };
+  call.videoUI = true;
+  call.peers.forEach((peer) => { if (peer.vs) peer.vs.replaceTrack(t).catch(() => {}); });
+  announceCam();
+  renderCallPanel();
+}
+
+function stopCamera() {
+  if (!call) return;
+  const t = call.cam.track;
+  call.cam = { track: null, on: false };
+  if (t) { t.onended = null; try { t.stop(); } catch (e) { /* ignore */ } }
+  call.peers.forEach((peer) => { if (peer.vs) peer.vs.replaceTrack(null).catch(() => {}); });
+  announceCam();
+  renderCallPanel();
+}
+
+const toggleCamera = () => { if (call) { if (call.cam.on) stopCamera(); else startCamera(); } };
 
 // ----- Connecting to the other people (peer to peer) -----
 function syncPeers() {
   if (!call || call.kind === 'private') return;
-  for (const id of callPeople.keys()) {
+  const people = roomPeople();
+  for (const id of people.keys()) {
     if (id === state.user.id || call.peers.has(id) || state.blocked.has(id)) continue;
     // To avoid two people calling each other at the same moment, the smaller id always makes the first call.
     if (state.user.id < id) startPeer(id, true);
   }
-  for (const id of [...call.peers.keys()]) if (!callPeople.has(id)) closePeer(id);
+  for (const id of [...call.peers.keys()]) if (!people.has(id)) closePeer(id);
 }
 
 function startPeer(id, initiator) {
   const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-  const peer = { pc, queue: call.early.get(id) || [], hasRemote: false, audio: null, state: 'connecting' };
+  const peer = { pc, queue: call.early.get(id) || [], hasRemote: false, audio: null, stream: null, vs: null, state: 'connecting' };
   call.early.delete(id);
   call.peers.set(id, peer);
   call.stream.getTracks().forEach((t) => pc.addTrack(t, call.stream));
+  if (initiator) {                       // a video "slot" that is always there, so the camera can be switched on and off without reconnecting
+    pc.addTransceiver('video', { direction: 'sendrecv' });
+    ensureVideoSender(peer);
+  }
 
   pc.onicecandidate = (e) => { if (e.candidate) sendSignal(id, 'ice', e.candidate.toJSON()); };
   pc.ontrack = (e) => {
-    if (!peer.audio) { peer.audio = new Audio(); peer.audio.autoplay = true; }
-    peer.audio.srcObject = e.streams[0];
-    peer.audio.play().catch(() => {});
-    watchSpeaking(id, e.streams[0]);
+    if (!peer.stream) peer.stream = new MediaStream();
+    if (!peer.stream.getTracks().includes(e.track)) peer.stream.addTrack(e.track);
+    if (e.track.kind === 'audio') {
+      if (!peer.audio) { peer.audio = new Audio(); peer.audio.autoplay = true; }
+      peer.audio.srcObject = new MediaStream([e.track]);
+      peer.audio.play().catch(() => {});
+      watchSpeaking(id, new MediaStream([e.track]));
+    }
+    renderCallPanel();
   };
   pc.onconnectionstatechange = () => {
     peer.state = pc.connectionState;
     if (call && call.kind === 'private' && call.peers.get(id) === peer) {
-      if (pc.connectionState === 'connected') call.phase = 'connected';
+      if (pc.connectionState === 'connected') { call.phase = 'connected'; if (call.cam.on) announceCam(); }
       if (pc.connectionState === 'failed') { endPrivate('The call lost its connection.'); return; }
     }
     if (pc.connectionState === 'failed' && call && call.peers.get(id) === peer) {
@@ -3485,6 +3750,16 @@ function startPeer(id, initiator) {
       .catch((e) => console.warn('Call offer failed', e));
   }
   return peer;
+}
+
+/** Finds (or makes) the video slot of a connection and puts my camera in it if the camera is on. */
+function ensureVideoSender(peer) {
+  if (peer.vs) return;
+  let vt = peer.pc.getTransceivers().find((t) => t.receiver && t.receiver.track && t.receiver.track.kind === 'video');
+  if (!vt) vt = peer.pc.addTransceiver('video', { direction: 'sendrecv' });
+  try { vt.direction = 'sendrecv'; } catch (e) { /* ignore */ }
+  peer.vs = vt.sender;
+  if (call && call.cam.on && call.cam.track) peer.vs.replaceTrack(call.cam.track).catch(() => {});
 }
 
 function closePeer(id, c = call) {
@@ -3519,11 +3794,13 @@ async function onCallSignal(m) {
   const from = m.from;
   try {
     if (m.kind === 'offer') {
+      if (call.kind === 'group' && !memberIds(call.gid).includes(from)) return;
       if (call.peers.has(from)) closePeer(from);
       const peer = startPeer(from, false);
       await peer.pc.setRemoteDescription(m.data);
       peer.hasRemote = true;
       await flushIce(peer);
+      ensureVideoSender(peer);
       const answer = await peer.pc.createAnswer();
       await peer.pc.setLocalDescription(answer);
       sendSignal(from, 'answer', peer.pc.localDescription.toJSON());
@@ -3576,45 +3853,142 @@ function checkSpeaking() {
     const talking = peak > 14 && !(id === state.user.id && call.muted);
     if (talking !== call.speaking.has(id)) { talking ? call.speaking.add(id) : call.speaking.delete(id); changed = true; }
   });
-  if (changed) document.querySelectorAll('#call-panel .call-row').forEach((row) => {
+  if (changed) document.querySelectorAll('#call-panel .call-row, #call-panel .vtile').forEach((row) => {
     row.classList.toggle('speaking', call.speaking.has(row.dataset.id));
   });
 }
 
 // ----- The call window -----
+const callIds = () => {
+  const ids = call.kind === 'private' ? [call.with] : [...roomPeople().keys()].filter((id) => id !== state.user.id).sort();
+  ids.unshift(state.user.id);
+  return ids;
+};
+function camOf(id) {
+  if (id === state.user.id) return call.cam.on;
+  if (call.kind === 'private') return call.otherCam;
+  return !!(roomPeople().get(id) || {}).cam;
+}
+function muteOf(id) {
+  if (id === state.user.id) return call.muted;
+  if (call.kind === 'private') return call.otherMuted;
+  return !!(roomPeople().get(id) || {}).muted;
+}
+function callTitle() {
+  if (call.kind === 'private') return 'Private call';
+  if (call.kind === 'group') return ((state.groups.get(call.gid) || {}).name || 'Group') + ' call';
+  return 'Global Call';
+}
+function callSubtitle(ids) {
+  if (call.kind === 'private') return call.phase === 'calling' ? 'Ringing…' : call.phase === 'connected' ? 'Connected' : 'Connecting…';
+  return ids.length + (ids.length === 1 ? ' person' : ' people');
+}
+function peerStatus(id) {
+  if (id === state.user.id) return '';
+  const peer = call.peers.get(id);
+  if (call.kind === 'private' && call.phase === 'calling') return ' · calling…';
+  return peer && peer.state === 'connected' ? '' : ' · connecting…';
+}
+
 function renderCallPanel() {
   if (!call) return;
   let panel = $('#call-panel');
-  if (!panel) { panel = el('div', { id: 'call-panel', class: 'call-panel', attrs: { role: 'region', 'aria-label': 'Global Call' } }); document.body.append(panel); }
+  if (!panel) { panel = el('div', { id: 'call-panel', class: 'call-panel', attrs: { role: 'region', 'aria-label': 'Call' } }); document.body.append(panel); }
+  const ids = callIds();
+  if (!call.videoUI && ids.some((id) => id !== state.user.id && camOf(id))) call.videoUI = true;   // someone turned a camera on
+  if (call.videoUI) renderVideoPanel(panel, ids); else renderVoicePanel(panel, ids);
+}
 
-  const isPrivate = call.kind === 'private';
-  const ids = isPrivate ? [call.with] : [...callPeople.keys()].filter((id) => id !== state.user.id).sort();
-  ids.unshift(state.user.id);
+function renderVoicePanel(panel, ids) {
+  panel.dataset.mode = 'voice';
+  panel.className = 'call-panel';
   const rows = ids.map((id) => {
-    const meta = callPeople.get(id) || {};
     const isMe = id === state.user.id;
+    const meta = roomPeople().get(id) || {};
     const p = state.profiles.get(id) || (isMe ? state.profile : { username: meta.username || '?' });
-    const peer = call.peers.get(id);
-    const status = isMe ? '' : (isPrivate && call.phase === 'calling' ? ' · calling…' : (peer && peer.state === 'connected' ? '' : ' · connecting…'));
     return el('div', { class: 'call-row' + (call.speaking.has(id) ? ' speaking' : ''), attrs: { 'data-id': id } },
       makeAvatar(p, 'sm'),
-      el('span', { class: 'call-name', text: nameOf(p) + (isMe ? ' (you)' : '') + status }),
-      (isMe ? call.muted : (isPrivate ? call.otherMuted : meta.muted)) ? el('span', { class: 'call-muted', text: '🔇', attrs: { title: 'Muted' } }) : null,
+      el('span', { class: 'call-name', text: nameOf(p) + (isMe ? ' (you)' : '') + peerStatus(id) }),
+      muteOf(id) ? el('span', { class: 'call-muted', text: '🔇', attrs: { title: 'Muted' } }) : null,
     );
   });
-
+  const isPrivate = call.kind === 'private';
   panel.replaceChildren(
-    el('div', { class: 'call-head' }, phoneIcon(16),
-      el('strong', { text: isPrivate ? 'Private call' : 'Global Call' }),
-      el('span', { class: 'muted', text: isPrivate
-        ? (call.phase === 'calling' ? 'Ringing…' : call.phase === 'connected' ? 'Connected' : 'Connecting…')
-        : ids.length + (ids.length === 1 ? ' person' : ' people') })),
+    el('div', { class: 'call-head' }, phoneIcon(16), el('strong', { text: callTitle() }), el('span', { class: 'muted', text: callSubtitle(ids) })),
     el('div', { class: 'call-list' }, rows),
     el('div', { class: 'call-actions' },
       el('button', { class: 'btn btn-ghost', text: call.muted ? 'Unmute' : 'Mute', attrs: { type: 'button' }, on: { click: toggleMute } }),
+      el('button', { class: 'btn btn-ghost', text: 'Camera', attrs: { type: 'button', title: 'Turn your camera on' }, on: { click: toggleCamera } }),
       el('button', { class: 'btn btn-leave', text: isPrivate ? (call.phase === 'calling' ? 'Cancel' : 'End call') : 'Leave', attrs: { type: 'button' }, on: { click: () => leaveCall() } }),
     ),
   );
+}
+
+function makeTile(id) {
+  const video = el('video', { attrs: { autoplay: '', playsinline: '' } });
+  video.muted = true; video.playsInline = true; video.autoplay = true;
+  const ph = el('div', { class: 'vph' });
+  const name = el('div', { class: 'vname' });
+  const node = el('div', { class: 'vtile' + (id === state.user.id ? ' me' : ''), attrs: { 'data-id': id } }, video, ph, name);
+  return { el: node, video, ph, name, who: null, track: null };
+}
+
+function updateTile(t, id) {
+  const isMe = id === state.user.id;
+  const p = state.profiles.get(id) || (isMe ? state.profile : { id, username: (roomPeople().get(id) || {}).username || '?' });
+  const who = nameOf(p) + '|' + (p.avatar_path || '') + '|' + (p.avatar_color || '');
+  if (t.who !== who) { t.who = who; t.ph.replaceChildren(makeAvatar(p)); }
+  const cam = camOf(id);
+  t.el.classList.toggle('cam', cam);
+  t.el.classList.toggle('speaking', call.speaking.has(id));
+  t.name.textContent = nameOf(p) + (isMe ? ' (you)' : '') + peerStatus(id) + (muteOf(id) ? ' 🔇' : '');
+  if (isMe) {
+    const want = cam ? call.cam.track : null;
+    if (t.track !== want) { t.track = want; t.video.srcObject = want ? new MediaStream([want]) : null; if (want) t.video.play().catch(() => {}); }
+  } else {
+    const peer = call.peers.get(id);
+    const stream = (peer && peer.stream) || null;
+    if (t.video.srcObject !== stream) { t.video.srcObject = stream; if (stream) t.video.play().catch(() => {}); }
+  }
+}
+
+function toggleFull() {
+  if (!call) return;
+  call.full = !call.full;
+  const panel = $('#call-panel'); if (panel) panel.classList.toggle('full', call.full);
+}
+
+function renderVideoPanel(panel, ids) {
+  if (panel.dataset.mode !== 'video') {
+    panel.dataset.mode = 'video';
+    panel.className = 'call-panel video' + (call.full ? ' full' : '');
+    const btn = (cls, label, svg, onClick) => { const b = el('button', { class: 'vbtn ' + cls, attrs: { type: 'button', 'aria-label': label, title: label }, on: { click: onClick } }); b.innerHTML = svg; return b; };
+    const head = el('div', { class: 'vhead' }, phoneIcon(16), el('strong', { class: 'vtitle' }), el('span', { class: 'muted vsub' }));
+    const grid = el('div', { class: 'vgrid' });
+    call.ui = { head, grid,
+      mic: btn('mic slash', 'Mute / unmute microphone', micSvg, toggleMute),
+      cam: btn('cam slash', 'Camera on / off', camSvg('currentColor', 22), toggleCamera),
+      fs: btn('fs', 'Full screen', fsSvg, toggleFull),
+      end: btn('end', 'End call', phoneSvg(22), () => leaveCall()) };
+    call.tiles = new Map();
+    panel.replaceChildren(head, grid, el('div', { class: 'vcontrols' }, call.ui.mic, call.ui.cam, call.ui.fs, call.ui.end));
+  }
+  const ui = call.ui;
+  ui.head.querySelector('.vtitle').textContent = callTitle();
+  ui.head.querySelector('.vsub').textContent = callSubtitle(ids);
+  for (const [id, t] of [...call.tiles]) if (!ids.includes(id)) { t.el.remove(); call.tiles.delete(id); }
+  ids.forEach((id) => { let t = call.tiles.get(id); if (!t) { t = makeTile(id); call.tiles.set(id, t); } updateTile(t, id); });
+  const order = [...ids.filter((i) => i !== state.user.id), state.user.id];       // me last, so with 2 people my picture floats in the corner
+  order.forEach((id, i) => {
+    const node = call.tiles.get(id).el;
+    if (ui.grid.children[i] !== node) { ui.grid.insertBefore(node, ui.grid.children[i] || null); const v = node.querySelector('video'); if (v && v.srcObject) v.play().catch(() => {}); }
+  });
+  ui.grid.dataset.count = String(ids.length);
+  ui.mic.classList.toggle('off', call.muted);
+  ui.cam.classList.toggle('off', !call.cam.on);
+  ui.mic.setAttribute('aria-pressed', String(call.muted));
+  ui.cam.setAttribute('aria-pressed', String(!call.cam.on));
+  ui.end.title = call.kind === 'private' && call.phase === 'calling' ? 'Cancel call' : (call.kind === 'private' ? 'End call' : 'Leave call');
 }
 
 // =====================================================================
@@ -3624,22 +3998,67 @@ function renderCallPanel() {
 const RING_MS = 30000;      // how long the phone rings before giving up
 let incoming = null;        // an incoming call that is ringing right now
 
-async function startPrivateCall(id) {
+async function startPrivateCall(id, video = false) {
   if (call || incoming) { toast('Finish your current call first.', 'error'); return; }
+  if (!callsOn()) { toast('Calls are turned off. Turn them on from the call button.', 'error'); return; }
   if (!callChannel) { toast('Calls are not ready yet. Try again in a moment.', 'error'); return; }
   const p = profileOf(id);
   if (state.blocked.has(id)) { toast('You blocked ' + nameOf(p) + '. Unblock them in their profile to call.', 'error'); return; }
   if (!state.online.has(id)) { toast(nameOf(p) + ' is offline right now, so they cannot get a call.', 'error'); return; }
-  const stream = await getMic();
-  if (!stream) return;
-  if (call || incoming) { stream.getTracks().forEach((t) => t.stop()); return; }
-  makeCall(stream, 'private');
+  const media = await getMedia(video);
+  if (!media) return;
+  if (call || incoming) { media.stream.getTracks().forEach((t) => t.stop()); if (media.cam) media.cam.stop(); return; }
+  makeCall(media.stream, 'private', { cam: media.cam, video });
   call.with = id;
   call.phase = 'calling';
   call.ringTimer = setTimeout(() => { if (call && call.phase === 'calling') endPrivate(nameOf(p) + ' did not answer.'); }, RING_MS);
-  sendSignal(id, 'invite');
+  sendSignal(id, 'invite', { video: !!video });
   renderCallPanel();
   renderUsers();
+}
+
+// ----- Group calls (the people of one of your groups) -----
+async function startGroupCall(gid, video = false) {
+  if (call || incoming) { toast('Finish your current call first.', 'error'); return; }
+  if (!callsOn()) { toast('Calls are turned off. Turn them on from the call button.', 'error'); return; }
+  if (!callChannel || !state.groups.has(gid)) { toast('Calls are not ready yet. Try again in a moment.', 'error'); return; }
+  const ring = memberIds(gid).filter((id) => id !== state.user.id && !state.blocked.has(id) && state.online.has(id));
+  if (!ring.length) { toast('Nobody else from this group is online right now.', 'error'); return; }
+  const media = await getMedia(video);
+  if (!media) return;
+  if (call || incoming) { media.stream.getTracks().forEach((t) => t.stop()); if (media.cam) media.cam.stop(); return; }
+  enterGroupCall(gid, media, video);
+  ring.forEach((id) => sendSignal(id, 'ginvite', { gid, video: !!video }));
+  toast('Calling ' + ring.length + (ring.length === 1 ? ' person' : ' people') + ' from the group…');
+}
+
+function enterGroupCall(gid, media, video) {
+  makeCall(media.stream, 'group', { cam: media.cam, video, gid });
+  const room = db.channel('chatworld-gcall-' + gid, { config: { presence: { key: state.user.id } } });
+  call.room = room;
+  room
+    .on('presence', { event: 'sync' }, onGroupPresence)
+    .on('broadcast', { event: 'signal' }, ({ payload }) => onGroupSignal(payload))
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED' && call && call.room === room) { try { await room.track(callMeta()); } catch (e) { /* the sync event will still arrive */ } }
+    });
+  renderCallPanel();
+  renderUsers();
+}
+
+function onGroupPresence() {
+  if (!call || call.kind !== 'group' || !call.room) return;
+  const members = memberIds(call.gid);
+  call.people = new Map(Object.entries(call.room.presenceState()).filter(([id]) => members.includes(id)).map(([id, metas]) => [id, metas[0] || {}]));
+  syncPeers();
+  renderCallPanel();
+}
+
+function onGroupSignal(m) {
+  if (!m || m.to !== state.user.id || typeof m.from !== 'string' || m.from === state.user.id) return;
+  if (!/^[0-9a-f-]{36}$/.test(m.from) || state.blocked.has(m.from)) return;
+  if (!call || call.kind !== 'group' || !memberIds(call.gid).includes(m.from)) return;
+  if (m.kind === 'offer' || m.kind === 'answer' || m.kind === 'ice') onCallSignal(m);
 }
 
 /** Ends a private call. remoteEnded = the other person already hung up, so there is nothing to tell them. */
@@ -3654,9 +4073,17 @@ function onPrivateSignal(m) {
   const mine = call && call.kind === 'private' && call.with === from;
   switch (m.kind) {
     case 'invite':
+      if (!callsOn()) { sendSignal(from, 'dnd'); return; }
       if (call || incoming) { sendSignal(from, 'busy'); return; }
-      showIncoming(from);
+      showIncoming(from, { video: !!(m.data && m.data.video) });
       break;
+    case 'ginvite': {
+      const d = m.data || {};
+      if (typeof d.gid !== 'string' || !state.groups.has(d.gid) || !memberIds(d.gid).includes(from)) return;
+      if (!callsOn() || call || incoming) return;         // calls off or already busy: stay quiet
+      showIncoming(from, { gid: d.gid, video: !!d.video });
+      break;
+    }
     case 'cancel':
       if (incoming && incoming.from === from) { dismissIncoming(); toast('Missed call from ' + name + '.'); }
       break;
@@ -3670,8 +4097,10 @@ function onPrivateSignal(m) {
       break;
     case 'decline': if (mine && call.phase === 'calling') endPrivate(name + ' declined the call.', true); break;
     case 'busy':    if (mine && call.phase === 'calling') endPrivate(name + ' is on another call.', true); break;
+    case 'dnd':     if (mine && call.phase === 'calling') endPrivate(name + ' is not taking calls right now.', true); break;
     case 'hangup':  if (mine) endPrivate(name + ' ended the call.', true); break;
     case 'mute':    if (mine) { call.otherMuted = !!(m.data && m.data.muted); renderCallPanel(); } break;
+    case 'cam':     if (mine) { call.otherCam = !!(m.data && m.data.on); renderCallPanel(); } break;
   }
 }
 
@@ -3690,16 +4119,20 @@ function startRing() {
   } catch (e) { return null; }
 }
 
-function showIncoming(from) {
+function showIncoming(from, opts = {}) {
   const p = profileOf(from);
+  const gname = opts.gid ? ((state.groups.get(opts.gid) || {}).name || 'a group') : '';
+  const line = opts.gid
+    ? (opts.video ? 'is FaceTiming the group ' : 'is calling the group ') + gname + '…'
+    : (opts.video ? 'is FaceTiming you…' : 'is calling you…');
   const box = el('div', { id: 'incoming-call', class: 'incoming-call', attrs: { role: 'alertdialog', 'aria-label': 'Incoming call' } },
     makeAvatar(p, 'sm'),
-    el('div', { class: 'inc-text' }, el('strong', { text: nameOf(p) }), el('span', { text: 'is calling you…' })),
+    el('div', { class: 'inc-text' }, el('strong', { text: nameOf(p) }), el('span', { text: line })),
     el('button', { class: 'btn btn-leave', text: 'Decline', attrs: { type: 'button' }, on: { click: declineIncoming } }),
     el('button', { class: 'btn btn-accept', text: 'Accept', attrs: { type: 'button' }, on: { click: acceptIncoming } }),
   );
   document.body.append(box);
-  incoming = { from, ring: startRing(), timer: setTimeout(dismissIncoming, RING_MS + 5000) };
+  incoming = { from, gid: opts.gid || null, video: !!opts.video, ring: startRing(), timer: setTimeout(dismissIncoming, RING_MS + 5000) };
 }
 
 function dismissIncoming() {
@@ -3712,18 +4145,26 @@ function dismissIncoming() {
 
 function declineIncoming() {
   if (!incoming) return;
-  sendSignal(incoming.from, 'decline');
+  if (!incoming.gid) sendSignal(incoming.from, 'decline');
   dismissIncoming();
 }
 
 async function acceptIncoming() {
   if (!incoming) return;
-  const from = incoming.from;
+  const inc = incoming;
+  const from = inc.from;
   dismissIncoming();
-  if (call) { sendSignal(from, 'busy'); return; }
-  const stream = await getMic();
-  if (!stream) { sendSignal(from, 'decline'); return; }
-  makeCall(stream, 'private');
+  if (call) { if (!inc.gid) sendSignal(from, 'busy'); return; }
+  if (!callsOn()) { if (!inc.gid) sendSignal(from, 'dnd'); return; }
+  const media = await getMedia(inc.video);
+  if (!media) { if (!inc.gid) sendSignal(from, 'decline'); return; }
+  if (call) { media.stream.getTracks().forEach((t) => t.stop()); if (media.cam) media.cam.stop(); return; }
+  if (inc.gid) {
+    if (!state.groups.has(inc.gid)) { media.stream.getTracks().forEach((t) => t.stop()); if (media.cam) media.cam.stop(); return; }
+    enterGroupCall(inc.gid, media, inc.video);
+    return;
+  }
+  makeCall(media.stream, 'private', { cam: media.cam, video: inc.video });
   call.with = from;
   call.phase = 'connecting';
   sendSignal(from, 'accept');
@@ -3747,7 +4188,21 @@ function bindUI() {
   $('#announce-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); postAnnouncement(); }
   });
-  $('#call-btn').addEventListener('click', () => { if (state.chat.type === 'dm') startPrivateCall(state.chat.id); });
+  $('#call-btn').addEventListener('click', () => {
+    if (state.chat.type === 'dm' || state.chat.type === 'group') openCallChooser({ kind: state.chat.type, id: state.chat.id });
+  });
+  // Refresh by itself each time you come back to the tab (so you always see the newest version and messages).
+  // It waits if a refresh would lose something: a call, an upload, a typed-but-unsent message or a chosen photo/video.
+  let leftTabAt = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { leftTabAt = Date.now(); return; }
+    if (!leftTabAt || !state.user) return;
+    leftTabAt = 0;
+    const typed = ['#message-input', '#announce-input'].some((id) => { const box = $(id); return box && box.value.trim(); });
+    if (call || incoming || state.uploadingVideo || state.pendingImage || state.pendingVideo || typed) return;
+    location.reload();
+  });
+  $('#reply-cancel').addEventListener('click', () => { clearReply(); $('#message-input').focus(); });
   window.addEventListener('pagehide', () => {
     stopTyping();
     if (call && call.kind === 'private') sendSignal(call.with, call.phase === 'calling' ? 'cancel' : 'hangup');
@@ -3825,6 +4280,7 @@ function bindUI() {
       e.preventDefault();
       sendMessage();
     }
+    if (e.key === 'Escape' && replyTo) { clearReply(); }
   });
 
   // Modal
