@@ -454,6 +454,10 @@ input:focus, textarea:focus {
 .grind-track { margin-top: 6px; height: 5px; border-radius: 99px; background: var(--bg-4); overflow: hidden; }
 .grind-track i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #ffd666, #ff7a3a); transition: width .6s ease; }
 .grind-bar.done .grind-track { display: none; }
+.grinder-tag.off { opacity: .4; filter: grayscale(.8); box-shadow: none; }
+.grinder-tag.off::after { display: none; }
+.grind-equip { height: 26px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-3); color: var(--text); font-size: 12px; font-weight: 700; }
+.grind-equip:hover { background: var(--bg-4); }
 
 /* ---------- 3-dot menu + Voice Memos ---------- */
 .more-btn[aria-expanded="true"] { background: var(--bg-4); color: var(--text); }
@@ -678,6 +682,19 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .call-btn:hover { filter: brightness(1.12); }
 .call-btn:active { transform: translateY(1px); }
 .call-btn[hidden] { display: none; }
+.dice-btn {
+  flex: none; width: 38px; height: 38px; border: 0; border-radius: 50%;
+  display: grid; place-items: center; margin-left: auto; margin-right: 10px; color: #fff;
+  background: linear-gradient(135deg, #5865f2, #8b5cf6); transition: filter .15s, transform .06s;
+}
+.dice-btn:hover { filter: brightness(1.12); }
+.dice-btn:active { transform: translateY(1px); }
+.dice-btn[hidden] { display: none; }
+.dice-btn + .call-btn { margin-left: 0; }
+.dice-modal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .65); animation: pop .15s ease-out; }
+.dice-modal[hidden] { display: none; }
+.dice-frame { width: min(560px, 100%); height: min(760px, 100%); border: 1px solid var(--line); border-radius: 18px; background: var(--bg-0); box-shadow: 0 20px 60px rgba(0, 0, 0, .6); overflow: hidden; }
+@media (max-width: 600px) { .dice-modal { padding: 0; } .dice-frame { width: 100%; height: 100%; border-radius: 0; border: 0; } }
 .btn-accept { background: var(--green); color: #fff; }
 .btn-accept:hover { filter: brightness(1.1); }
 .incoming-call {
@@ -1017,9 +1034,14 @@ input:disabled { opacity: .6; cursor: not-allowed; }
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div id="chat-title" class="chat-title"></div>
+        <button id="dice-btn" class="dice-btn" type="button" title="Play Dice 20" aria-label="Play the Dice 20 game" hidden></button>
         <button id="call-btn" class="call-btn" type="button" title="Call (voice or FaceTime video)" aria-label="Call" hidden></button>
         <div id="online-pill" class="pill"><span class="dot"></span><span id="online-count">0 online</span></div>
       </header>
+
+      <div id="dice-modal" class="dice-modal" hidden>
+        <iframe id="dice-frame" class="dice-frame" title="Dice 20 game" allow="vibrate"></iframe>
+      </div>
 
       <div id="messages" class="messages" aria-live="polite"></div>
 
@@ -2002,7 +2024,7 @@ async function ensureProfiles(ids) {
 const GRIND_GOAL = 6000;                 // seconds (100 minutes)
 const GRIND_PING_MS = 30000;
 const GRIND_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 1.5c.4 3-1 4.6-2.5 6.2C9.4 9.4 8 11 8 13.5c0 1.2.4 2.2 1 3-.2-1.7.7-3 1.8-4 .2 1.4 1.2 2.3 2 3.1.8.8 1.2 1.6 1.2 2.6 0 1.100-.5 2-1.200 2.600 3.200-.3 5.200-2.600 5.200-5.700 0-3-1.700-4.700-3-6.300-1-1.300-1.800-2.800-1.500-5.500z"/></svg>';
-const grind = { set: new Set(), secs: 0, at: 0, running: false, unlocked: false, ok: false, timer: null, tick: null, channel: null };
+const grind = { off: new Set(), set: new Set(), secs: 0, at: 0, running: false, unlocked: false, ok: false, timer: null, tick: null, channel: null };
 
 function grinderTag() {
   const t = el('span', { class: 'grinder-tag', attrs: { title: 'Spent 100 minutes in a row on ChatWorld' } });
@@ -2019,8 +2041,13 @@ function paintGrind() {
   bar.hidden = false;
   if (grind.unlocked) {
     bar.classList.add('done');
-    $('#grind-label').replaceChildren(grinderTag());
-    $('#grind-count').textContent = 'Unlocked';
+    const equipped = !grind.off.has(state.user.id);
+    const tag = grinderTag(); if (!equipped) tag.classList.add('off');
+    $('#grind-label').replaceChildren(tag);
+    $('#grind-count').replaceChildren(el('button', {
+      class: 'grind-equip', text: equipped ? 'Unequip' : 'Equip', attrs: { type: 'button', title: equipped ? 'Hide your GRINDER tag' : 'Show your GRINDER tag' },
+      on: { click: toggleTagEquipped },
+    }));
     return;
   }
   bar.classList.remove('done');
@@ -2044,6 +2071,17 @@ function grindApply(d) {
     }
   }
   paintGrind();
+}
+
+async function toggleTagEquipped() {
+  const me = state.user.id, wasOff = grind.off.has(me);
+  const apply = (off) => { if (off) grind.off.add(me); else grind.off.delete(me); paintGrind(); rerenderTags(); };
+  apply(!wasOff);                                              // change it on screen right away
+  const { error } = await db.rpc('chat_set_tag', { p_on: wasOff });
+  if (error) {
+    apply(wasOff);                                             // it did not save: put it back
+    toast(/function|schema cache|chat_set_tag|equipped/i.test(error.message || '') ? 'Equipping tags needs a database update. Run supabase-grinder.sql again in Supabase.' : 'Could not change your tag. Please try again.', 'error');
+  }
 }
 
 function rerenderTags() { if (['global', 'dm', 'group'].includes(state.chat.type)) renderMessages(); }
@@ -2080,10 +2118,12 @@ function grindStop() {
 }
 
 async function loadGrinders() {
-  const { data, error } = await db.from('chat_grinders').select('user_id');
+  let { data, error } = await db.from('chat_grinders').select('user_id, equipped');
+  if (error) ({ data, error } = await db.from('chat_grinders').select('user_id'));   // before the equip update was run
   if (error) { grind.ok = false; return; }
   grind.ok = true;
   grind.set = new Set((data || []).map((r) => r.user_id));
+  grind.off = new Set((data || []).filter((r) => r.equipped === false).map((r) => r.user_id));
   grind.unlocked = grind.set.has(state.user.id);
 }
 
@@ -2093,14 +2133,35 @@ function subscribeGrinders() {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_grinders' }, (payload) => {
       const id = payload.new && payload.new.user_id;
       if (!id || grind.set.has(id)) return;
-      grind.set.add(id); rerenderTags();
+      grind.set.add(id);
+      if (payload.new.equipped === false) grind.off.add(id);
+      if (state.user && id === state.user.id) {            // the tag was given to me
+        grind.unlocked = true; clearInterval(grind.timer); grind.timer = null; paintGrind();
+      }
+      rerenderTags();
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_grinders' }, (payload) => {
+      const id = payload.new && payload.new.user_id;
+      if (!id) return;
+      const off = payload.new.equipped === false;
+      if (off === grind.off.has(id)) return;
+      if (off) grind.off.add(id); else grind.off.delete(id);
+      if (state.user && id === state.user.id) paintGrind();
+      rerenderTags();
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_grinders' }, (payload) => {
+      const id = payload.old && payload.old.user_id;
+      if (!id || !grind.set.has(id)) return;
+      grind.set.delete(id); grind.off.delete(id);
+      if (state.user && id === state.user.id) { grind.unlocked = false; grindBegin(); }   // tag removed: start counting again
+      rerenderTags();
     })
     .subscribe();
 }
 function unsubscribeGrinders() { if (grind.channel && db) db.removeChannel(grind.channel); grind.channel = null; }
 
 async function startGrind() {
-  grind.set = new Set(); grind.unlocked = false; grind.ok = false; grind.secs = 0; grind.running = false;
+  grind.set = new Set(); grind.off = new Set(); grind.unlocked = false; grind.ok = false; grind.secs = 0; grind.running = false;
   await loadGrinders();
   subscribeGrinders();
   if (grind.ok) { clearInterval(grind.tick); grind.tick = setInterval(paintGrind, 15000); }
@@ -2109,7 +2170,26 @@ async function startGrind() {
 }
 function stopGrind() {
   grindStop(); unsubscribeGrinders(); clearInterval(grind.tick); grind.tick = null;
-  grind.ok = false; grind.unlocked = false; grind.set = new Set(); paintGrind();
+  grind.ok = false; grind.unlocked = false; grind.set = new Set(); grind.off = new Set(); paintGrind();
+}
+
+
+// ---------- Dice 20 game (lives in dice-game.html) ----------
+const DICE_SVG = '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/></svg>';
+function openDice() {
+  const names = state.chat.type === 'dm'
+    ? [nameOf(state.profile), nameOf(profileOf(state.chat.id))]
+    : null;
+  const q = new URLSearchParams({ embed: '1' });
+  if (names) { q.set('p1', names[0]); q.set('p2', names[1]); }
+  $('#dice-frame').src = 'dice-game.html?' + q.toString();
+  $('#dice-modal').hidden = false;
+  $('#dice-frame').focus();
+}
+function closeDice() {
+  $('#dice-modal').hidden = true;
+  $('#dice-frame').src = 'about:blank';        // forget the game (and anyone's secret rolls)
+  $('#dice-btn').focus();
 }
 
 function renderMe() {
@@ -3435,6 +3515,7 @@ function renderHeader() {
     box.onclick = () => openProfile(p.id);
   }
   $('#call-btn').hidden = state.chat.type !== 'dm' && state.chat.type !== 'group';
+  $('#dice-btn').hidden = !['global', 'dm', 'group'].includes(state.chat.type);
   updateHeaderSub();
 }
 
@@ -3504,7 +3585,7 @@ function buildMessageNodes(m, prev) {
   if (!grouped) {
     body.append(el('div', { class: 'msg-head' },
       el('button', { class: 'msg-author', text: nameOf(p), attrs: { type: 'button' }, on: { click: () => openProfile(p.id) } }),
-      grind.set.has(p.id) ? grinderTag() : null,
+      grind.set.has(p.id) && !grind.off.has(p.id) ? grinderTag() : null,
       p.display_name ? el('span', { class: 'msg-handle', text: '@' + p.username }) : null,
       el('span', { class: 'msg-time', text: formatTime(m.created_at) }),
     ));
@@ -5102,6 +5183,12 @@ function bindUI() {
   // GRINDER: switching away from the tab (or closing it) ends the streak
   document.addEventListener('visibilitychange', () => { if (document.hidden) grindStop(); else if (state.user && grind.ok) grindBegin(); });
   window.addEventListener('pagehide', () => { if (grind.running) grindStop(); });
+  // Dice 20 game
+  $('#dice-btn').innerHTML = DICE_SVG;
+  $('#dice-btn').addEventListener('click', openDice);
+  $('#dice-modal').addEventListener('click', (e) => { if (e.target === $('#dice-modal')) closeDice(); });
+  window.addEventListener('message', (e) => { if (e.data && e.data.type === 'dice-close' && e.source === $('#dice-frame').contentWindow) closeDice(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#dice-modal').hidden) closeDice(); });
   // 3-dot menu + voice memos
   $('#more-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleMoreMenu(); });
   $('#more-menu').addEventListener('click', (e) => { const b = e.target.closest('.more-item'); if (b) moreMenuAction(b.dataset.act); });
