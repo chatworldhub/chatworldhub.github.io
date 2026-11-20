@@ -424,6 +424,37 @@ input:focus, textarea:focus {
 .mc-big { width: 64px; height: 64px; margin: 2px 0; }
 
 
+
+
+/* ---------- Banned screen ---------- */
+.banned-card { width: calc(100% - 32px); max-width: 440px; margin: 0 auto; font-size: 16px; line-height: 1.5; padding: 34px 26px; text-align: center; border-radius: 20px; background: var(--bg-2); border: 1px solid rgba(239, 68, 68, .35); box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
+.banned-card .banned-icon { font-size: 54px; line-height: 1; margin-bottom: 10px; }
+.banned-card h1 { margin: 0 0 8px; font-size: clamp(24px, 7vw, 32px); font-weight: 800; color: #f87171; letter-spacing: -.01em; }
+.banned-card p { margin: 0; font-size: 16px; color: var(--muted); }
+
+/* ---------- GRINDER tag ---------- */
+.grinder-tag {
+  position: relative; display: inline-flex; align-items: center; gap: 4px; flex: none; overflow: hidden;
+  margin: 0 2px; padding: 2px 8px 2px 6px; border-radius: 999px; vertical-align: 1px;
+  font-size: 10px; font-weight: 800; letter-spacing: .09em; line-height: 1.5; text-transform: uppercase;
+  color: #2a1700; background: linear-gradient(135deg, #ffd666 0%, #ffa43a 55%, #ff7a3a 100%);
+  box-shadow: 0 0 0 1px rgba(255, 190, 90, .35), 0 2px 10px rgba(255, 140, 50, .35);
+}
+.grinder-tag svg { width: 11px; height: 11px; flex: none; }
+.grinder-tag::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .65), transparent);
+  transform: skewX(-20deg); animation: grindershine 4.5s ease-in-out infinite;
+}
+@keyframes grindershine { 0%, 60% { left: -60%; } 100% { left: 140%; } }
+@media (prefers-reduced-motion: reduce) { .grinder-tag::after { animation: none; display: none; } }
+.grind-bar { padding: 8px 14px 4px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.grind-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.grind-row b { color: var(--text); font-variant-numeric: tabular-nums; }
+.grind-track { margin-top: 6px; height: 5px; border-radius: 99px; background: var(--bg-4); overflow: hidden; }
+.grind-track i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #ffd666, #ff7a3a); transition: width .6s ease; }
+.grind-bar.done .grind-track { display: none; }
+
 /* ---------- 3-dot menu + Voice Memos ---------- */
 .more-btn[aria-expanded="true"] { background: var(--bg-4); color: var(--text); }
 .more-menu {
@@ -962,6 +993,11 @@ input:disabled { opacity: .6; cursor: not-allowed; }
       </div>
 
       <nav id="user-list" class="user-list" aria-label="Chats and people"></nav>
+
+      <div id="grind-bar" class="grind-bar" hidden>
+        <div class="grind-row"><span id="grind-label">Grinder</span><b id="grind-count">0 / 100 min</b></div>
+        <div class="grind-track"><i id="grind-fill"></i></div>
+      </div>
 
       <div class="me">
         <button id="me-btn" class="me-info" type="button" title="Edit my profile">
@@ -1668,6 +1704,7 @@ function setPwVisible(btn, show) {
 }
 
 function showAuth() {
+  if (bannedScreen) return;          // a banned person stays on the banned screen
   document.querySelectorAll('.pw-toggle').forEach((b) => setPwVisible(b, false));
   $('#splash').hidden = true;
   $('#app').hidden = true;
@@ -1729,6 +1766,7 @@ async function handleLogin(e) {
   const { error } = await db.auth.signInWithPassword({ email: loginEmail, password });
   setBusy(form, false);
 
+  if (error && isBannedError(error)) { showBanned(); return; }
   if (error) {
     state.failCount += 1;
     if (state.failCount >= 5) { state.lockUntil = Date.now() + 30000; state.failCount = 0; }
@@ -1736,6 +1774,7 @@ async function handleLogin(e) {
     return;
   }
   state.failCount = 0;
+  clearBannedFlag();
   form.reset();
   // The onAuthStateChange listener below starts the app.
 }
@@ -1763,7 +1802,13 @@ async function handleSignup(e) {
   }
   if (password.length < 8) { err.textContent = 'Password must be at least 8 characters.'; return; }
 
+  if (bannedOnThisBrowser()) { showBanned(); return; }
   setBusy(form, true, 'Creating account…');
+
+  try {
+    const ban = await db.rpc('username_is_banned', { check_name: username });
+    if (ban && ban.data === true) { setBusy(form, false); showBanned(); return; }
+  } catch (e3) { /* the ban check is not installed yet: carry on */ }
 
   const check = await db.rpc('username_available', { check_name: username });
   if (check.error) {
@@ -1791,6 +1836,7 @@ async function handleSignup(e) {
   }
   setBusy(form, false);
 
+  if (error && isBannedError(error)) { showBanned(); return; }
   if (error) { err.textContent = friendlyAuthError(error); return; }
 
   // Supabase returns a user with no identities when the account already exists.
@@ -1821,6 +1867,30 @@ async function fetchOwnProfile(userId) {
   return null;
 }
 
+
+// ---------- Banned people ----------
+const BANNED_FLAG = 'chatworld_banned';
+function isBannedError(error) {
+  return !!error && (error.code === 'user_banned' || /banned/i.test(error.message || ''));
+}
+let bannedScreen = false;
+function showBanned() {
+  bannedScreen = true;
+  try { localStorage.setItem(BANNED_FLAG, '1'); } catch (e) { /* storage may be blocked */ }
+  $('#app').hidden = true;
+  $('#auth-screen').hidden = true;
+  const splash = $('#splash');
+  splash.hidden = false;
+  splash.replaceChildren(el('div', { class: 'banned-card', attrs: { role: 'alert' } },
+    el('div', { class: 'banned-icon', text: '🚫' }),
+    el('h1', { text: 'You Have Been Banned!' }),
+    el('p', { text: 'This account can no longer use ChatWorld.' }),
+  ));
+}
+function bannedOnThisBrowser() { try { return localStorage.getItem(BANNED_FLAG) === '1'; } catch (e) { return false; } }
+function clearBannedFlag() { try { localStorage.removeItem(BANNED_FLAG); } catch (e) { /* ignore */ }
+}
+
 function showStartupProblem(user) {
   $('#app').hidden = true;
   $('#auth-screen').hidden = true;
@@ -1849,6 +1919,12 @@ async function startApp(user) {
     showStartupProblem(user);
     return;
   }
+  if (profile.is_banned === true) {
+    state = freshState();
+    try { await db.auth.signOut(); } catch (e) { /* ignore */ }
+    showBanned();
+    return;
+  }
   state.profile = profile;
   state.profiles.set(profile.id, profile);
   renderMe();
@@ -1863,6 +1939,7 @@ async function startApp(user) {
   joinTypingChannel();
   subscribeAnnouncements();
   subscribePolls();
+  startGrind();
   await openAnnouncements();     // ChatWorld opens on the Announcements tab
 }
 
@@ -1880,6 +1957,7 @@ function stopApp() {
     unsubscribeAnnouncements();
     unsubscribePolls();
   }
+  stopGrind();
   cancelVoice();
   clearPendingImage();
   if (state.videoHolder && state.videoHolder.xhr) state.videoHolder.xhr.abort();
@@ -1914,6 +1992,124 @@ async function ensureProfiles(ids) {
   if (!missing.length) return;
   const { data } = await db.from('profiles').select('id, username, display_name, bio, avatar_color, avatar_path').in('id', missing);
   (data || []).forEach((p) => state.profiles.set(p.id, p));
+}
+
+
+// =====================================================================
+//  GRINDER tag: 100 minutes in a row on ChatWorld (tab open AND in front).
+//  The server keeps the clock; this part only sends "still here" signals.
+// =====================================================================
+const GRIND_GOAL = 6000;                 // seconds (100 minutes)
+const GRIND_PING_MS = 30000;
+const GRIND_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 1.5c.4 3-1 4.6-2.5 6.2C9.4 9.4 8 11 8 13.5c0 1.2.4 2.2 1 3-.2-1.7.7-3 1.8-4 .2 1.4 1.2 2.3 2 3.1.8.8 1.2 1.6 1.2 2.6 0 1.100-.5 2-1.200 2.600 3.200-.3 5.200-2.600 5.200-5.700 0-3-1.700-4.700-3-6.300-1-1.300-1.800-2.800-1.500-5.500z"/></svg>';
+const grind = { set: new Set(), secs: 0, at: 0, running: false, unlocked: false, ok: false, timer: null, tick: null, channel: null };
+
+function grinderTag() {
+  const t = el('span', { class: 'grinder-tag', attrs: { title: 'Spent 100 minutes in a row on ChatWorld' } });
+  t.innerHTML = GRIND_ICON + 'Grinder';
+  return t;
+}
+
+function grindNow() { return grind.secs + (grind.running ? (Date.now() - grind.at) / 1000 : 0); }
+
+function paintGrind() {
+  const bar = $('#grind-bar');
+  if (!bar) return;
+  if (!grind.ok || !state.user) { bar.hidden = true; return; }
+  bar.hidden = false;
+  if (grind.unlocked) {
+    bar.classList.add('done');
+    $('#grind-label').replaceChildren(grinderTag());
+    $('#grind-count').textContent = 'Unlocked';
+    return;
+  }
+  bar.classList.remove('done');
+  const secs = Math.min(GRIND_GOAL, grindNow());
+  $('#grind-label').textContent = 'Grinder: stay 100 min';
+  $('#grind-count').textContent = Math.floor(secs / 60) + ' / 100 min';
+  $('#grind-fill').style.width = (secs / GRIND_GOAL * 100) + '%';
+}
+
+function grindApply(d) {
+  if (!d) return;
+  grind.ok = true;
+  grind.secs = d.secs || 0; grind.at = Date.now();
+  if (d.unlocked && !grind.unlocked) {
+    grind.unlocked = true;
+    clearInterval(grind.timer); grind.timer = null;
+    if (state.user && !grind.set.has(state.user.id)) {
+      grind.set.add(state.user.id);
+      toast('GRINDER unlocked! You stayed 100 minutes in a row.', 'success');
+      rerenderTags();
+    }
+  }
+  paintGrind();
+}
+
+function rerenderTags() { if (['global', 'dm', 'group'].includes(state.chat.type)) renderMessages(); }
+
+async function grindCall(name) {
+  try {
+    const { data, error } = await db.rpc(name);
+    if (error) throw error;
+    return data;
+  } catch (e) {
+    return null;                       // before supabase-grinder.sql is run, the bar simply stays hidden
+  }
+}
+
+async function grindBegin() {
+  if (!db || !state.user || document.hidden) return;
+  clearInterval(grind.timer);
+  grind.running = true; grind.secs = 0; grind.at = Date.now();
+  const d = await grindCall('chat_grind_start');
+  if (!d) { grind.running = false; grind.ok = false; paintGrind(); return; }
+  grindApply(d);
+  if (!grind.unlocked) grind.timer = setInterval(async () => {
+    if (document.hidden || !state.user) return;
+    grindApply(await grindCall('chat_grind_ping'));
+  }, GRIND_PING_MS);
+}
+
+function grindStop() {
+  clearInterval(grind.timer); grind.timer = null;
+  const was = grind.running;
+  grind.running = false; grind.secs = 0;
+  if (was && db && state.user && !grind.unlocked) grindCall('chat_grind_stop');
+  paintGrind();
+}
+
+async function loadGrinders() {
+  const { data, error } = await db.from('chat_grinders').select('user_id');
+  if (error) { grind.ok = false; return; }
+  grind.ok = true;
+  grind.set = new Set((data || []).map((r) => r.user_id));
+  grind.unlocked = grind.set.has(state.user.id);
+}
+
+function subscribeGrinders() {
+  unsubscribeGrinders();
+  grind.channel = db.channel('chatworld-grinders')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_grinders' }, (payload) => {
+      const id = payload.new && payload.new.user_id;
+      if (!id || grind.set.has(id)) return;
+      grind.set.add(id); rerenderTags();
+    })
+    .subscribe();
+}
+function unsubscribeGrinders() { if (grind.channel && db) db.removeChannel(grind.channel); grind.channel = null; }
+
+async function startGrind() {
+  grind.set = new Set(); grind.unlocked = false; grind.ok = false; grind.secs = 0; grind.running = false;
+  await loadGrinders();
+  subscribeGrinders();
+  if (grind.ok) { clearInterval(grind.tick); grind.tick = setInterval(paintGrind, 15000); }
+  paintGrind();
+  if (grind.ok) await grindBegin();
+}
+function stopGrind() {
+  grindStop(); unsubscribeGrinders(); clearInterval(grind.tick); grind.tick = null;
+  grind.ok = false; grind.unlocked = false; grind.set = new Set(); paintGrind();
 }
 
 function renderMe() {
@@ -3308,6 +3504,7 @@ function buildMessageNodes(m, prev) {
   if (!grouped) {
     body.append(el('div', { class: 'msg-head' },
       el('button', { class: 'msg-author', text: nameOf(p), attrs: { type: 'button' }, on: { click: () => openProfile(p.id) } }),
+      grind.set.has(p.id) ? grinderTag() : null,
       p.display_name ? el('span', { class: 'msg-handle', text: '@' + p.username }) : null,
       el('span', { class: 'msg-time', text: formatTime(m.created_at) }),
     ));
@@ -4902,6 +5099,9 @@ function bindUI() {
     stopTyping();
     if (call && call.kind === 'private') sendSignal(call.with, call.phase === 'calling' ? 'cancel' : 'hangup');
   });
+  // GRINDER: switching away from the tab (or closing it) ends the streak
+  document.addEventListener('visibilitychange', () => { if (document.hidden) grindStop(); else if (state.user && grind.ok) grindBegin(); });
+  window.addEventListener('pagehide', () => { if (grind.running) grindStop(); });
   // 3-dot menu + voice memos
   $('#more-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleMoreMenu(); });
   $('#more-menu').addEventListener('click', (e) => { const b = e.target.closest('.more-item'); if (b) moreMenuAction(b.dataset.act); });
@@ -5046,7 +5246,7 @@ init();
 <script>
   setTimeout(function () {
     var s = document.getElementById('splash');
-    if (s && !s.hidden && !s.querySelector('.startup-problem')) {
+    if (s && !s.hidden && !s.querySelector('.startup-problem') && !s.querySelector('.banned-card')) {
       s.innerHTML = '<div style="text-align:center;padding:24px;max-width:430px;line-height:1.55">' +
         '<p style="font-size:18px;font-weight:700;margin:10px 0">ChatWorld could not start</p>' +
         '<p style="color:#9aa1ad;font-size:15px">Most likely the two Supabase lines near the top of the code in <b>index.html</b> were edited incorrectly ' +
