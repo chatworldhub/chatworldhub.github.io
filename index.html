@@ -682,19 +682,6 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .call-btn:hover { filter: brightness(1.12); }
 .call-btn:active { transform: translateY(1px); }
 .call-btn[hidden] { display: none; }
-.dice-btn {
-  flex: none; width: 38px; height: 38px; border: 0; border-radius: 50%;
-  display: grid; place-items: center; margin-left: auto; margin-right: 10px; color: #fff;
-  background: linear-gradient(135deg, #5865f2, #8b5cf6); transition: filter .15s, transform .06s;
-}
-.dice-btn:hover { filter: brightness(1.12); }
-.dice-btn:active { transform: translateY(1px); }
-.dice-btn[hidden] { display: none; }
-.dice-btn + .call-btn { margin-left: 0; }
-.dice-modal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .65); animation: pop .15s ease-out; }
-.dice-modal[hidden] { display: none; }
-.dice-frame { width: min(560px, 100%); height: min(760px, 100%); border: 1px solid var(--line); border-radius: 18px; background: var(--bg-0); box-shadow: 0 20px 60px rgba(0, 0, 0, .6); overflow: hidden; }
-@media (max-width: 600px) { .dice-modal { padding: 0; } .dice-frame { width: 100%; height: 100%; border-radius: 0; border: 0; } }
 .btn-accept { background: var(--green); color: #fff; }
 .btn-accept:hover { filter: brightness(1.1); }
 .incoming-call {
@@ -778,6 +765,74 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .reply-bar strong { color: var(--text); margin-right: 6px; }
 .msg.flash { animation: flashmsg 1.6s ease-out; }
 @keyframes flashmsg { 0% { background: rgba(88, 101, 242, .38); } 100% { background: rgba(88, 101, 242, 0); } }
+
+
+/* ---------- Feed (public videos and images, TikTok-style) ---------- */
+.feed-icon { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #f43f5e, #f59e0b); }
+.feed-page { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; background: #000; }
+.feed-page[hidden] { display: none; }
+.feed-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; container-type: size;
+  scroll-snap-type: y mandatory; scrollbar-width: none; }
+.feed-scroll::-webkit-scrollbar { display: none; }
+.feed-list { display: block; }
+.feed-card { position: relative; height: 100%; height: 100cqh; width: min(100%, 470px); margin: 0 auto; background: #000; overflow: hidden;
+  scroll-snap-align: start; scroll-snap-stop: always; }
+@media (min-width: 700px) { .feed-card { border-radius: 16px; height: calc(100cqh - 16px); margin: 8px auto; } }
+.feed-media { position: absolute; inset: 0; background: #000; cursor: pointer; }
+.feed-media img, .feed-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.feed-media .feed-load { position: absolute; inset: 0; display: grid; place-items: center; color: #9aa0ad; font-size: 13px; pointer-events: none; }
+.feed-shade { position: absolute; left: 0; right: 0; bottom: 0; height: 42%; pointer-events: none; background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,0)); }
+.feed-info { position: absolute; left: 14px; right: 74px; bottom: 18px; color: #fff; pointer-events: none; display: flex; flex-direction: column; gap: 8px; text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+.feed-who-row { display: flex; align-items: center; gap: 10px; pointer-events: auto; flex-wrap: wrap; }
+.feed-who-row .avatar { width: 38px; height: 38px; border: 2px solid #fff; }
+.feed-who { font-weight: 700; font-size: 16px; background: none; border: 0; color: #fff; padding: 0; cursor: pointer; text-align: left; }
+.feed-who:hover { text-decoration: underline; }
+.feed-time { font-size: 12px; opacity: .8; }
+.feed-caption { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; max-height: 5.6em; overflow: hidden; }
+.feed-side { position: absolute; right: 10px; bottom: 22px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.feed-btn { width: 46px; height: 46px; border: 0; border-radius: 50%; background: rgba(30, 32, 40, .65); color: #fff; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(6px); }
+.feed-btn:hover { background: rgba(60, 64, 80, .85); }
+.feed-btn.del:hover { color: #ff6b81; }
+.feed-playicon { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.feed-playicon span { width: 78px; height: 78px; border-radius: 50%; background: rgba(0,0,0,.5); display: grid; place-items: center; }
+.feed-playicon.show { opacity: 1; }
+.feed-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.25); pointer-events: none; }
+.feed-bar i { display: block; height: 100%; width: 0; background: #fff; }
+.feed-fail { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 24px; background: var(--bg-2); color: var(--muted); cursor: default; }
+.feed-fail .big { font-size: 38px; }
+.feed-fail strong { color: var(--text); font-size: 16px; }
+.feed-fail span { font-size: 13px; line-height: 1.45; max-width: 320px; }
+.feed-fail .ff-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+.feed-fail a, .feed-fail button { height: 36px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-4); color: var(--text); font: inherit; font-size: 13px; font-weight: 600; display: inline-grid; place-items: center; text-decoration: none; cursor: pointer; }
+.feed-empty { height: 100%; height: 100cqh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 24px; color: #9aa0ad; background: var(--bg); scroll-snap-align: start; }
+.feed-empty .big { font-size: 42px; }
+.feed-empty strong { color: var(--text); font-size: 18px; }
+.feed-empty span { font-size: 14px; line-height: 1.5; max-width: 360px; }
+.feed-more { height: 56px; display: grid; place-items: center; color: #9aa0ad; font-size: 13px; background: var(--bg); scroll-snap-align: end; }
+/* upload button floats over the feed */
+#feed-top { position: absolute; top: 12px; right: 12px; left: 12px; z-index: 6; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+#feed-top[hidden] { display: none; }
+.feed-upload { pointer-events: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.feed-upload[hidden], .feed-post[hidden] { display: none; }
+.feed-upload .btn { height: 40px; border-radius: 999px; padding: 0 18px; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
+.feed-err { pointer-events: auto; max-width: 340px; color: #ffd0d6; background: rgba(120, 20, 40, .92); border: 1px solid rgba(255, 99, 120, .5); border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.45; }
+.feed-err[hidden] { display: none; }
+.feed-drag { position: absolute; inset: 0; z-index: 7; display: none; place-items: center; background: rgba(88, 101, 242, .35); color: #fff; font-size: 20px; font-weight: 700; border: 3px dashed #fff; pointer-events: none; }
+.feed-page.drag .feed-drag { display: grid; }
+.feed-post { pointer-events: auto; position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .7); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.feed-post .fp-box { width: min(100%, 460px); max-height: 100%; overflow-y: auto; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.feed-preview { border-radius: 12px; overflow: hidden; background: #000; display: grid; place-items: center; max-height: 340px; }
+.feed-preview img, .feed-preview video { display: block; max-width: 100%; max-height: 340px; }
+.feed-meta { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.feed-note { font-size: 13px; line-height: 1.45; padding: 9px 12px; border-radius: 10px; background: rgba(245, 158, 11, .12); border: 1px solid rgba(245, 158, 11, .35); color: #fbbf24; }
+.feed-note[hidden] { display: none; }
+.feed-progress { height: 8px; border-radius: 99px; background: var(--bg-4); overflow: hidden; }
+.feed-progress[hidden] { display: none; }
+.feed-progress i { display: block; height: 100%; width: 0; background: var(--accent-grad); transition: width .15s; }
+.feed-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.feed-post .feed-err { max-width: none; }
+.feed-newpill { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 5; height: 38px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--accent-grad); color: #fff; font-weight: 700; box-shadow: 0 8px 24px rgba(0, 0, 0, .45); cursor: pointer; }
+.feed-newpill[hidden] { display: none; }
 
 /* ---------- Polls ---------- */
 .poll-icon { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #14b8a6, #0ea5e9); }
@@ -1034,14 +1089,9 @@ input:disabled { opacity: .6; cursor: not-allowed; }
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div id="chat-title" class="chat-title"></div>
-        <button id="dice-btn" class="dice-btn" type="button" title="Play Dice 20" aria-label="Play the Dice 20 game" hidden></button>
         <button id="call-btn" class="call-btn" type="button" title="Call (voice or FaceTime video)" aria-label="Call" hidden></button>
         <div id="online-pill" class="pill"><span class="dot"></span><span id="online-count">0 online</span></div>
       </header>
-
-      <div id="dice-modal" class="dice-modal" hidden>
-        <iframe id="dice-frame" class="dice-frame" title="Dice 20 game" allow="vibrate"></iframe>
-      </div>
 
       <div id="messages" class="messages" aria-live="polite"></div>
 
@@ -1061,6 +1111,19 @@ input:disabled { opacity: .6; cursor: not-allowed; }
       </div>
 
       <!-- The Polls page (no chatting here, only polls) -->
+      <!-- The Feed page (public videos and images) -->
+      <div id="feed-page" class="feed-page" hidden>
+        <button id="feed-newpill" class="feed-newpill" type="button" hidden></button>
+        <div class="feed-drag">Drop a video or photo to share it</div>
+        <div id="feed-top"></div>
+        <div id="feed-scroll" class="feed-scroll">
+          <div id="feed-list" class="feed-list" aria-live="polite"></div>
+          <div id="feed-more" class="feed-more"></div>
+        </div>
+        <input id="feed-file" type="file" hidden
+          accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/bmp,image/heic,image/heif,video/mp4,video/quicktime,video/webm,video/x-msvideo,video/x-matroska,video/3gpp,video/3gpp2,.jpg,.jpeg,.png,.gif,.webp,.avif,.bmp,.heic,.heif,.mp4,.mov,.webm,.avi,.mkv,.3gp,.3g2" />
+      </div>
+
       <div id="polls-page" class="polls-page" hidden>
         <div id="polls-scroll" class="polls-scroll">
           <div id="polls-create" class="poll-create"></div>
@@ -1961,6 +2024,7 @@ async function startApp(user) {
   joinTypingChannel();
   subscribeAnnouncements();
   subscribePolls();
+  subscribeFeed();
   startGrind();
   await openAnnouncements();     // ChatWorld opens on the Announcements tab
 }
@@ -1978,6 +2042,7 @@ function stopApp() {
     if (state.groupsChannel) db.removeChannel(state.groupsChannel);
     unsubscribeAnnouncements();
     unsubscribePolls();
+    unsubscribeFeed();
   }
   stopGrind();
   cancelVoice();
@@ -2174,22 +2239,488 @@ function stopGrind() {
 }
 
 
-// ---------- Dice 20 game (lives in dice-game.html) ----------
-const DICE_SVG = '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/></svg>';
-function openDice() {
-  const names = state.chat.type === 'dm'
-    ? [nameOf(state.profile), nameOf(profileOf(state.chat.id))]
-    : null;
-  const q = new URLSearchParams({ embed: '1' });
-  if (names) { q.set('p1', names[0]); q.set('p2', names[1]); }
-  $('#dice-frame').src = 'dice-game.html?' + q.toString();
-  $('#dice-modal').hidden = false;
-  $('#dice-frame').focus();
+// =====================================================================
+//  FEED  (public scrolling feed of videos and images; everyone can browse and post)
+// =====================================================================
+const FEED_PAGE = 6;
+const FEED_VIDEO_MAX = 50 * 1024 * 1024;    // 50 MB
+const FEED_IMAGE_MAX = 10 * 1024 * 1024;    // 10 MB
+const FEED_IMAGE_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', bmp: 'image/bmp', heic: 'image/heic', heif: 'image/heif' };
+const FEED_VIDEO_TYPES = { mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', avi: 'video/x-msvideo', mkv: 'video/x-matroska', '3gp': 'video/3gpp', '3g2': 'video/3gpp2' };
+const FEED_RISKY = ['mov', 'avi', 'mkv', '3gp', '3g2', 'heic', 'heif'];    // work on some devices only
+const FEED_FORMATS_TEXT = 'Videos: MP4, MOV, WebM, AVI, MKV, 3GP. Photos: JPG, PNG, GIF, WebP, AVIF, BMP, HEIC.';
+let feed = { muted: true, items: [], loaded: false, error: '', done: false, loading: false, channel: null, built: false, ui: null, file: null, busy: false,
+             pending: [], holder: {}, sentinelObs: null, videoObs: null, previewUrl: '' };
+
+function feedIcon() {
+  const icon = el('span', { class: 'feed-icon', attrs: { 'aria-hidden': 'true' } });
+  icon.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
+  return icon;
 }
-function closeDice() {
-  $('#dice-modal').hidden = true;
-  $('#dice-frame').src = 'about:blank';        // forget the game (and anyone's secret rolls)
-  $('#dice-btn').focus();
+
+const feedUrl = (path) => db.storage.from('chat-feed').getPublicUrl(path).data.publicUrl;
+
+function feedErrorText(error) {
+  const msg = (error && error.message) || '';
+  const status = error && (error.status || error.statusCode);
+  if (error && error.network) return 'Upload failed. Check your internet connection and try again.';
+  if (/schema cache|does not exist|could not find|bucket not found/i.test(msg) || status === 404)
+    return 'The Feed needs a one-time database update. Run supabase-feed.sql in your Supabase project (see README.md).';
+  if (/row-level security|unauthorized|violates|not allowed/i.test(msg) || status === 403)
+    return 'Upload blocked. You can upload 6 files every 10 minutes (40 a day). Wait a little and try again.';
+  if (/exceed|too large|maximum allowed size/i.test(msg) || status === 413) return 'That file is too big to upload (videos up to 50 MB, photos up to 10 MB).';
+  if (/mime type|not supported/i.test(msg)) return 'Supabase did not accept that file type. Try converting it to MP4 or JPG.';
+  if (/slow down|did not finish|too long|already gone|only delete|invalid file|sign in/i.test(msg)) return msg;
+  return 'Something went wrong. Please try again.';
+}
+
+/** Works out what kind of file this is from its name (browsers are unreliable about the type of AVI/MKV/3GP). */
+function feedKindOf(file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (FEED_IMAGE_TYPES[ext]) return { kind: 'image', ext, mime: FEED_IMAGE_TYPES[ext] };
+  if (FEED_VIDEO_TYPES[ext]) return { kind: 'video', ext, mime: FEED_VIDEO_TYPES[ext] };
+  return null;
+}
+
+/** Checks the browser can really show this file BEFORE it is uploaded. Resolves with its size on screen. */
+function feedCompat(file, info) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const fail = (msg) => { URL.revokeObjectURL(url); reject(new Error(msg)); };
+    const E = info.ext.toUpperCase();
+    if (info.kind === 'image') {
+      const img = new Image();
+      img.onload = () => (img.naturalWidth > 0 ? resolve({ url, w: img.naturalWidth, h: img.naturalHeight }) : fail('This image has no picture in it.'));
+      img.onerror = () => fail(/^(heic|heif)$/.test(info.ext)
+        ? 'Your browser cannot show ' + E + ' photos (only Apple devices can). Convert it to JPG or PNG and try again.'
+        : 'This image is damaged or in a format your browser cannot show. Try saving it as JPG or PNG.');
+      img.src = url;
+      return;
+    }
+    const v = document.createElement('video');
+    v.preload = 'metadata'; v.muted = true; v.playsInline = true;
+    const timer = setTimeout(() => fail('This video took too long to open. It may be damaged or in a format your browser cannot play. Convert it to MP4 and try again.'), 12000);
+    v.onloadedmetadata = () => {
+      clearTimeout(timer);
+      if (!v.videoWidth) { fail('This ' + E + ' file has no picture your browser can play (it may be audio only). Convert it to MP4 and try again.'); return; }
+      resolve({ url, w: v.videoWidth, h: v.videoHeight });
+    };
+    v.onerror = () => {
+      clearTimeout(timer);
+      fail('Your browser cannot play this ' + E + ' video (its video format is not supported). ' +
+        (/^(avi|mkv|3gp|3g2)$/.test(info.ext) ? E + ' files often fail in browsers. ' : '') + 'Convert it to MP4 (H.264) and try again.');
+    };
+    v.src = url;
+  });
+}
+
+function feedTimeAgo(iso) {
+  const sec = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (sec < 60) return 'just now';
+  if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+  if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+  if (sec < 7 * 86400) return Math.floor(sec / 86400) + 'd ago';
+  return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ----- the upload box (built once, so what you type is never wiped by live updates) -----
+function buildFeedTop() {
+  const top = $('#feed-top');
+  const ui = {};
+  ui.err = el('div', { class: 'feed-err', attrs: { role: 'alert' } }); ui.err.hidden = true;
+  ui.pick = el('button', { class: 'btn btn-primary', text: '+ Upload', attrs: { type: 'button' }, on: { click: () => $('#feed-file').click() } });
+  const ico = el('span', { class: 'fu-ico' });
+  ico.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>';
+  ui.pick.textContent = '+ Upload';
+  ui.idle = el('div', { class: 'feed-upload' }, ui.pick, ui.err);
+  // drag and drop (computers): drop a file anywhere on the feed
+  const pageEl = $('#feed-page');
+  ['dragenter', 'dragover'].forEach((ev) => pageEl.addEventListener(ev, (e) => { e.preventDefault(); pageEl.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach((ev) => pageEl.addEventListener(ev, (e) => { e.preventDefault(); pageEl.classList.remove('drag'); }));
+  pageEl.addEventListener('drop', (e) => { const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) feedFileChosen(f); });
+
+  ui.preview = el('div', { class: 'feed-preview' });
+  ui.meta = el('div', { class: 'feed-meta' });
+  ui.note = el('div', { class: 'feed-note' }); ui.note.hidden = true;
+  ui.caption = el('input', { attrs: { type: 'text', maxlength: '200', placeholder: 'Add a caption (optional)', 'aria-label': 'Caption' } });
+  ui.bar = el('i'); ui.progress = el('div', { class: 'feed-progress' }, ui.bar); ui.progress.hidden = true;
+  ui.perr = el('div', { class: 'feed-err', attrs: { role: 'alert' } }); ui.perr.hidden = true;
+  ui.cancel = el('button', { class: 'btn btn-ghost', text: 'Cancel', attrs: { type: 'button' }, on: { click: cancelFeedUpload } });
+  ui.post = el('button', { class: 'btn btn-primary', text: 'Post', attrs: { type: 'button' }, on: { click: postToFeed } });
+  ui.panel = el('div', { class: 'feed-post' }, el('div', { class: 'fp-box' }, el('strong', { text: 'Share to the Feed' }), ui.preview, ui.meta, ui.note, ui.caption, ui.progress, ui.perr, el('div', { class: 'feed-actions' }, ui.cancel, ui.post)));
+  ui.panel.hidden = true;
+  top.replaceChildren(ui.idle, ui.panel);
+  feed.ui = ui; feed.built = true;
+  $('#feed-file').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) feedFileChosen(f); });
+  $('#feed-newpill').addEventListener('click', showPendingFeed);
+}
+
+function feedShowError(msg) { feed.ui.err.textContent = msg; feed.ui.err.hidden = !msg; }
+
+async function feedFileChosen(file) {
+  if (feed.busy) return;
+  feedShowError('');
+  const info = feedKindOf(file);
+  if (!info) { feedShowError('That file type is not supported. ' + FEED_FORMATS_TEXT); return; }
+  const max = info.kind === 'video' ? FEED_VIDEO_MAX : FEED_IMAGE_MAX;
+  if (file.size > max) { feedShowError('That ' + info.kind + ' is ' + formatSize(file.size) + '. ' + (info.kind === 'video' ? 'Videos can be up to 50 MB.' : 'Photos can be up to 10 MB.')); return; }
+  if (!file.size) { feedShowError('That file is empty.'); return; }
+  feed.ui.pick.disabled = true; feed.ui.pick.textContent = 'Checking…';
+  let check;
+  try { check = await feedCompat(file, info); }
+  catch (e) { feedShowError(e.message); feed.ui.pick.disabled = false; feed.ui.pick.textContent = '+ Upload'; return; }
+  feed.ui.pick.disabled = false; feed.ui.pick.textContent = '+ Upload';
+  feed.file = Object.assign({ file }, info, check);
+  const ui = feed.ui;
+  if (feed.previewUrl) URL.revokeObjectURL(feed.previewUrl);
+  feed.previewUrl = check.url;
+  const media = info.kind === 'image'
+    ? el('img', { attrs: { src: check.url, alt: 'Preview' } })
+    : el('video', { attrs: { src: check.url, controls: '', muted: '', playsinline: '', preload: 'metadata' } });
+  if (info.kind === 'video') media.muted = true;
+  ui.preview.replaceChildren(media);
+  ui.meta.textContent = file.name + ' · ' + formatSize(file.size) + ' · ' + check.w + '×' + check.h;
+  const risky = FEED_RISKY.includes(info.ext);
+  ui.note.textContent = risky
+    ? 'This ' + info.ext.toUpperCase() + ' file plays on your device, but ' + info.ext.toUpperCase() + ' files fail on some phones and browsers. ' + (info.kind === 'video' ? 'MP4 works everywhere.' : 'JPG and PNG work everywhere.')
+    : '';
+  ui.note.hidden = !risky;
+  ui.caption.value = ''; ui.perr.hidden = true; ui.progress.hidden = true; ui.bar.style.width = '0';
+  ui.post.disabled = false; ui.post.textContent = 'Post'; ui.cancel.textContent = 'Cancel';
+  ui.idle.hidden = true; ui.panel.hidden = false;
+}
+
+function resetFeedUpload() {
+  if (!feed.built) return;
+  if (feed.previewUrl) URL.revokeObjectURL(feed.previewUrl);
+  feed.previewUrl = ''; feed.file = null; feed.busy = false; feed.holder = {};
+  feed.ui.preview.replaceChildren();
+  feed.ui.panel.hidden = true; feed.ui.idle.hidden = false;
+}
+
+function cancelFeedUpload() {
+  if (feed.busy && feed.holder.xhr) feed.holder.xhr.abort();
+  else resetFeedUpload();
+}
+
+/** Uploads with a progress bar (the normal upload call cannot report progress). */
+async function feedUpload(path, file, mime, onProgress, holder) {
+  const { data: sess } = await db.auth.getSession();
+  const token = sess && sess.session && sess.session.access_token;
+  if (!token) throw Object.assign(new Error('Please sign in again.'), { status: 401 });
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    holder.xhr = xhr;
+    xhr.open('POST', SUPABASE_URL + '/storage/v1/object/chat-feed/' + path.split('/').map(encodeURIComponent).join('/'));
+    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+    xhr.setRequestHeader('apikey', SUPABASE_PUBLISHABLE_KEY);
+    xhr.setRequestHeader('x-upsert', 'false');
+    xhr.setRequestHeader('cache-control', 'max-age=31536000');
+    xhr.setRequestHeader('Content-Type', mime);
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) { onProgress(1); resolve(); return; }
+      let msg = ''; try { msg = (JSON.parse(xhr.responseText) || {}).message || ''; } catch (e) { msg = xhr.responseText || ''; }
+      reject(Object.assign(new Error(msg || ('HTTP ' + xhr.status)), { status: xhr.status }));
+    };
+    xhr.onerror = () => reject(Object.assign(new Error('network'), { network: true }));
+    xhr.onabort = () => reject(Object.assign(new Error('cancelled'), { cancelled: true }));
+    xhr.send(file);
+  });
+}
+
+async function postToFeed() {
+  const f = feed.file, ui = feed.ui;
+  if (!f || feed.busy) return;
+  feed.busy = true;
+  ui.post.disabled = true; ui.post.textContent = 'Uploading…'; ui.cancel.textContent = 'Stop';
+  ui.perr.hidden = true; ui.progress.hidden = false; ui.bar.style.width = '0';
+  const path = state.user.id + '/' + randomVideoName(f.ext);
+  try {
+    await feedUpload(path, f.file, f.mime, (p) => { ui.bar.style.width = Math.round(p * 100) + '%'; }, feed.holder);
+  } catch (e) {
+    feed.busy = false;
+    if (e.cancelled) { resetFeedUpload(); return; }
+    ui.post.disabled = false; ui.post.textContent = 'Try again'; ui.cancel.textContent = 'Cancel';
+    ui.progress.hidden = true; ui.perr.textContent = feedErrorText(e); ui.perr.hidden = false;
+    return;
+  }
+  ui.post.textContent = 'Posting…'; ui.cancel.disabled = true;
+  const { data, error } = await db.rpc('chat_feed_post', { p_path: path, p_kind: f.kind, p_mime: f.mime, p_caption: ui.caption.value.trim(), p_w: f.w, p_h: f.h });
+  ui.cancel.disabled = false;
+  if (error) {
+    feed.busy = false;
+    db.storage.from('chat-feed').remove([path]).catch(() => {});      // do not leave an orphan file behind
+    ui.post.disabled = false; ui.post.textContent = 'Try again'; ui.cancel.textContent = 'Cancel';
+    ui.progress.hidden = true; ui.perr.textContent = feedErrorText(error); ui.perr.hidden = false;
+    return;
+  }
+  resetFeedUpload();
+  toast('Posted to the Feed!', 'success');
+  if (!feed.items.some((x) => x.id === data.id)) feed.items.unshift(data);
+  if (state.chat.type === 'feed') { renderFeedList(); $('#feed-scroll').scrollTo({ top: 0, behavior: 'smooth' }); }
+}
+
+// ----- loading -----
+async function feedFetchProfiles(rows) {
+  const ids = [...new Set(rows.map((x) => x.author_id))].filter((id) => !state.profiles.has(id));
+  if (!ids.length) return;
+  const res = await db.from('profiles').select('*').in('id', ids);
+  (res.data || []).forEach((pr) => state.profiles.set(pr.id, pr));
+}
+
+async function loadFeedPage() {
+  if (feed.loading || feed.done) return;
+  feed.loading = true;
+  const last = feed.items.length ? feed.items[feed.items.length - 1].id : null;
+  let q = db.from('chat_feed').select('*').order('id', { ascending: false }).limit(FEED_PAGE);
+  if (last != null) q = q.lt('id', last);
+  const { data, error } = await q;
+  feed.loading = false;
+  if (error) {
+    if (!feed.items.length) { feed.error = feedErrorText(error); feed.loaded = true; }
+    else toast('Could not load more. Scroll up and down to try again.', 'error');
+    return;
+  }
+  feed.error = ''; feed.loaded = true;
+  const rows = (data || []).filter((x) => !feed.items.some((y) => y.id === x.id));
+  await feedFetchProfiles(rows);
+  feed.items.push(...rows);
+  if ((data || []).length < FEED_PAGE) feed.done = true;
+}
+
+// ----- one post -----
+function feedFailBox(media, x, reason, retry) {
+  const isVideo = x.kind === 'video';
+  const box = el('div', { class: 'feed-fail', attrs: { role: 'alert' } },
+    el('span', { class: 'big', text: '⚠️' }),
+    el('strong', { text: isVideo ? 'This video can’t be displayed' : 'This photo can’t be displayed' }),
+    el('span', { text: reason }),
+    el('div', { class: 'ff-row' },
+      el('button', { text: 'Try again', attrs: { type: 'button' }, on: { click: retry } }),
+      el('a', { text: 'Open file', attrs: { href: feedUrl(x.path), target: '_blank', rel: 'noopener noreferrer' } }),
+    ));
+  media.replaceChildren(box);
+}
+
+function feedMedia(x) {
+  const ext = (x.path.split('.').pop() || '').toLowerCase();
+  const E = ext.toUpperCase();
+  const media = el('div', { class: 'feed-media' });
+  const build = () => {
+    media.replaceChildren(el('div', { class: 'feed-load', text: 'Loading…' }));
+    const url = feedUrl(x.path);
+    if (x.kind === 'image') {
+      const img = el('img', { attrs: { alt: x.caption || 'Photo', loading: 'lazy', decoding: 'async', draggable: 'false' } });
+      img.onload = () => { const l = media.querySelector('.feed-load'); if (l) l.remove(); };
+      img.onerror = () => feedFailBox(media, x,
+        /^(heic|heif)$/.test(ext) ? 'HEIC photos only show on Apple devices. Open the file or ask them to post a JPG or PNG.'
+          : 'This photo is damaged, was deleted, or is in a format your browser cannot show.', build);
+      img.src = url;
+      media.append(img);
+    } else {
+      const v = el('video', { attrs: { loop: '', playsinline: '', preload: 'metadata', 'aria-label': x.caption || 'Video' } });
+      v.muted = feed.muted;
+      const bar = el('i');
+      const icon = el('div', { class: 'feed-playicon' }, el('span'));
+      icon.firstChild.innerHTML = '<svg viewBox="0 0 24 24" width="38" height="38" fill="#fff"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
+      v.onloadeddata = () => { const l = media.querySelector('.feed-load'); if (l) l.remove(); };
+      v.onloadedmetadata = () => { if (!v.videoWidth) feedFailBox(media, x, 'This file has no picture your device can play (it may be audio only).', build); };
+      v.ontimeupdate = () => { if (v.duration) bar.style.width = (v.currentTime / v.duration * 100) + '%'; };
+      v.onerror = () => feedFailBox(media, x,
+        'Your device cannot play this ' + E + ' video. ' + (/^(avi|mkv|3gp|3g2|mov)$/.test(ext) ? E + ' videos only play on some phones and browsers. ' : '') +
+        'Open the file to download it, or ask for an MP4 version.', build);
+      // tap the video to pause or play
+      media.onclick = (e) => {
+        if (e.target.closest('.feed-fail')) return;
+        if (v.paused) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); icon.classList.remove('show'); }
+        else { v.pause(); icon.classList.add('show'); }
+      };
+      v.onplay = () => icon.classList.remove('show');
+      v.src = url;
+      media.append(v, icon, el('div', { class: 'feed-bar' }, bar));
+      if (feed.videoObs) feed.videoObs.observe(v);
+    }
+  };
+  build();
+  return media;
+}
+
+function feedCard(x) {
+  const p = profileOf(x.author_id);
+  const info = el('div', { class: 'feed-info' },
+    el('div', { class: 'feed-who-row' },
+      makeAvatar(p, 'sm'),
+      el('button', { class: 'feed-who', text: nameOf(p), attrs: { type: 'button' }, on: { click: () => openProfile(x.author_id) } }),
+      p && grind.set.has(p.id) && !grind.off.has(p.id) ? grinderTag() : null,
+      el('span', { class: 'feed-time', text: feedTimeAgo(x.created_at), attrs: { title: new Date(x.created_at).toLocaleString() } })),
+    x.caption ? el('div', { class: 'feed-caption', text: x.caption }) : null);
+  const side = el('div', { class: 'feed-side' });
+  if (x.kind === 'video') {
+    const mute = el('button', { class: 'feed-btn', attrs: { type: 'button', title: 'Sound on or off', 'aria-label': 'Sound on or off' } });
+    const paint = () => {
+      mute.innerHTML = feed.muted
+        ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>'
+        : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+    };
+    paint();
+    mute.addEventListener('click', () => {
+      feed.muted = !feed.muted;
+      document.querySelectorAll('#feed-list video').forEach((v) => { v.muted = feed.muted; });
+      document.querySelectorAll('#feed-list .feed-btn[data-mute]').forEach((b) => b.repaint && b.repaint());
+    });
+    mute.dataset.mute = '1'; mute.repaint = paint;
+    side.append(mute);
+  }
+  if (x.author_id === state.user.id || isAnnouncer()) {
+    const del = el('button', { class: 'feed-btn del', attrs: { type: 'button', title: 'Delete this post', 'aria-label': 'Delete this post' }, on: { click: () => deleteFeedPost(x.id) } });
+    del.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>';
+    side.append(del);
+  }
+  return el('article', { class: 'feed-card', attrs: { 'data-id': String(x.id) } },
+    feedMedia(x), el('div', { class: 'feed-shade' }), info, side.childNodes.length ? side : null);
+}
+
+async function deleteFeedPost(id) {
+  const x = feed.items.find((y) => y.id === id);
+  if (!x || !window.confirm('Delete this post for everyone?')) return;
+  const { data, error } = await db.rpc('chat_feed_delete', { p_id: id });
+  if (error) { toast(feedErrorText(error), 'error'); return; }
+  if (data) db.storage.from('chat-feed').remove([data]).catch(() => {});
+  feed.items = feed.items.filter((y) => y.id !== id);
+  const card = document.querySelector('.feed-card[data-id="' + id + '"]');
+  if (card) card.remove();
+  if (state.chat.type === 'feed' && !feed.items.length) renderFeedList();
+}
+
+function renderFeedList() {
+  const list = $('#feed-list');
+  const keep = $('#feed-scroll').scrollTop;
+  list.replaceChildren();
+  $('#feed-top').hidden = !!feed.error;
+  if (feed.error) {
+    list.append(el('div', { class: 'feed-empty' }, el('span', { class: 'big', text: '🛠️' }), el('strong', { text: 'The Feed is not ready yet' }), el('span', { text: feed.error })));
+  } else if (!feed.loaded) {
+    list.append(el('div', { class: 'feed-empty', text: 'Loading…' }));
+  } else if (!feed.items.length) {
+    list.append(el('div', { class: 'feed-empty' }, el('span', { class: 'big', text: '🎬' }), el('strong', { text: 'Nothing here yet' }), el('span', { text: 'Be the first to share a video or photo! Tap + Upload at the top. ' + FEED_FORMATS_TEXT })));
+  } else {
+    feed.items.forEach((x) => list.append(feedCard(x)));
+  }
+  $('#feed-more').textContent = feed.error || !feed.loaded ? '' : feed.done ? (feed.items.length ? 'You\u2019re all caught up' : '') : 'Loading more…';
+  $('#feed-scroll').scrollTop = keep;
+  watchFeedEnd();
+}
+
+/** Loads the next page when you scroll near the bottom, and plays only the video that is on screen. */
+function watchFeedEnd() {
+  if (feed.sentinelObs) feed.sentinelObs.disconnect();
+  if (!('IntersectionObserver' in window)) { if (!feed.done) loadMoreFeed(); return; }
+  if (feed.done || feed.error) return;
+  feed.sentinelObs = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) loadMoreFeed(); }, { root: $('#feed-scroll'), rootMargin: '500px' });
+  feed.sentinelObs.observe($('#feed-more'));
+}
+async function loadMoreFeed() {
+  if (feed.loading || feed.done || state.chat.type !== 'feed') return;
+  const before = feed.items.length;
+  await loadFeedPage();
+  if (state.chat.type !== 'feed') return;
+  if (feed.items.length > before) {
+    const list = $('#feed-list');
+    feed.items.slice(before).forEach((x) => list.append(feedCard(x)));
+  }
+  $('#feed-more').textContent = feed.done ? 'You\u2019re all caught up' : 'Loading more…';
+  if (feed.sentinelObs) feed.sentinelObs.disconnect();
+  if (!feed.done) watchFeedEnd();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!state.chat || state.chat.type !== 'feed') return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ''))) return;
+  const sc = $('#feed-scroll');
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); sc.scrollBy({ top: sc.clientHeight, behavior: 'smooth' }); }
+  if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); sc.scrollBy({ top: -sc.clientHeight, behavior: 'smooth' }); }
+});
+
+function stopFeedMedia() {
+  if (feed.videoObs) feed.videoObs.disconnect();
+  if (feed.sentinelObs) feed.sentinelObs.disconnect();
+  document.querySelectorAll('#feed-list video').forEach((v) => { try { v.pause(); } catch (e) { /* ignore */ } });
+}
+
+function startFeedVideoObserver() {
+  if (feed.videoObs) feed.videoObs.disconnect();
+  if (!('IntersectionObserver' in window)) return;
+  feed.videoObs = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      const v = e.target;
+      if (e.isIntersecting && e.intersectionRatio >= 0.6) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); }
+      else if (!v.paused) v.pause();
+    });
+  }, { root: $('#feed-scroll'), threshold: [0, 0.6] });
+}
+
+function showPendingFeed() {
+  const add = feed.pending.splice(0);
+  add.forEach((x) => { if (!feed.items.some((y) => y.id === x.id)) feed.items.unshift(x); });
+  $('#feed-newpill').hidden = true;
+  renderFeedList();
+  $('#feed-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function openFeed() {
+  stopTyping();
+  clearReply();
+  state.chat = { type: 'feed', id: 'feed' };
+  state.loadToken += 1;
+  clearPendingImage();
+  if (!state.uploadingVideo) clearPendingVideo();
+  closeEmojiPanel();
+  closeSidebar();
+  showView('feed');
+  renderHeader();
+  renderUsers();
+  updateTitle();
+  if (!feed.built) buildFeedTop();
+  startFeedVideoObserver();
+  $('#feed-newpill').hidden = true;
+  feed.pending = [];
+  // always start fresh so you see the newest posts
+  feed.items = []; feed.loaded = false; feed.done = false; feed.error = '';
+  renderFeedList();
+  await loadFeedPage();
+  if (state.chat.type === 'feed') renderFeedList();
+}
+
+/** Live updates: new posts appear for everyone, deleted posts disappear. */
+function subscribeFeed() {
+  unsubscribeFeed();
+  feed.channel = db.channel('chatworld-feed')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_feed' }, async (payload) => {
+      const x = payload.new;
+      if (!x || feed.items.some((y) => y.id === x.id) || feed.pending.some((y) => y.id === x.id)) return;
+      await feedFetchProfiles([x]);
+      if (state.chat.type !== 'feed') return;                 // the list is rebuilt fresh when you open the Feed
+      if (x.author_id === state.user.id) return;
+      feed.pending.push(x);
+      const pill = $('#feed-newpill');
+      pill.textContent = '↑ ' + feed.pending.length + (feed.pending.length === 1 ? ' new post' : ' new posts');
+      pill.hidden = false;
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_feed' }, (payload) => {
+      const id = payload.old && payload.old.id;
+      if (id == null) return;
+      feed.items = feed.items.filter((y) => y.id !== id);
+      feed.pending = feed.pending.filter((y) => y.id !== id);
+      const card = document.querySelector('.feed-card[data-id="' + id + '"]');
+      if (card) card.remove();
+    })
+    .subscribe();
+}
+function unsubscribeFeed() {
+  if (feed.channel && db) db.removeChannel(feed.channel);
+  feed.channel = null;
+  stopFeedMedia();
 }
 
 function renderMe() {
@@ -2251,6 +2782,15 @@ function renderUsers() {
     onClick: () => openPolls(),
   }));
 
+  // The Feed sits right under Polls
+  list.append(chatItem({
+    key: 'feed',
+    avatar: feedIcon(),
+    name: 'Feed',
+    badge: 0,
+    onClick: () => openFeed(),
+  }));
+
   // Groups
   list.append(el('div', { class: 'section-label with-action' },
     el('span', { text: 'Groups' }),
@@ -2295,10 +2835,13 @@ function renderUsers() {
 function showView(view) {
   const announce = view === 'announce';
   const polls = view === 'polls';
-  $('#messages').hidden = announce || polls;
-  $('#composer').hidden = announce || polls;
+  const feedView = view === 'feed';
+  $('#messages').hidden = announce || polls || feedView;
+  $('#composer').hidden = announce || polls || feedView;
   $('#announce-page').hidden = !announce;
   $('#polls-page').hidden = !polls;
+  $('#feed-page').hidden = !feedView;
+  if (!feedView) stopFeedMedia();
 }
 
 // =====================================================================
@@ -2648,7 +3191,7 @@ function renderPollList(freshId = null) {
   if (polls.error) {
     list.append(el('div', { class: 'polls-empty' }, el('span', { class: 'big', text: '🛠️' }), el('strong', { text: 'Polls are not ready yet' }), el('span', { text: polls.error })));
   } else if (!polls.loaded) {
-    list.append(el('div', { class: 'polls-empty', text: 'Loading…' }));
+    list.append(el('div', { class: 'feed-empty', text: 'Loading…' }));
   } else if (!polls.items.length) {
     list.append(el('div', { class: 'polls-empty' }, el('span', { class: 'big', text: '📊' }), el('strong', { text: 'No polls yet' }), el('span', { text: 'Be the first: ask a question above.' })));
   } else {
@@ -3161,7 +3704,7 @@ function onTypingSignal(d) {
 function renderTyping() {
   const box = $('#messages');
   const old = box.querySelector('.typing-row');
-  const ids = (state.chat.type === 'announce' || state.chat.type === 'polls') ? [] : Array.from((typers.get(chatKey()) || new Map()).keys());
+  const ids = (state.chat.type === 'announce' || state.chat.type === 'polls' || state.chat.type === 'feed') ? [] : Array.from((typers.get(chatKey()) || new Map()).keys());
   if (!ids.length) { if (old) old.remove(); return; }
   const people = ids.slice(0, 3).map(profileOf);
   const names = ids.map((id) => nameOf(profileOf(id)));
@@ -3384,6 +3927,7 @@ function updateFavicon(total) {
 async function openChat(type, id = null) {
   if (type === 'announce') { openAnnouncements(); return; }
   if (type === 'polls') { openPolls(); return; }
+  if (type === 'feed') { openFeed(); return; }
   stopTyping();            // tell the chat we just left that we stopped typing
   if (!voice.sending) cancelVoice();   // a voice memo belongs to one chat only
   toggleMoreMenu(false);
@@ -3497,6 +4041,11 @@ function renderHeader() {
       pollIcon(),
       el('div', { class: 'title-text' }, el('h2', { text: 'Polls' }), el('p', { id: 'chat-sub' })),
     );
+  } else if (state.chat.type === 'feed') {
+    box.append(
+      feedIcon(),
+      el('div', { class: 'title-text' }, el('h2', { text: 'Feed' }), el('p', { id: 'chat-sub' })),
+    );
   } else if (state.chat.type === 'group') {
     const g = state.groups.get(state.chat.id) || { id: state.chat.id, name: 'Group' };
     box.append(
@@ -3515,7 +4064,6 @@ function renderHeader() {
     box.onclick = () => openProfile(p.id);
   }
   $('#call-btn').hidden = state.chat.type !== 'dm' && state.chat.type !== 'group';
-  $('#dice-btn').hidden = !['global', 'dm', 'group'].includes(state.chat.type);
   updateHeaderSub();
 }
 
@@ -3530,6 +4078,8 @@ function updateHeaderSub() {
     sub.textContent = 'Official news · everyone can read, like and dislike';
   } else if (state.chat.type === 'polls') {
     sub.textContent = 'Make a poll and vote · one vote each, no chatting';
+  } else if (state.chat.type === 'feed') {
+    sub.textContent = 'Public feed · videos and photos from everyone';
   } else if (state.chat.type === 'group') {
     const ids = memberIds(state.chat.id);
     const names = ids.map((id) => (id === state.user.id ? 'You' : nameOf(profileOf(id))));
@@ -5183,12 +5733,6 @@ function bindUI() {
   // GRINDER: switching away from the tab (or closing it) ends the streak
   document.addEventListener('visibilitychange', () => { if (document.hidden) grindStop(); else if (state.user && grind.ok) grindBegin(); });
   window.addEventListener('pagehide', () => { if (grind.running) grindStop(); });
-  // Dice 20 game
-  $('#dice-btn').innerHTML = DICE_SVG;
-  $('#dice-btn').addEventListener('click', openDice);
-  $('#dice-modal').addEventListener('click', (e) => { if (e.target === $('#dice-modal')) closeDice(); });
-  window.addEventListener('message', (e) => { if (e.data && e.data.type === 'dice-close' && e.source === $('#dice-frame').contentWindow) closeDice(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#dice-modal').hidden) closeDice(); });
   // 3-dot menu + voice memos
   $('#more-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleMoreMenu(); });
   $('#more-menu').addEventListener('click', (e) => { const b = e.target.closest('.more-item'); if (b) moreMenuAction(b.dataset.act); });
