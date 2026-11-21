@@ -365,6 +365,14 @@ input:focus, textarea:focus {
   .typing-bubble i { animation: typing-fade 1.4s ease-in-out infinite; }
   @keyframes typing-fade { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
 }
+.mention, .hashtag { display: inline; font-weight: 600; border-radius: 5px; padding: 0 3px; cursor: pointer; pointer-events: auto; text-decoration: none; }
+.mention { color: #aab4ff; background: rgba(88, 101, 242, .22); }
+.hashtag { color: #5eead4; background: rgba(45, 212, 191, .14); }
+.mention:hover, .hashtag:hover { filter: brightness(1.25); text-decoration: underline; }
+.feed-tagbar { position: absolute; top: 12px; left: 62px; z-index: 6; display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 6px 0 16px; border-radius: 999px; background: rgba(30, 32, 40, .85); color: #5eead4; font-weight: 700; box-shadow: 0 6px 20px rgba(0,0,0,.5); max-width: calc(100% - 150px); }
+.feed-tagbar[hidden] { display: none; }
+.feed-tagbar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed-tagbar button { flex: none; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; font-size: 14px; }
 .msg-text { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
 
 .empty {
@@ -788,11 +796,16 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .feed-who { font-weight: 700; font-size: 16px; background: none; border: 0; color: #fff; padding: 0; cursor: pointer; text-align: left; }
 .feed-who:hover { text-decoration: underline; }
 .feed-time { font-size: 12px; opacity: .8; }
-.feed-caption { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; max-height: 5.6em; overflow: hidden; }
+.feed-caption { pointer-events: none; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; max-height: 5.6em; overflow: hidden; }
 .feed-side { position: absolute; right: 10px; bottom: 22px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
 .feed-btn { width: 46px; height: 46px; border: 0; border-radius: 50%; background: rgba(30, 32, 40, .65); color: #fff; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(6px); }
 .feed-btn:hover { background: rgba(60, 64, 80, .85); }
 .feed-btn.del:hover { color: #ff6b81; }
+.feed-vote { display: flex; flex-direction: column; align-items: center; gap: 3px; color: #fff; font-size: 12px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+.feed-vote .vote-count { min-height: 14px; }
+.feed-btn.like.on { background: #f43f5e; }
+.feed-btn.dis.on { background: #64748b; }
+.feed-btn.vote:active { transform: scale(.92); }
 .feed-playicon { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .2s; }
 .feed-playicon span { width: 78px; height: 78px; border-radius: 50%; background: rgba(0,0,0,.5); display: grid; place-items: center; }
 .feed-playicon.show { opacity: 1; }
@@ -809,6 +822,43 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .feed-empty strong { color: var(--text); font-size: 18px; }
 .feed-empty span { font-size: 14px; line-height: 1.5; max-width: 360px; }
 .feed-more { height: 56px; display: grid; place-items: center; color: #9aa0ad; font-size: 13px; background: var(--bg); scroll-snap-align: end; }
+.feed-watch { position: absolute; inset: 0; display: flex; flex-direction: column; background: #000; }
+.feed-watch[hidden] { display: none; }
+.feed-view { position: absolute; inset: 0; overflow-y: auto; background: var(--bg); padding: 66px max(14px, calc((100% - 780px) / 2)) 44px; }
+.feed-view[hidden] { display: none; }
+.feed-back { position: absolute; top: 12px; left: 12px; z-index: 6; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(30, 32, 40, .85); color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
+.feed-back[hidden] { display: none; }
+.feed-tagbar { left: 62px; max-width: calc(100% - 210px); }
+.fh-hero { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.fh-hero h1 { margin: 0; font-size: 30px; background: linear-gradient(135deg, #f43f5e, #f59e0b); -webkit-background-clip: text; background-clip: text; color: transparent; width: fit-content; }
+.fh-hero p { margin: 0; color: var(--muted); }
+.fh-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.fh-search { display: flex; gap: 8px; margin-bottom: 22px; }
+.fh-search input { flex: 1; min-width: 0; }
+.fh-sec { margin-bottom: 24px; }
+.fh-sec h3 { margin: 0 0 10px; font-size: 16px; }
+.fh-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.feed-chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg-3); color: var(--text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.feed-chip:hover { background: var(--bg-4); }
+.feed-chip.tag { color: #5eead4; }
+.feed-chip .avatar { width: 24px; height: 24px; font-size: 12px; margin-left: -8px; }
+.feed-chip small { color: var(--muted); font-weight: 500; }
+.feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.feed-tile { position: relative; aspect-ratio: 3 / 4; padding: 0; border: 0; border-radius: 12px; overflow: hidden; background: #111; cursor: pointer; color: #fff; }
+.feed-tile img, .feed-tile video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.feed-tile:hover { outline: 2px solid var(--accent); }
+.feed-tile .tile-shade { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 8px 7px; background: linear-gradient(to top, rgba(0,0,0,.8), transparent); font-size: 12px; font-weight: 600; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed-tile .tile-play { position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,.55); display: grid; place-items: center; }
+.feed-tile .tile-bad { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; background: var(--bg-3); }
+.fp-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; margin-bottom: 22px; }
+.fp-hero .avatar { width: 96px; height: 96px; font-size: 40px; }
+.fp-hero h2 { margin: 6px 0 0; font-size: 24px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.fp-hero .muted { margin: 0; }
+.fp-bio { margin: 4px 0; max-width: 420px; overflow-wrap: anywhere; }
+.fp-stats { color: var(--muted); font-size: 14px; }
+.fp-stats b { color: var(--text); }
+.fp-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+.feed-empty.inline { height: auto; padding: 40px 24px; }
 /* upload button floats over the feed */
 #feed-top { position: absolute; top: 12px; right: 12px; left: 12px; z-index: 6; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
 #feed-top[hidden] { display: none; }
@@ -1113,13 +1163,19 @@ input:disabled { opacity: .6; cursor: not-allowed; }
       <!-- The Polls page (no chatting here, only polls) -->
       <!-- The Feed page (public videos and images) -->
       <div id="feed-page" class="feed-page" hidden>
+        <div id="feed-home" class="feed-view" hidden></div>
+        <div id="feed-profile" class="feed-view" hidden></div>
+        <div id="feed-watch" class="feed-watch" hidden>
+          <div id="feed-scroll" class="feed-scroll">
+            <div id="feed-list" class="feed-list" aria-live="polite"></div>
+            <div id="feed-more" class="feed-more"></div>
+          </div>
+        </div>
+        <button id="feed-back" class="feed-back" type="button" aria-label="Back" title="Back" hidden>←</button>
         <button id="feed-newpill" class="feed-newpill" type="button" hidden></button>
+        <div id="feed-tagbar" class="feed-tagbar" hidden><span></span><button type="button" aria-label="Show everything again" title="Show everything again">✕</button></div>
         <div class="feed-drag">Drop a video or photo to share it</div>
         <div id="feed-top"></div>
-        <div id="feed-scroll" class="feed-scroll">
-          <div id="feed-list" class="feed-list" aria-live="polite"></div>
-          <div id="feed-more" class="feed-more"></div>
-        </div>
         <input id="feed-file" type="file" hidden
           accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/bmp,image/heic,image/heif,video/mp4,video/quicktime,video/webm,video/x-msvideo,video/x-matroska,video/3gpp,video/3gpp2,.jpg,.jpeg,.png,.gif,.webp,.avif,.bmp,.heic,.heif,.mp4,.mov,.webm,.avi,.mkv,.3gp,.3g2" />
       </div>
@@ -1587,6 +1643,42 @@ function friendlyVideoError(error) {
   return 'Video upload failed. Please try again.';
 }
 
+/** Finds a person by their username (for @mentions). */
+function profileByUsername(name) {
+  const n = String(name).toLowerCase();
+  if (state.profile && String(state.profile.username || '').toLowerCase() === n) return state.profile;
+  for (const p of state.profiles.values()) if (String(p.username || '').toLowerCase() === n) return p;
+  return null;
+}
+
+/** Adds text to a node, turning @username (a real person) and #hashtag into clickable highlights. */
+function appendRich(node, text) {
+  const re = /(^|[^\p{L}\p{N}_])([@#])([\p{L}\p{N}_]{1,30})/gu;
+  let last = 0;
+  for (const m of text.matchAll(re)) {
+    const start = m.index + m[1].length;
+    const word = m[3];
+    let link = null, go = null;
+    if (m[2] === '@') {
+      const p = profileByUsername(word);
+      if (p) {
+        link = el('span', { class: 'mention', text: '@' + word, attrs: { role: 'button', tabindex: '0', title: 'View ' + nameOf(p) + '’s profile' } });
+        const id = p.id; go = () => ((state.chat && state.chat.type === 'feed') ? feedProfile(id) : openProfile(id));
+      }
+    } else if (/\p{L}/u.test(word)) {
+      link = el('span', { class: 'hashtag', text: '#' + word, attrs: { role: 'button', tabindex: '0', title: 'See posts tagged #' + word } });
+      go = () => openFeed(word);
+    }
+    if (!link) continue;
+    link.addEventListener('click', (e) => { e.stopPropagation(); e.preventDefault(); go(); });
+    link.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.stopPropagation(); e.preventDefault(); go(); } });
+    if (start > last) node.append(document.createTextNode(text.slice(last, start)));
+    node.append(link);
+    last = start + 1 + word.length;
+  }
+  if (last < text.length) node.append(document.createTextNode(text.slice(last)));
+}
+
 /** Turns message text into text + animated emoticon images. Only known emoticon names are accepted. */
 function renderContent(content) {
   const box = el('div', { class: 'msg-text' });
@@ -1596,14 +1688,14 @@ function renderContent(content) {
   for (const match of content.matchAll(MINICON_TOKEN)) {
     const id = match[1];
     if (!MINICON_NAMES.has(id)) continue;
-    if (match.index > last) box.append(document.createTextNode(content.slice(last, match.index)));
+    if (match.index > last) appendRich(box, content.slice(last, match.index));
     box.append(el('img', {
       class: 'mc' + (onlyEmoticons ? ' mc-big' : ''),
       attrs: { src: MINICONS_BASE + id + '.svg', alt: MINICON_NAMES.get(id), title: MINICON_NAMES.get(id), loading: 'lazy', draggable: 'false' },
     }));
     last = match.index + match[0].length;
   }
-  if (last < content.length) box.append(document.createTextNode(content.slice(last)));
+  if (last < content.length) appendRich(box, content.slice(last));
   return box;
 }
 
@@ -2249,7 +2341,7 @@ const FEED_IMAGE_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/pn
 const FEED_VIDEO_TYPES = { mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', avi: 'video/x-msvideo', mkv: 'video/x-matroska', '3gp': 'video/3gpp', '3g2': 'video/3gpp2' };
 const FEED_RISKY = ['mov', 'avi', 'mkv', '3gp', '3g2', 'heic', 'heif'];    // work on some devices only
 const FEED_FORMATS_TEXT = 'Videos: MP4, MOV, WebM, AVI, MKV, 3GP. Photos: JPG, PNG, GIF, WebP, AVIF, BMP, HEIC.';
-let feed = { muted: true, items: [], loaded: false, error: '', done: false, loading: false, channel: null, built: false, ui: null, file: null, busy: false,
+let feed = { ready: false, likes: new Map(), votesOk: false, mode: 'home', nav: 0, queue: [], qpos: 0, author: '', from: 'home', profileId: '', tag: '', muted: true, items: [], loaded: false, error: '', done: false, loading: false, channel: null, built: false, ui: null, file: null, busy: false,
              pending: [], holder: {}, sentinelObs: null, videoObs: null, previewUrl: '' };
 
 function feedIcon() {
@@ -2457,8 +2549,13 @@ async function postToFeed() {
   }
   resetFeedUpload();
   toast('Posted to the Feed!', 'success');
-  if (!feed.items.some((x) => x.id === data.id)) feed.items.unshift(data);
-  if (state.chat.type === 'feed') { renderFeedList(); $('#feed-scroll').scrollTo({ top: 0, behavior: 'smooth' }); }
+  const tagOk = !feed.tag || new RegExp('(^|[^\\p{L}\\p{N}_])#' + feed.tag + '($|[^\\p{L}\\p{N}_])', 'iu').test(data.caption || '');
+  if (state.chat.type !== 'feed') return;
+  if (feed.mode === 'home') { feedHome(); return; }
+  if (feed.mode === 'profile') { feedProfile(feed.profileId); return; }
+  if (feed.votesOk) feed.likes.set(data.id, { likes: 0, mine: 0 });
+  if (tagOk && (!feed.author || feed.author === data.author_id) && !feed.items.some((x) => x.id === data.id)) feed.items.unshift(data);
+  renderFeedList(); $('#feed-scroll').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ----- loading -----
@@ -2470,23 +2567,27 @@ async function feedFetchProfiles(rows) {
 }
 
 async function loadFeedPage() {
-  if (feed.loading || feed.done) return;
+  if (!feed.ready || feed.loading || feed.done) return;
+  const tok = feed.nav;
   feed.loading = true;
-  const last = feed.items.length ? feed.items[feed.items.length - 1].id : null;
-  let q = db.from('chat_feed').select('*').order('id', { ascending: false }).limit(FEED_PAGE);
-  if (last != null) q = q.lt('id', last);
-  const { data, error } = await q;
+  const chunk = feed.queue.slice(feed.qpos, feed.qpos + FEED_PAGE);
+  if (!chunk.length) { feed.loading = false; feed.done = true; feed.loaded = true; return; }
+  const { data, error } = await db.from('chat_feed').select('*').in('id', chunk);
   feed.loading = false;
+  if (tok !== feed.nav) return;
   if (error) {
     if (!feed.items.length) { feed.error = feedErrorText(error); feed.loaded = true; }
     else toast('Could not load more. Scroll up and down to try again.', 'error');
     return;
   }
   feed.error = ''; feed.loaded = true;
-  const rows = (data || []).filter((x) => !feed.items.some((y) => y.id === x.id));
-  await feedFetchProfiles(rows);
+  feed.qpos += chunk.length;
+  const byId = new Map((data || []).map((r) => [r.id, r]));
+  const rows = chunk.map((id) => byId.get(id)).filter((r) => r && !feed.items.some((y) => y.id === r.id));
+  await Promise.all([feedFetchProfiles(rows), feedLoadVotes(rows)]);
+  if (tok !== feed.nav) return;
   feed.items.push(...rows);
-  if ((data || []).length < FEED_PAGE) feed.done = true;
+  if (feed.qpos >= feed.queue.length) feed.done = true;
 }
 
 // ----- one post -----
@@ -2546,16 +2647,73 @@ function feedMedia(x) {
   return media;
 }
 
+
+// ----- like / dislike (everyone sees the likes; nobody sees the dislikes) -----
+const feedCount = (n) => (n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(n));
+
+async function feedLoadVotes(rows) {
+  if (!rows.length) return;
+  const { data, error } = await db.rpc('chat_feed_likes', { p_ids: rows.map((r) => r.id) });
+  if (error || !Array.isArray(data)) return;           // the SQL has not been run yet: no buttons are shown
+  feed.votesOk = true;
+  data.forEach((v) => feed.likes.set(Number(v.post_id), { likes: Number(v.likes), mine: Number(v.mine) }));
+}
+
+function feedVoteError(error) {
+  const msg = (error && error.message) || '';
+  if (/schema cache|could not find|does not exist/i.test(msg)) return 'Likes need a database update. Run supabase-feed-likes.sql (see README.md).';
+  if (/already gone/i.test(msg)) return 'That post is already gone.';
+  return 'Could not save your vote. Please try again.';
+}
+
+function feedVoteButtons(x) {
+  if (!feed.likes.has(x.id)) return null;
+  const mk = (cls, label, svg) => {
+    const b = el('button', { class: 'feed-btn vote ' + cls, attrs: { type: 'button', 'aria-label': label, title: label } });
+    b.innerHTML = svg; return b;
+  };
+  const up = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1h3zM7 11l4-8a2.5 2.5 0 0 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.5 20H7"/></svg>';
+  const down = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 13V4h3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-3zM17 13l-4 8a2.5 2.5 0 0 1-2.5-2.5V15H5.3a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.5 4H17"/></svg>';
+  const like = mk('like', 'Like', up), dis = mk('dis', 'Dislike', down);
+  const count = el('span', { class: 'vote-count' });
+  const paint = () => {
+    const st = feed.likes.get(x.id) || { likes: 0, mine: 0 };
+    like.classList.toggle('on', st.mine === 1);
+    dis.classList.toggle('on', st.mine === -1);
+    like.setAttribute('aria-pressed', String(st.mine === 1));
+    dis.setAttribute('aria-pressed', String(st.mine === -1));
+    count.textContent = feedCount(st.likes);
+  };
+  const vote = async (v) => {
+    const cur = feed.likes.get(x.id) || { likes: 0, mine: 0 };
+    const prev = { ...cur };
+    const want = cur.mine === v ? 0 : v;
+    cur.likes += (want === 1 ? 1 : 0) - (prev.mine === 1 ? 1 : 0);
+    cur.mine = want;
+    feed.likes.set(x.id, cur); paint();
+    const { data, error } = await db.rpc('chat_feed_vote', { p_post: x.id, p_vote: want });
+    const row = Array.isArray(data) ? data[0] : data;
+    if (error || !row) { feed.likes.set(x.id, prev); paint(); toast(feedVoteError(error), 'error'); return; }
+    feed.likes.set(x.id, { likes: Number(row.likes), mine: Number(row.mine) }); paint();
+  };
+  like.addEventListener('click', () => vote(1));
+  dis.addEventListener('click', () => vote(-1));
+  paint();
+  return [el('div', { class: 'feed-vote' }, like, count), el('div', { class: 'feed-vote' }, dis)];
+}
+
 function feedCard(x) {
   const p = profileOf(x.author_id);
   const info = el('div', { class: 'feed-info' },
     el('div', { class: 'feed-who-row' },
       makeAvatar(p, 'sm'),
-      el('button', { class: 'feed-who', text: nameOf(p), attrs: { type: 'button' }, on: { click: () => openProfile(x.author_id) } }),
+      el('button', { class: 'feed-who', text: nameOf(p), attrs: { type: 'button' }, on: { click: () => feedProfile(x.author_id) } }),
       p && grind.set.has(p.id) && !grind.off.has(p.id) ? grinderTag() : null,
       el('span', { class: 'feed-time', text: feedTimeAgo(x.created_at), attrs: { title: new Date(x.created_at).toLocaleString() } })),
-    x.caption ? el('div', { class: 'feed-caption', text: x.caption }) : null);
+    (() => { if (!x.caption) return null; const c = el('div', { class: 'feed-caption' }); appendRich(c, x.caption); return c; })());
   const side = el('div', { class: 'feed-side' });
+  const votes = feedVoteButtons(x);
+  if (votes) side.append(...votes);
   if (x.kind === 'video') {
     const mute = el('button', { class: 'feed-btn', attrs: { type: 'button', title: 'Sound on or off', 'aria-label': 'Sound on or off' } });
     const paint = () => {
@@ -2603,7 +2761,7 @@ function renderFeedList() {
   } else if (!feed.loaded) {
     list.append(el('div', { class: 'feed-empty', text: 'Loading…' }));
   } else if (!feed.items.length) {
-    list.append(el('div', { class: 'feed-empty' }, el('span', { class: 'big', text: '🎬' }), el('strong', { text: 'Nothing here yet' }), el('span', { text: 'Be the first to share a video or photo! Tap + Upload at the top. ' + FEED_FORMATS_TEXT })));
+    list.append(el('div', { class: 'feed-empty' }, el('span', { class: 'big', text: '🎬' }), el('strong', { text: feed.tag ? 'No posts with #' + feed.tag + ' yet' : 'Nothing here yet' }), el('span', { text: feed.tag ? 'Tap + Upload and put #' + feed.tag + ' in your caption to start it.' : 'Be the first to share a video or photo! Tap + Upload at the top. ' + FEED_FORMATS_TEXT + ' Tip: add #hashtags to your caption.' })));
   } else {
     feed.items.forEach((x) => list.append(feedCard(x)));
   }
@@ -2615,16 +2773,16 @@ function renderFeedList() {
 /** Loads the next page when you scroll near the bottom, and plays only the video that is on screen. */
 function watchFeedEnd() {
   if (feed.sentinelObs) feed.sentinelObs.disconnect();
-  if (!('IntersectionObserver' in window)) { if (!feed.done) loadMoreFeed(); return; }
-  if (feed.done || feed.error) return;
+  if (!('IntersectionObserver' in window)) { if (!feed.done && feed.ready) loadMoreFeed(); return; }
+  if (feed.done || feed.error || !feed.ready) return;
   feed.sentinelObs = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) loadMoreFeed(); }, { root: $('#feed-scroll'), rootMargin: '500px' });
   feed.sentinelObs.observe($('#feed-more'));
 }
 async function loadMoreFeed() {
-  if (feed.loading || feed.done || state.chat.type !== 'feed') return;
+  if (feed.loading || feed.done || state.chat.type !== 'feed' || feed.mode !== 'watch') return;
   const before = feed.items.length;
   await loadFeedPage();
-  if (state.chat.type !== 'feed') return;
+  if (state.chat.type !== 'feed' || feed.mode !== 'watch') return;
   if (feed.items.length > before) {
     const list = $('#feed-list');
     feed.items.slice(before).forEach((x) => list.append(feedCard(x)));
@@ -2635,7 +2793,7 @@ async function loadMoreFeed() {
 }
 
 document.addEventListener('keydown', (e) => {
-  if (!state.chat || state.chat.type !== 'feed') return;
+  if (!state.chat || state.chat.type !== 'feed' || feed.mode !== 'watch') return;
   if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ''))) return;
   const sc = $('#feed-scroll');
   if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); sc.scrollBy({ top: sc.clientHeight, behavior: 'smooth' }); }
@@ -2660,15 +2818,17 @@ function startFeedVideoObserver() {
   }, { root: $('#feed-scroll'), threshold: [0, 0.6] });
 }
 
-function showPendingFeed() {
+async function showPendingFeed() {
   const add = feed.pending.splice(0);
+  await feedLoadVotes(add);
   add.forEach((x) => { if (!feed.items.some((y) => y.id === x.id)) feed.items.unshift(x); });
   $('#feed-newpill').hidden = true;
   renderFeedList();
   $('#feed-scroll').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-async function openFeed() {
+/** Shared first steps for every Feed screen (home, watching, a profile). */
+function enterFeedView() {
   stopTyping();
   clearReply();
   state.chat = { type: 'feed', id: 'feed' };
@@ -2681,15 +2841,198 @@ async function openFeed() {
   renderHeader();
   renderUsers();
   updateTitle();
-  if (!feed.built) buildFeedTop();
-  startFeedVideoObserver();
+  if (!feed.built) {
+    buildFeedTop();
+    $('#feed-back').addEventListener('click', feedGoBack);
+  }
+}
+
+function feedSetMode(mode) {
+  feed.mode = mode;
+  stopFeedMedia();
+  $('#feed-home').hidden = mode !== 'home';
+  $('#feed-profile').hidden = mode !== 'profile';
+  $('#feed-watch').hidden = mode !== 'watch';
+  $('#feed-back').hidden = mode === 'home';
   $('#feed-newpill').hidden = true;
-  feed.pending = [];
-  // always start fresh so you see the newest posts
-  feed.items = []; feed.loaded = false; feed.done = false; feed.error = '';
+  const bar = $('#feed-tagbar');
+  bar.hidden = !(mode === 'watch' && feed.tag);
+  if (feed.tag) { bar.firstChild.textContent = '#' + feed.tag; bar.lastChild.onclick = () => feedWatch({}); }
+  updateHeaderSub();
+}
+
+function feedGoBack() {
+  if (feed.mode === 'watch' && feed.from === 'profile' && feed.author) feedProfile(feed.author);
+  else feedHome();
+}
+
+/** Open the Feed. With a #tag it shows that tag, otherwise the Feed home page. */
+function openFeed(tag) {
+  if (typeof tag === 'string' && tag.replace(/^#/, '')) return feedWatch({ tag });
+  return feedHome();
+}
+
+const feedShuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const feedTagPattern = (tag) => '(^|[^[:alnum:]_])#' + tag + '([^[:alnum:]_]|$)';
+
+/** The full-screen vertical feed. Random order every time, unless it is someone's profile (newest first). */
+async function feedWatch(o = {}) {
+  enterFeedView();
+  const tok = ++feed.nav;
+  feed.tag = String(o.tag || '').replace(/^#/, '');
+  feed.author = o.author || '';
+  feed.from = o.from || 'home';
+  feed.items = []; feed.loaded = false; feed.done = false; feed.error = ''; feed.queue = []; feed.qpos = 0; feed.pending = []; feed.loading = false; feed.ready = false;
+  feedSetMode('watch');
+  startFeedVideoObserver();
   renderFeedList();
+  let q = db.from('chat_feed').select('id').order('id', { ascending: false }).limit(1000);
+  if (feed.tag) q = q.filter('caption', 'imatch', feedTagPattern(feed.tag));
+  if (feed.author) q = q.eq('author_id', feed.author);
+  const { data, error } = await q;
+  if (tok !== feed.nav) return;
+  if (error) { feed.error = feedErrorText(error); feed.loaded = true; feed.ready = true; renderFeedList(); return; }
+  let ids = (data || []).map((r) => r.id);
+  if (o.ordered) {
+    const i = o.startId != null ? ids.indexOf(o.startId) : -1;
+    if (i > 0) ids = ids.slice(i);
+  } else {
+    ids = feedShuffle(ids);
+    if (o.startId != null) ids = [o.startId, ...ids.filter((i) => i !== o.startId)];
+  }
+  feed.queue = ids;
+  feed.ready = true;
   await loadFeedPage();
-  if (state.chat.type === 'feed') renderFeedList();
+  if (tok !== feed.nav) return;
+  renderFeedList();
+}
+
+/** A small square preview of a post (used on the home page and on profiles). */
+function feedTile(x, onOpen, label) {
+  const tile = el('button', { class: 'feed-tile', attrs: { type: 'button', 'aria-label': (label || 'Post') + (x.caption ? ': ' + x.caption : '') }, on: { click: onOpen } });
+  const bad = () => tile.replaceChildren(el('span', { class: 'tile-bad', text: '⚠️' }));
+  const url = feedUrl(x.path);
+  if (x.kind === 'image') {
+    const img = el('img', { attrs: { alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' } });
+    img.onerror = bad; img.src = url; tile.append(img);
+  } else {
+    const v = el('video', { attrs: { muted: '', playsinline: '', preload: 'metadata' } });
+    v.muted = true; v.onerror = bad; v.src = url + '#t=0.1'; tile.append(v);
+    const pl = el('span', { class: 'tile-play' });
+    pl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
+    tile.append(pl);
+  }
+  if (label) tile.append(el('div', { class: 'tile-shade', text: label }));
+  return tile;
+}
+
+function feedNotReady(msg) {
+  return el('div', { class: 'feed-empty inline' }, el('span', { class: 'big', text: '🛠️' }), el('strong', { text: 'The Feed is not ready yet' }), el('span', { text: msg }));
+}
+
+/** The Feed home page: search, trending hashtags, picks for you, newest posts and creators. */
+async function feedHome() {
+  enterFeedView();
+  const tok = ++feed.nav;
+  feed.tag = ''; feed.author = '';
+  feedSetMode('home');
+  const box = $('#feed-home');
+  box.scrollTop = 0;
+  box.replaceChildren(el('div', { class: 'feed-empty inline', text: 'Loading…' }));
+  const { data, error } = await db.from('chat_feed').select('*').order('id', { ascending: false }).limit(200);
+  if (tok !== feed.nav) return;
+  $('#feed-top').hidden = !!error;
+  if (error) { box.replaceChildren(feedNotReady(feedErrorText(error))); return; }
+  const rows = data || [];
+  await feedFetchProfiles(rows);
+  if (tok !== feed.nav) return;
+  renderFeedHome(box, rows);
+}
+
+function renderFeedHome(box, rows) {
+  const search = el('input', { attrs: { type: 'text', maxlength: '32', placeholder: 'Search #hashtag or @person', 'aria-label': 'Search the Feed' } });
+  const form = el('form', { class: 'fh-search', on: { submit: (e) => {
+    e.preventDefault();
+    const v = search.value.trim();
+    if (!v) return;
+    if (v[0] === '@') {
+      const p = profileByUsername(v.slice(1));
+      if (p) feedProfile(p.id); else toast('Nobody has that username.', 'error');
+      return;
+    }
+    const tag = v.replace(/^#/, '');
+    if (/^[\p{L}\p{N}_]{1,30}$/u.test(tag)) feedWatch({ tag }); else toast('Hashtags can only use letters, numbers and _.', 'error');
+  } } }, search, el('button', { class: 'btn btn-primary', text: 'Search', attrs: { type: 'submit' } }));
+
+  const hero = el('div', { class: 'fh-hero' },
+    el('h1', { text: 'Discover' }),
+    el('p', { text: rows.length ? 'Fresh videos and photos from everyone. The order changes every time you visit.' : 'Share videos and photos with everyone on ChatWorld.' }),
+    el('div', { class: 'fh-actions' },
+      el('button', { class: 'btn btn-primary fh-watch', text: '▶ Watch now', attrs: { type: 'button' }, on: { click: () => feedWatch({}) } }),
+      el('button', { class: 'btn btn-ghost fh-mine', text: 'My profile', attrs: { type: 'button' }, on: { click: () => feedProfile(state.user.id) } })));
+  box.replaceChildren(hero, form);
+
+  if (!rows.length) {
+    box.append(el('div', { class: 'feed-empty inline' }, el('span', { class: 'big', text: '🎬' }), el('strong', { text: 'Nothing here yet' }),
+      el('span', { text: 'Be the first to share a video or photo! Tap + Upload at the top. ' + FEED_FORMATS_TEXT + ' Tip: add #hashtags to your caption.' })));
+    return;
+  }
+  const section = (title, node) => box.append(el('div', { class: 'fh-sec' }, el('h3', { text: title }), node));
+
+  // trending hashtags (counted from the newest posts)
+  const counts = new Map();
+  rows.forEach((x) => { const seen = new Set(); for (const m of String(x.caption || '').matchAll(/#([\p{L}\p{N}_]{1,30})/gu)) { const t = m[1]; if (!/\p{L}/u.test(t) || seen.has(t.toLowerCase())) continue; seen.add(t.toLowerCase()); const k = t.toLowerCase(); const c = counts.get(k) || { tag: t, n: 0 }; c.n += 1; counts.set(k, c); } });
+  const tags = [...counts.values()].sort((a, b) => b.n - a.n).slice(0, 12);
+  if (tags.length) section('Trending hashtags', el('div', { class: 'fh-chips' }, ...tags.map((t) =>
+    el('button', { class: 'feed-chip tag', attrs: { type: 'button' }, on: { click: () => feedWatch({ tag: t.tag }) } }, '#' + t.tag, el('small', { text: String(t.n) })))));
+
+  const nameFor = (x) => nameOf(profileOf(x.author_id));
+  section('Picked for you', el('div', { class: 'feed-grid' }, ...feedShuffle(rows).slice(0, 8).map((x) => feedTile(x, () => feedWatch({ startId: x.id }), nameFor(x)))));
+  section('Just posted', el('div', { class: 'feed-grid' }, ...rows.slice(0, 8).map((x) => feedTile(x, () => feedWatch({ startId: x.id }), nameFor(x)))));
+
+  const seenAuthors = [];
+  rows.forEach((x) => { if (!seenAuthors.includes(x.author_id)) seenAuthors.push(x.author_id); });
+  section('Creators', el('div', { class: 'fh-chips' }, ...seenAuthors.slice(0, 12).map((id) => {
+    const p = profileOf(id);
+    return el('button', { class: 'feed-chip', attrs: { type: 'button' }, on: { click: () => feedProfile(id) } }, makeAvatar(p, 'sm'), nameOf(p));
+  })));
+}
+
+/** A full-screen profile for the Feed: who they are and every video and photo they posted. */
+async function feedProfile(id) {
+  enterFeedView();
+  const tok = ++feed.nav;
+  feed.tag = ''; feed.author = ''; feed.profileId = id;
+  feedSetMode('profile');
+  const box = $('#feed-profile');
+  box.scrollTop = 0;
+  box.replaceChildren(el('div', { class: 'feed-empty inline', text: 'Loading…' }));
+  if (!(id === state.user.id ? state.profile : state.profiles.get(id))) await feedFetchProfiles([{ author_id: id }]);
+  const { data, error } = await db.from('chat_feed').select('*').eq('author_id', id).order('id', { ascending: false }).limit(60);
+  if (tok !== feed.nav) return;
+  $('#feed-top').hidden = !!error;
+  if (error) { box.replaceChildren(feedNotReady(feedErrorText(error))); return; }
+  const rows = data || [];
+  const p = id === state.user.id ? state.profile : profileOf(id);
+  const mine = id === state.user.id;
+  const actions = el('div', { class: 'fp-actions' });
+  if (rows.length) actions.append(el('button', { class: 'btn btn-primary', text: '▶ Watch all', attrs: { type: 'button' }, on: { click: () => feedWatch({ author: id, ordered: true, from: 'profile' }) } }));
+  if (mine) actions.append(el('button', { class: 'btn btn-ghost', text: 'Edit profile', attrs: { type: 'button' }, on: { click: () => openProfile(id) } }));
+  else actions.append(el('button', { class: 'btn btn-ghost', text: 'Message', attrs: { type: 'button' }, on: { click: () => openChat('dm', id) } }));
+  const hero = el('div', { class: 'fp-hero' },
+    makeAvatar(p, 'xl'),
+    el('h2', {}, nameOf(p), grind.set.has(id) && !grind.off.has(id) ? grinderTag() : null),
+    el('p', { class: 'muted', text: '@' + (p.username || 'unknown') }),
+    el('p', { class: 'fp-bio', text: p.bio || (mine ? 'You have not written a bio yet.' : 'No bio yet.') }),
+    el('div', { class: 'fp-stats' }, el('b', { text: String(rows.length) + (rows.length >= 60 ? '+' : '') }), rows.length === 1 ? ' post' : ' posts'),
+    actions);
+  box.replaceChildren(hero);
+  if (!rows.length) {
+    box.append(el('div', { class: 'feed-empty inline' }, el('span', { class: 'big', text: '🎞️' }), el('strong', { text: mine ? 'You have not posted yet' : 'No posts yet' }),
+      el('span', { text: mine ? 'Tap + Upload at the top to share your first video or photo.' : nameOf(p) + ' has not shared anything on the Feed.' })));
+    return;
+  }
+  box.append(el('div', { class: 'feed-grid' }, ...rows.map((x) => feedTile(x, () => feedWatch({ author: id, startId: x.id, ordered: true, from: 'profile' })))));
 }
 
 /** Live updates: new posts appear for everyone, deleted posts disappear. */
@@ -2700,8 +3043,10 @@ function subscribeFeed() {
       const x = payload.new;
       if (!x || feed.items.some((y) => y.id === x.id) || feed.pending.some((y) => y.id === x.id)) return;
       await feedFetchProfiles([x]);
-      if (state.chat.type !== 'feed') return;                 // the list is rebuilt fresh when you open the Feed
+      if (state.chat.type !== 'feed' || feed.mode !== 'watch') return;       // lists are rebuilt fresh when you open them
       if (x.author_id === state.user.id) return;
+      if (feed.author && x.author_id !== feed.author) return;
+      if (feed.tag && !new RegExp('(^|[^\\p{L}\\p{N}_])#' + feed.tag + '($|[^\\p{L}\\p{N}_])', 'iu').test(x.caption || '')) return;
       feed.pending.push(x);
       const pill = $('#feed-newpill');
       pill.textContent = '↑ ' + feed.pending.length + (feed.pending.length === 1 ? ' new post' : ' new posts');
@@ -4079,7 +4424,9 @@ function updateHeaderSub() {
   } else if (state.chat.type === 'polls') {
     sub.textContent = 'Make a poll and vote · one vote each, no chatting';
   } else if (state.chat.type === 'feed') {
-    sub.textContent = 'Public feed · videos and photos from everyone';
+    sub.textContent = feed.mode === 'home' ? 'Discover videos and photos from everyone'
+      : feed.mode === 'profile' ? 'Feed profile'
+      : feed.tag ? 'Posts tagged #' + feed.tag : 'Videos and photos from everyone · shuffled';
   } else if (state.chat.type === 'group') {
     const ids = memberIds(state.chat.id);
     const names = ids.map((id) => (id === state.user.id ? 'You' : nameOf(profileOf(id))));
@@ -4773,6 +5120,10 @@ function openProfile(id) {
       el('button', {
         class: 'btn btn-primary', text: 'Send a private message', attrs: { type: 'button' },
         on: { click: () => { closeModal(); openChat('dm', p.id); } },
+      }),
+      el('button', {
+        class: 'btn btn-ghost', text: 'See their Feed posts', attrs: { type: 'button' },
+        on: { click: () => { closeModal(); feedProfile(p.id); } },
       }),
       isBlocked
         ? el('button', { class: 'btn btn-ghost', text: 'Unblock', attrs: { type: 'button' }, on: { click: async () => {
