@@ -806,6 +806,38 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .feed-btn.like.on { background: #f43f5e; }
 .feed-btn.dis.on { background: #64748b; }
 .feed-btn.vote:active { transform: scale(.92); }
+.cm-overlay { position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, .55); }
+.cm-sheet { width: min(100%, 520px); height: min(80%, 660px); display: flex; flex-direction: column; background: var(--bg-2); border: 1px solid var(--line); border-bottom: 0; border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,.5); animation: pop .18s ease-out; }
+.cm-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+.cm-head strong { font-size: 16px; }
+.cm-x { width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--bg-4); color: var(--text); cursor: pointer; font-size: 15px; }
+.cm-list { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 16px 12px; overscroll-behavior: contain; }
+.cm-empty { text-align: center; color: var(--muted); padding: 40px 10px; line-height: 1.5; }
+.cm-item { display: flex; gap: 10px; padding: 10px 0; }
+.cm-item .avatar { width: 34px; height: 34px; flex: none; cursor: pointer; }
+.cm-item.reply .avatar { width: 26px; height: 26px; font-size: 12px; }
+.cm-main { flex: 1; min-width: 0; }
+.cm-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.cm-name { font-weight: 700; background: none; border: 0; padding: 0; color: var(--text); cursor: pointer; font: inherit; font-weight: 700; }
+.cm-name:hover { text-decoration: underline; }
+.cm-time { color: var(--muted); font-size: 12px; }
+.cm-creator { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: var(--accent-grad); color: #fff; }
+.cm-pinned { font-size: 11px; font-weight: 700; color: #fbbf24; }
+.cm-body { margin-top: 2px; line-height: 1.4; overflow-wrap: anywhere; white-space: pre-wrap; }
+.cm-actions { display: flex; align-items: center; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.cm-act { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.cm-act:hover { background: var(--bg-4); color: var(--text); }
+.cm-act.on { color: #f43f5e; }
+.cm-act.pin.on { color: #fbbf24; }
+.cm-act.del:hover { color: #ff6b81; }
+.cm-replies { margin-left: 44px; border-left: 2px solid var(--line); padding-left: 10px; }
+.cm-more { margin: 0 0 6px 44px; height: 28px; padding: 0 4px; border: 0; background: none; color: #8b97ff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.cm-compose { border-top: 1px solid var(--line); padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+.cm-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); }
+.cm-chip button { border: 0; background: none; color: var(--text); cursor: pointer; font-size: 14px; }
+.cm-row { display: flex; gap: 8px; }
+.cm-row input { flex: 1; min-width: 0; }
+.cm-err { color: #ffd0d6; font-size: 13px; }
 .feed-playicon { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .2s; }
 .feed-playicon span { width: 78px; height: 78px; border-radius: 50%; background: rgba(0,0,0,.5); display: grid; place-items: center; }
 .feed-playicon.show { opacity: 1; }
@@ -2391,7 +2423,7 @@ const FEED_IMAGE_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/pn
 const FEED_VIDEO_TYPES = { mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', avi: 'video/x-msvideo', mkv: 'video/x-matroska', '3gp': 'video/3gpp', '3g2': 'video/3gpp2' };
 const FEED_RISKY = ['mov', 'avi', 'mkv', '3gp', '3g2', 'heic', 'heif'];    // work on some devices only
 const FEED_FORMATS_TEXT = 'Videos: MP4, MOV, WebM, AVI, MKV, 3GP. Photos: JPG, PNG, GIF, WebP, AVIF, BMP, HEIC.';
-let feed = { homeType: 'all', homeRows: [], spot: null, blocked: false, unlockedAt: 0, ready: false, likes: new Map(), votesOk: false, mode: 'home', nav: 0, queue: [], qpos: 0, author: '', from: 'home', profileId: '', tag: '', muted: false, items: [], loaded: false, error: '', done: false, loading: false, channel: null, built: false, ui: null, file: null, busy: false,
+let feed = { comments: new Map(), cmOk: false, cmSeen: new Set(), cmChannel: null, homeType: 'all', homeRows: [], spot: null, blocked: false, unlockedAt: 0, ready: false, likes: new Map(), votesOk: false, mode: 'home', nav: 0, queue: [], qpos: 0, author: '', from: 'home', profileId: '', tag: '', muted: false, items: [], loaded: false, error: '', done: false, loading: false, channel: null, built: false, ui: null, file: null, busy: false,
              pending: [], holder: {}, sentinelObs: null, videoObs: null, previewUrl: '' };
 
 function feedIcon() {
@@ -2604,6 +2636,7 @@ async function postToFeed() {
   if (feed.mode === 'home') { feedHome(); return; }
   if (feed.mode === 'profile') { feedProfile(feed.profileId); return; }
   if (feed.votesOk) feed.likes.set(data.id, { likes: 0, mine: 0 });
+  if (feed.cmOk) feed.comments.set(data.id, 0);
   if (tagOk && (!feed.author || feed.author === data.author_id) && !feed.items.some((x) => x.id === data.id)) feed.items.unshift(data);
   renderFeedList(); $('#feed-scroll').scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2634,7 +2667,7 @@ async function loadFeedPage() {
   feed.qpos += chunk.length;
   const byId = new Map((data || []).map((r) => [r.id, r]));
   const rows = chunk.map((id) => byId.get(id)).filter((r) => r && !feed.items.some((y) => y.id === r.id));
-  await Promise.all([feedFetchProfiles(rows), feedLoadVotes(rows)]);
+  await Promise.all([feedFetchProfiles(rows), feedLoadVotes(rows), feedLoadCounts(rows)]);
   if (tok !== feed.nav) return;
   feed.items.push(...rows);
   if (feed.qpos >= feed.queue.length) feed.done = true;
@@ -2810,6 +2843,11 @@ function feedCard(x) {
   const side = el('div', { class: 'feed-side' });
   const votes = feedVoteButtons(x);
   if (votes) side.append(...votes);
+  if (feed.cmOk && feed.comments.has(x.id)) {
+    const cb = el('button', { class: 'feed-btn comment', attrs: { type: 'button', 'aria-label': 'Comments', title: 'Comments' }, on: { click: () => openComments(x) } });
+    cb.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.5-4.6A8 8 0 1 1 21 12z"/></svg>';
+    side.append(el('div', { class: 'feed-vote' }, cb, el('span', { class: 'vote-count', text: feedCount(feed.comments.get(x.id) || 0), attrs: { 'data-cmcount': String(x.id) } })));
+  }
   if (x.kind === 'video') {
     const mute = el('button', { class: 'feed-btn', attrs: { type: 'button', title: 'Sound on or off', 'aria-label': 'Sound on or off' } });
     const paint = () => {
@@ -2890,6 +2928,8 @@ async function loadMoreFeed() {
 }
 
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && cm.open) { closeComments(); return; }
+  if (cm.open) return;
   if (!state.chat || state.chat.type !== 'feed' || feed.mode !== 'watch') return;
   if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ''))) return;
   const sc = $('#feed-scroll');
@@ -2949,9 +2989,233 @@ function feedUnlockSound() {
   feedSoundUi();
 }
 
+
+// =====================================================================
+//  COMMENTS (anyone signed in can comment, reply and like; the post's owner can pin)
+// =====================================================================
+let cm = { open: false, post: null, items: [], replyTo: null, expanded: new Set(), ui: null, seq: 0 };
+
+function feedPaintCommentCount(postId) {
+  document.querySelectorAll('[data-cmcount="' + postId + '"]').forEach((n) => { n.textContent = feedCount(feed.comments.get(postId) || 0); });
+}
+
+async function feedLoadCounts(rows) {
+  if (!rows.length) return;
+  const { data, error } = await db.rpc('chat_feed_comment_counts', { p_ids: rows.map((r) => r.id) });
+  if (error || !Array.isArray(data)) return;           // the SQL has not been run yet: no comment buttons
+  feed.cmOk = true;
+  data.forEach((v) => feed.comments.set(Number(v.post_id), Number(v.comments)));
+}
+
+function feedCmError(error) {
+  const msg = (error && error.message) || '';
+  if (/schema cache|could not find|does not exist/i.test(msg)) return 'Comments need a database update. Run supabase-feed-comments.sql (see README.md).';
+  if (/slow down|too long|write something|already gone|only |sign in/i.test(msg)) return msg;
+  return 'Something went wrong. Please try again.';
+}
+
+function cmBump(postId, delta) {
+  if (!feed.comments.has(postId)) return;
+  feed.comments.set(postId, Math.max(0, feed.comments.get(postId) + delta));
+  feedPaintCommentCount(postId);
+}
+
+function closeComments() {
+  if (!cm.open) return;
+  cm.open = false; cm.seq += 1;
+  if (cm.ui && cm.ui.overlay) cm.ui.overlay.remove();
+  cm.ui = null;
+}
+
+async function openComments(x) {
+  closeComments();
+  cm = { open: true, post: x, items: [], replyTo: null, expanded: new Set(), ui: null, seq: cm.seq + 1 };
+  const seq = cm.seq;
+  const ui = {};
+  ui.title = el('strong', { text: 'Comments' });
+  ui.list = el('div', { class: 'cm-list' }, el('div', { class: 'cm-empty', text: 'Loading…' }));
+  ui.err = el('div', { class: 'cm-err', attrs: { role: 'alert' } }); ui.err.hidden = true;
+  ui.chipName = el('span');
+  ui.chip = el('div', { class: 'cm-chip' }, ui.chipName, el('button', { text: '✕', attrs: { type: 'button', 'aria-label': 'Cancel reply' }, on: { click: () => setReply(null) } }));
+  ui.chip.hidden = true;
+  ui.input = el('input', { attrs: { type: 'text', maxlength: '300', placeholder: 'Add a comment…', 'aria-label': 'Add a comment', autocomplete: 'off' } });
+  ui.send = el('button', { class: 'btn btn-primary', text: 'Send', attrs: { type: 'submit' } });
+  ui.form = el('form', { class: 'cm-compose', on: { submit: (e) => { e.preventDefault(); sendComment(); } } }, ui.err, ui.chip, el('div', { class: 'cm-row' }, ui.input, ui.send));
+  ui.sheet = el('div', { class: 'cm-sheet', attrs: { role: 'dialog', 'aria-label': 'Comments' } },
+    el('div', { class: 'cm-head' }, ui.title, el('button', { class: 'cm-x', text: '✕', attrs: { type: 'button', 'aria-label': 'Close comments' }, on: { click: closeComments } })),
+    ui.list, ui.form);
+  ui.overlay = el('div', { class: 'cm-overlay', on: { click: (e) => { if (e.target === ui.overlay) closeComments(); } } }, ui.sheet);
+  cm.ui = ui;
+  $('#feed-page').append(ui.overlay);
+  const { data, error } = await db.rpc('chat_feed_comments_list', { p_post: x.id });
+  if (seq !== cm.seq) return;
+  if (error || !Array.isArray(data)) { ui.list.replaceChildren(el('div', { class: 'cm-empty', text: feedCmError(error) })); return; }
+  cm.items = data.map((c) => ({ ...c, id: Number(c.id), post_id: Number(c.post_id), parent_id: c.parent_id == null ? null : Number(c.parent_id), likes: Number(c.likes), mine: !!c.mine }));
+  data.forEach((c) => feed.cmSeen.add(Number(c.id)));
+  feed.comments.set(x.id, cm.items.length); feedPaintCommentCount(x.id);
+  await feedFetchProfiles(cm.items);
+  if (seq !== cm.seq) return;
+  renderComments();
+}
+
+function setReply(c) {
+  const ui = cm.ui; if (!ui) return;
+  cm.replyTo = c;
+  ui.chip.hidden = !c;
+  if (c) {
+    ui.chipName.textContent = 'Replying to ' + nameOf(profileOf(c.author_id));
+    if (c.parent_id) ui.input.value = '@' + (profileOf(c.author_id).username || '') + ' ';
+    ui.input.focus();
+  }
+}
+
+function renderComments() {
+  const ui = cm.ui; if (!ui) return;
+  const keep = ui.list.scrollTop;
+  const tops = cm.items.filter((c) => !c.parent_id).sort((a, b) => (b.pinned - a.pinned) || (new Date(b.created_at) - new Date(a.created_at)));
+  const kids = new Map();
+  cm.items.filter((c) => c.parent_id).sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).forEach((c) => { (kids.get(c.parent_id) || kids.set(c.parent_id, []).get(c.parent_id)).push(c); });
+  ui.title.textContent = 'Comments · ' + feedCount(cm.items.length);
+  if (!tops.length) {
+    ui.list.replaceChildren(el('div', { class: 'cm-empty' }, el('div', { text: '💬', style: { fontSize: '34px' } }), 'No comments yet. Be the first!'));
+    return;
+  }
+  const nodes = [];
+  tops.forEach((c) => {
+    nodes.push(commentRow(c, false));
+    const rs = kids.get(c.id) || [];
+    if (rs.length) {
+      const open = cm.expanded.has(c.id);
+      if (open) nodes.push(el('div', { class: 'cm-replies' }, ...rs.map((r) => commentRow(r, true))));
+      nodes.push(el('button', { class: 'cm-more', text: open ? 'Hide replies' : 'View ' + rs.length + (rs.length === 1 ? ' reply' : ' replies'), attrs: { type: 'button' },
+        on: { click: () => { if (open) cm.expanded.delete(c.id); else cm.expanded.add(c.id); renderComments(); } } }));
+    }
+  });
+  ui.list.replaceChildren(...nodes);
+  ui.list.scrollTop = keep;
+}
+
+function commentRow(c, isReply) {
+  const p = profileOf(c.author_id);
+  const me = state.user.id;
+  const isOwner = c.author_id === cm.post.author_id;
+  const meta = el('div', { class: 'cm-meta' },
+    el('button', { class: 'cm-name', text: nameOf(p), attrs: { type: 'button' }, on: { click: () => { closeComments(); feedProfile(c.author_id); } } }),
+    isOwner ? el('span', { class: 'cm-creator', text: 'Creator' }) : null,
+    c.pinned ? el('span', { class: 'cm-pinned', text: '📌 Pinned' }) : null,
+    el('span', { class: 'cm-time', text: feedTimeAgo(c.created_at) }));
+  const body = el('div', { class: 'cm-body' }); appendRich(body, c.body);
+  const like = el('button', { class: 'cm-act like' + (c.mine ? ' on' : ''), attrs: { type: 'button', 'aria-pressed': String(c.mine), 'aria-label': 'Like this comment' }, on: { click: () => likeComment(c) } },
+    c.mine ? '♥' : '♡', el('span', { text: c.likes ? feedCount(c.likes) : '' }));
+  const actions = el('div', { class: 'cm-actions' }, like,
+    el('button', { class: 'cm-act reply', text: 'Reply', attrs: { type: 'button' }, on: { click: () => setReply(c) } }));
+  if (!isReply && cm.post.author_id === me) {
+    actions.append(el('button', { class: 'cm-act pin' + (c.pinned ? ' on' : ''), text: c.pinned ? '📌 Unpin' : '📌 Pin', attrs: { type: 'button', title: c.pinned ? 'Unpin this comment' : 'Pin this comment to the top' }, on: { click: () => pinComment(c) } }));
+  }
+  if (c.author_id === me || cm.post.author_id === me || isAnnouncer()) {
+    actions.append(el('button', { class: 'cm-act del', text: 'Delete', attrs: { type: 'button' }, on: { click: () => deleteComment(c) } }));
+  }
+  const av = makeAvatar(p, 'sm');
+  av.addEventListener('click', () => { closeComments(); feedProfile(c.author_id); });
+  return el('div', { class: 'cm-item' + (isReply ? ' reply' : ''), attrs: { 'data-cid': String(c.id) } }, av, el('div', { class: 'cm-main' }, meta, body, actions));
+}
+
+function cmShowError(msg) {
+  const ui = cm.ui; if (!ui) return;
+  ui.err.textContent = msg; ui.err.hidden = !msg;
+}
+
+async function sendComment() {
+  const ui = cm.ui; if (!ui || ui.send.disabled) return;
+  const text = ui.input.value.trim();
+  if (!text) return;
+  const seq = cm.seq, post = cm.post, parent = cm.replyTo;
+  ui.send.disabled = true; cmShowError('');
+  const { data, error } = await db.rpc('chat_feed_comment_post', { p_post: post.id, p_body: text, p_parent: parent ? parent.id : null });
+  if (seq !== cm.seq) return;
+  ui.send.disabled = false;
+  if (error || !data) { cmShowError(feedCmError(error)); return; }
+  const row = { ...data, id: Number(data.id), post_id: Number(data.post_id), parent_id: data.parent_id == null ? null : Number(data.parent_id), likes: 0, mine: false };
+  if (!cm.items.some((c) => c.id === row.id)) {
+    cm.items.push(row);
+    if (!feed.cmSeen.has(row.id)) { feed.cmSeen.add(row.id); cmBump(post.id, 1); }
+  }
+  if (row.parent_id) cm.expanded.add(row.parent_id);
+  ui.input.value = ''; setReply(null);
+  renderComments();
+  const node = ui.list.querySelector('[data-cid="' + row.id + '"]');
+  if (node) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+async function likeComment(c) {
+  const prev = { likes: c.likes, mine: c.mine };
+  c.mine = !c.mine; c.likes += c.mine ? 1 : -1;
+  renderComments();
+  const { data, error } = await db.rpc('chat_feed_comment_like', { p_comment: c.id, p_like: c.mine });
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row) { c.likes = prev.likes; c.mine = prev.mine; renderComments(); toast(feedCmError(error), 'error'); return; }
+  c.likes = Number(row.likes); c.mine = !!row.mine; renderComments();
+}
+
+async function pinComment(c) {
+  const want = !c.pinned;
+  const { error } = await db.rpc('chat_feed_comment_pin', { p_id: c.id, p_pinned: want });
+  if (error) { toast(feedCmError(error), 'error'); return; }
+  cm.items.forEach((i) => { if (!i.parent_id) i.pinned = want && i.id === c.id; });
+  renderComments();
+  if (cm.ui) cm.ui.list.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function deleteComment(c) {
+  if (!window.confirm(c.parent_id ? 'Delete this reply?' : 'Delete this comment and its replies?')) return;
+  const { error } = await db.rpc('chat_feed_comment_delete', { p_id: c.id });
+  if (error) { toast(feedCmError(error), 'error'); return; }
+  const gone = new Set([c.id]);
+  cm.items.forEach((i) => { if (i.parent_id === c.id) gone.add(i.id); });
+  cm.items = cm.items.filter((i) => !gone.has(i.id));
+  cmBump(cm.post.id, -gone.size);
+  if (cm.replyTo && gone.has(cm.replyTo.id)) setReply(null);
+  renderComments();
+}
+
+/** Live comment updates (new, deleted, pinned). */
+function subscribeComments() {
+  if (feed.cmChannel && db) db.removeChannel(feed.cmChannel);
+  feed.cmChannel = db.channel('chatworld-feed-comments')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_feed_comments' }, async (payload) => {
+      const r = payload.new; if (!r) return;
+      const id = Number(r.id);
+      if (feed.cmSeen.has(id)) return;
+      feed.cmSeen.add(id);
+      cmBump(Number(r.post_id), 1);
+      if (!cm.open || cm.post.id !== Number(r.post_id) || cm.items.some((c) => c.id === id)) return;
+      await feedFetchProfiles([r]);
+      if (!cm.open || cm.post.id !== Number(r.post_id)) return;
+      cm.items.push({ ...r, id, post_id: Number(r.post_id), parent_id: r.parent_id == null ? null : Number(r.parent_id), likes: 0, mine: false });
+      renderComments();
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_feed_comments' }, (payload) => {
+      const id = payload.old && Number(payload.old.id);
+      if (!id || !cm.open) return;
+      const found = cm.items.find((c) => c.id === id);
+      if (!found) return;
+      cm.items = cm.items.filter((c) => c.id !== id);
+      cmBump(cm.post.id, -1);
+      renderComments();
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_feed_comments' }, (payload) => {
+      const r = payload.new; if (!r || !cm.open) return;
+      const id = Number(r.id), c = cm.items.find((x) => x.id === id);
+      if (!c) return;
+      if (r.pinned) cm.items.forEach((i) => { if (!i.parent_id) i.pinned = i.id === id; }); else c.pinned = false;
+      renderComments();
+    })
+    .subscribe();
+}
+
 async function showPendingFeed() {
   const add = feed.pending.splice(0);
-  await feedLoadVotes(add);
+  await Promise.all([feedLoadVotes(add), feedLoadCounts(add)]);
   add.forEach((x) => { if (!feed.items.some((y) => y.id === x.id)) feed.items.unshift(x); });
   $('#feed-newpill').hidden = true;
   renderFeedList();
@@ -2981,6 +3245,7 @@ function enterFeedView() {
 
 function feedSetMode(mode) {
   feed.mode = mode;
+  closeComments();
   stopFeedMedia();
   $('#feed-home').hidden = mode !== 'home';
   $('#feed-profile').hidden = mode !== 'profile';
@@ -3269,6 +3534,7 @@ async function feedProfile(id) {
 /** Live updates: new posts appear for everyone, deleted posts disappear. */
 function subscribeFeed() {
   unsubscribeFeed();
+  subscribeComments();
   feed.channel = db.channel('chatworld-feed')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_feed' }, async (payload) => {
       const x = payload.new;
@@ -3296,6 +3562,9 @@ function subscribeFeed() {
 function unsubscribeFeed() {
   if (feed.channel && db) db.removeChannel(feed.channel);
   feed.channel = null;
+  if (feed.cmChannel && db) db.removeChannel(feed.cmChannel);
+  feed.cmChannel = null;
+  closeComments();
   stopFeedMedia();
 }
 
