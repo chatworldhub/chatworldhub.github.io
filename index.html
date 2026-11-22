@@ -233,6 +233,7 @@ input:focus, textarea:focus {
 }
 
 .badge {
+  margin-left: auto; flex: none;
   min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
   background: var(--red); color: #fff; font-size: 12px; font-weight: 700;
   display: grid; place-items: center;
@@ -1259,6 +1260,7 @@ input:disabled { opacity: .6; cursor: not-allowed; }
             <small>Edit profile</small>
           </span>
         </button>
+        <button id="sound-btn" class="icon-btn" type="button" aria-label="Message sound" title="Message sound on/off"></button>
       </div>
     </aside>
 
@@ -1770,7 +1772,7 @@ function friendlyVideoError(error) {
   if (/bucket not found/i.test(msg) || status === 404) return 'Videos are not set up yet. Run supabase-videos.sql in Supabase (see README.md).';
   if (/mime|not supported|invalid/i.test(msg) && status !== 403) return 'Only MP4 and WebM videos can be sent.';
   if (status === 401) return 'Please sign in again, then retry.';
-  if (status === 403 || /row-level security|violates|unauthorized|not allowed/i.test(msg)) return 'Video not sent. You may be sending too many videos (limit: 5 every 10 minutes). Wait a bit and try again.';
+  if (status === 403 || /row-level security|violates|unauthorized|not allowed/i.test(msg)) return state.chat.type === 'group' ? 'Video not sent to this group. If it keeps happening, run supabase-groupfix.sql once in Supabase (see README.md). Otherwise you may be sending too many videos (limit: 5 every 10 minutes).' : 'Video not sent. You may be sending too many videos (limit: 5 every 10 minutes). Wait a bit and try again.';
   return 'Video upload failed. Please try again.';
 }
 
@@ -2242,6 +2244,7 @@ async function startApp(user) {
   subscribeRealtime();
   subscribeGroupsRealtime();
   await loadGroups();
+  loadUnread();
   joinPresence();
   joinCallChannel();
   joinTypingChannel();
@@ -4175,7 +4178,8 @@ function renderUsers() {
     el('span', { text: 'Groups' }),
     el('button', { class: 'mini-btn', text: '+', attrs: { type: 'button', title: 'Create a group', 'aria-label': 'Create a group' }, on: { click: () => { closeSidebar(); openCreateGroup(); } } })));
   const gTerm = state.search.trim().toLowerCase();
-  const myGroups = groupList().filter((g) => !gTerm || g.name.toLowerCase().includes(gTerm));
+  const myGroups = groupList().filter((g) => !gTerm || g.name.toLowerCase().includes(gTerm))
+    .sort((a, b) => notifRecent(b.id) - notifRecent(a.id));      // newest activity on top (ties keep A-Z order)
   myGroups.forEach((g) => list.append(chatItem({
     key: g.id, avatar: groupIcon(g.id), name: g.name,
     badge: state.unread.get(g.id) || 0,
@@ -4188,8 +4192,9 @@ function renderUsers() {
   const term = state.search.trim().toLowerCase();
   const others = [...state.profiles.values()]
     .filter((p) => p.id !== state.user.id && (!term || p.username.toLowerCase().includes(term) || nameOf(p).toLowerCase().includes(term)));
-  const on = others.filter((p) => state.online.has(p.id)).sort(byName);
-  const off = others.filter((p) => !state.online.has(p.id)).sort(byName);
+  const byRecent = (a, b) => (notifRecent(b.id) - notifRecent(a.id)) || byName(a, b);     // newest chat first, then A-Z
+  const on = others.filter((p) => state.online.has(p.id)).sort(byRecent);
+  const off = others.filter((p) => !state.online.has(p.id)).sort(byRecent);
 
   const personItem = (p, isOnline) => {
     const wrap = el('span', { class: 'avatar-wrap' }, makeAvatar(p), isOnline ? el('span', { class: 'status-dot' }) : null);
@@ -5231,6 +5236,113 @@ function subscribeRealtime() {
   state.dbChannel = channel;
 }
 
+
+// =====================================================================
+//  NOTIFICATIONS: unread numbers on the right of every chat (they survive closing the
+//  page), and the chat with the newest message jumps to the top of its list.
+//  Only this browser remembers what you have read. Nothing extra is stored in Supabase.
+// =====================================================================
+const notif = { read: {}, act: new Map(), base: 0, had: false, saveTimer: null };
+const notifStoreKey = () => 'chatworld-notif-' + (state.user ? state.user.id : 'x');
+const isTalkChat = () => ['global', 'group', 'dm'].includes(state.chat.type);
+
+function notifLoad() {
+  notif.read = {}; notif.act = new Map(); notif.base = 0; notif.had = false;
+  try {
+    const o = JSON.parse(localStorage.getItem(notifStoreKey()) || 'null');
+    if (o && typeof o === 'object') { notif.read = o.read || {}; notif.base = Number(o.base) || 0; notif.act = new Map(Object.entries(o.act || {})); notif.had = !!notif.base; }
+  } catch (e) { /* no saved notifications yet */ }
+}
+function notifSave() {
+  clearTimeout(notif.saveTimer);
+  notif.saveTimer = setTimeout(() => {
+    try {
+      const act = {}; [...notif.act.entries()].sort((a, b) => b[1] - a[1]).slice(0, 300).forEach(([k, v]) => { act[k] = v; });
+      localStorage.setItem(notifStoreKey(), JSON.stringify({ read: notif.read, base: notif.base, act }));
+    } catch (e) { /* storage may be blocked: badges then reset when the page closes */ }
+  }, 400);
+}
+/** This chat has new activity: it will be shown higher up. */
+function notifBump(key, ts) {
+  if (!key || !(ts > 0)) return;
+  if ((notif.act.get(key) || 0) < ts) { notif.act.set(key, ts); notifSave(); }
+}
+/** I have seen everything in this chat. */
+function notifMarkRead(key, ts) {
+  if (!key) return;
+  notif.read[key] = Math.max(Date.now(), ts || 0, notif.read[key] || 0); notifSave();
+}
+const notifRecent = (key) => notif.act.get(key) || 0;
+
+/** Counts what arrived since you last read each chat, even while ChatWorld was closed. */
+async function loadUnread() {
+  notifLoad();
+  const since = new Date(Date.now() - 14 * 86400000).toISOString();
+  const { data, error } = await db.from('messages').select('sender_id,recipient_id,group_id,created_at')
+    .gt('created_at', since).order('created_at', { ascending: false }).limit(1000);
+  if (error || !Array.isArray(data)) return;
+  let newest = 0;
+  const counts = new Map();
+  data.forEach((m) => {
+    const key = messageKey(m); if (!key) return;
+    const ts = Date.parse(m.created_at) || 0;
+    if (ts > newest) newest = ts;
+    notifBump(key, ts);
+    if (notif.had && m.sender_id !== state.user.id && notFromBlocked(m) && ts > (notif.read[key] || notif.base)) counts.set(key, (counts.get(key) || 0) + 1);
+  });
+  if (!notif.had) { notif.base = newest || Date.now(); notif.had = true; notifSave(); }   // first time ever: start counting from now
+  counts.forEach((n, key) => { if (!(isTalkChat() && key === chatKey())) state.unread.set(key, Math.max(state.unread.get(key) || 0, n)); });
+  renderUsers(); updateTitle();
+}
+
+
+// =====================================================================
+//  MESSAGE SOUND: a soft "ding" when someone messages you.
+//  It is made by the browser itself (no sound file). The speaker button next to your name turns it off/on.
+// =====================================================================
+const dingState = { ctx: null, on: true, last: 0 };
+try { dingState.on = localStorage.getItem('chatworld-ding') !== 'off'; } catch (e) { /* default: on */ }
+
+function dingContext() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  if (!dingState.ctx) { try { dingState.ctx = new AC(); } catch (e) { return null; } }
+  return dingState.ctx;
+}
+/** Browsers only allow sound after you have clicked or typed on the page once. */
+function dingUnlock() { const c = dingContext(); if (c && c.state === 'suspended') c.resume().catch(() => {}); }
+
+function playDing() {
+  if (!dingState.on || Date.now() - dingState.last < 1200) return;
+  const c = dingContext(); if (!c || c.state !== 'running') return;
+  dingState.last = Date.now();
+  const t0 = c.currentTime;
+  [[880, 0], [1320, 0.11]].forEach(([freq, at]) => {
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t0 + at);
+    g.gain.linearRampToValueAtTime(0.28, t0 + at + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0005, t0 + at + 0.55);
+    o.connect(g); g.connect(c.destination);
+    o.start(t0 + at); o.stop(t0 + at + 0.6);
+  });
+}
+
+function paintDingBtn() {
+  const b = $('#sound-btn'); if (!b) return;
+  b.innerHTML = dingState.on
+    ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>'
+    : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>';
+  b.title = dingState.on ? 'Message sound is on (press to turn off)' : 'Message sound is off (press to turn on)';
+  b.setAttribute('aria-pressed', String(dingState.on));
+}
+function toggleDing() {
+  dingState.on = !dingState.on;
+  try { localStorage.setItem('chatworld-ding', dingState.on ? 'on' : 'off'); } catch (e) { /* ignore */ }
+  paintDingBtn(); dingUnlock();
+  if (dingState.on) { dingState.last = 0; setTimeout(playDing, 80); }
+}
+
 function onNewMessage(m) {
   if (!notFromBlocked(m)) return;   // I blocked this person
   if (m.group_id && !state.groups.has(m.group_id)) { scheduleGroupsRefresh(); return; }   // a group I was just added to
@@ -5239,14 +5351,19 @@ function onNewMessage(m) {
   const mine = m.sender_id === state.user.id;
   if (!mine) removeTyper(key, m.sender_id);
 
-  if (key === chatKey()) {
+  const when = Date.parse(m.created_at) || Date.now();
+  notifBump(key, when);
+  if (!mine && !(isTalkChat() && key === chatKey() && !document.hidden)) playDing();   // not for the chat you are reading right now
+  if (isTalkChat() && key === chatKey()) {
     addMessage(m);
-    if (document.hidden && !mine) { state.awayCount += 1; updateTitle(); }
+    if (document.hidden && !mine) { state.unread.set(key, (state.unread.get(key) || 0) + 1); updateTitle(); }   // tab not in front: count it
+    else notifMarkRead(key, when);
+    renderUsers();
   } else if (!mine) {
     state.unread.set(key, (state.unread.get(key) || 0) + 1);
     renderUsers();
     updateTitle();
-  }
+  } else renderUsers();
 }
 
 function updateTitle() {
@@ -5317,6 +5434,7 @@ async function openChat(type, id = null) {
   if (!state.uploadingVideo) clearPendingVideo();
   state.stick = true;
   state.unread.delete(type === 'global' ? 'global' : id);
+  notifMarkRead(type === 'global' ? 'global' : id);
   state.messages = [];
   state.seen = new Set();
   state.hasMore = false;
@@ -5714,7 +5832,7 @@ async function chooseVideoForChat(file) {
 
 function friendlyUploadError(error) {
   const msg = (error && error.message) || '';
-  if (/row-level security|violates|unauthorized|not allowed/i.test(msg)) return 'Photo not sent. You may be sending too many photos. Wait a minute and try again.';
+  if (/row-level security|violates|unauthorized|not allowed/i.test(msg)) return state.chat.type === 'group' ? 'Photo not sent to this group. If it keeps happening, run supabase-groupfix.sql once in Supabase (see README.md). Otherwise wait a minute and try again.' : 'Photo not sent. You may be sending too many photos. Wait a minute and try again.';
   if (/size|too large|exceed/i.test(msg)) return 'That photo is too big to send.';
   if (/bucket/i.test(msg)) return 'Photos are not set up yet. Run supabase-photos.sql in Supabase (see README.md).';
   return 'Photo upload failed. Please try again.';
@@ -5822,6 +5940,7 @@ async function sendMessage(textOverride) {
     if (state.pendingVideo === usingVideo) clearPendingVideo(true);
   }
   if (data && data.id != null) state.undoUntil.set(data.id, Date.now() + UNDO_SECONDS * 1000);
+  if (isTalkChat()) { notifBump(chatKey(), Date.now()); notifMarkRead(chatKey()); renderUsers(); }
   await addMessage(data); // the real-time event for the same message is ignored (already seen)
   attachUndoSlot(data.id);   // (the live update may have shown the message before this point)
 }
@@ -5990,6 +6109,7 @@ async function sendVoiceMemo() {
   voice.url = null;                                                           // (kept alive for the message above)
   done(); cancelVoice();
   if (data && data.id != null) state.undoUntil.set(data.id, Date.now() + UNDO_SECONDS * 1000);
+  if (isTalkChat()) { notifBump(chatKey(), Date.now()); notifMarkRead(chatKey()); renderUsers(); }
   await addMessage(data);
   attachUndoSlot(data.id);
 }
@@ -7012,18 +7132,30 @@ function onPrivateSignal(m) {
   }
 }
 
+/** The incoming-call ring ("Gentle"): two soft, warm notes that repeat every 2.6 seconds. Made by the browser, no sound file. */
 function startRing() {
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
-    const beep = () => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.frequency.value = 523; g.gain.value = 0.05;
-      o.connect(g); g.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.25);
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    const master = ctx.createGain();
+    master.gain.value = 0.8;                        // loudness of the ring (the old ring was about 5%)
+    master.connect(ctx.destination);
+    const note = (freq, at, len) => {
+      [[1, 0.45], [2, 0.16]].forEach(([h, v]) => {   // a warm tone: the note plus a softer octave above
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = freq * h;
+        const t = ctx.currentTime + at;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(v, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.001, t + len);
+        o.connect(g); g.connect(master);
+        o.start(t); o.stop(t + len + 0.05);
+      });
     };
-    beep();
-    return { ctx, timer: setInterval(beep, 1800) };
+    const ring = () => { note(587, 0, 1.2); note(880, 0.45, 1.4); };
+    ring();
+    return { ctx, timer: setInterval(ring, 2600) };
   } catch (e) { return null; }
 }
 
@@ -7129,6 +7261,9 @@ function bindUI() {
   $('#voice-redo').addEventListener('click', () => { if (!voice.sending) openVoiceMemo(); });
   $('#voice-close').addEventListener('click', () => { if (!voice.sending) cancelVoice(); });
   // Photos in chat
+  $('#sound-btn').addEventListener('click', toggleDing);
+  paintDingBtn();
+  ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => document.addEventListener(ev, dingUnlock, { passive: true }));
   $('#image-input').addEventListener('change', (e) => {
     const file = e.target.files[0];
     e.target.value = '';
@@ -7214,7 +7349,7 @@ function bindUI() {
   // Catch up on messages after the tab was hidden for a while
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { state.hiddenAt = Date.now(); return; }
-    state.awayCount = 0;
+    if (state.user && isTalkChat() && state.unread.has(chatKey())) { state.unread.delete(chatKey()); notifMarkRead(chatKey()); renderUsers(); }   // you are looking at it now
     updateTitle();
     if (state.user && state.profile && state.hiddenAt && Date.now() - state.hiddenAt > 30000) {
       loadMessages();
