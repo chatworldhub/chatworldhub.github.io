@@ -790,14 +790,14 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .feed-media img, .feed-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
 .feed-media .feed-load { position: absolute; inset: 0; display: grid; place-items: center; color: #9aa0ad; font-size: 13px; pointer-events: none; }
 .feed-shade { position: absolute; left: 0; right: 0; bottom: 0; height: 42%; pointer-events: none; background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,0)); }
-.feed-info { position: absolute; left: 14px; right: 74px; bottom: 18px; color: #fff; pointer-events: none; display: flex; flex-direction: column; gap: 8px; text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+.feed-info { position: absolute; left: 14px; right: 74px; bottom: 34px; color: #fff; pointer-events: none; display: flex; flex-direction: column; gap: 8px; text-shadow: 0 1px 6px rgba(0,0,0,.7); }
 .feed-who-row { display: flex; align-items: center; gap: 10px; pointer-events: auto; flex-wrap: wrap; }
 .feed-who-row .avatar { width: 38px; height: 38px; border: 2px solid #fff; }
 .feed-who { font-weight: 700; font-size: 16px; background: none; border: 0; color: #fff; padding: 0; cursor: pointer; text-align: left; }
 .feed-who:hover { text-decoration: underline; }
 .feed-time { font-size: 12px; opacity: .8; }
 .feed-caption { pointer-events: none; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; max-height: 5.6em; overflow: hidden; }
-.feed-side { position: absolute; right: 10px; bottom: 22px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.feed-side { position: absolute; right: 10px; bottom: 38px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
 .feed-btn { width: 46px; height: 46px; border: 0; border-radius: 50%; background: rgba(30, 32, 40, .65); color: #fff; display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(6px); }
 .feed-btn:hover { background: rgba(60, 64, 80, .85); }
 .feed-btn.del:hover { color: #ff6b81; }
@@ -809,8 +809,14 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .feed-playicon { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity .2s; }
 .feed-playicon span { width: 78px; height: 78px; border-radius: 50%; background: rgba(0,0,0,.5); display: grid; place-items: center; }
 .feed-playicon.show { opacity: 1; }
-.feed-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.25); pointer-events: none; }
-.feed-bar i { display: block; height: 100%; width: 0; background: #fff; }
+.feed-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 28px; z-index: 2; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; outline: none; }
+.feed-bar .track { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.3); transition: height .12s; }
+.feed-bar .track i { display: block; height: 100%; width: 0; background: #fff; position: relative; }
+.feed-bar .track i::after { content: ''; position: absolute; right: -6px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.6); opacity: 0; transform: scale(.4); transition: opacity .12s, transform .12s; }
+.feed-bar:hover .track, .feed-bar.drag .track, .feed-bar:focus-visible .track { height: 7px; }
+.feed-bar:hover .track i::after, .feed-bar.drag .track i::after, .feed-bar:focus-visible .track i::after { opacity: 1; transform: scale(1); }
+.feed-bar .tip { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); padding: 5px 12px; border-radius: 999px; background: rgba(0,0,0,.75); color: #fff; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; opacity: 0; pointer-events: none; transition: opacity .12s; white-space: nowrap; }
+.feed-bar.drag .tip { opacity: 1; }
 .feed-fail { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 24px; background: var(--bg-2); color: var(--muted); cursor: default; }
 .feed-fail .big { font-size: 38px; }
 .feed-fail strong { color: var(--text); font-size: 16px; }
@@ -828,6 +834,8 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .feed-view[hidden] { display: none; }
 .feed-back { position: absolute; top: 12px; left: 12px; z-index: 6; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(30, 32, 40, .85); color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
 .feed-back[hidden] { display: none; }
+.feed-soundhint { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 6; padding: 9px 16px; border-radius: 999px; background: rgba(30, 32, 40, .92); color: #fff; font-size: 13px; font-weight: 700; box-shadow: 0 6px 20px rgba(0,0,0,.5); pointer-events: none; white-space: nowrap; }
+.feed-soundhint[hidden] { display: none; }
 .feed-tagbar { left: 62px; max-width: calc(100% - 210px); }
 .fh-hero { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
 .fh-hero h1 { margin: 0; font-size: 30px; background: linear-gradient(135deg, #f43f5e, #f59e0b); -webkit-background-clip: text; background-clip: text; color: transparent; width: fit-content; }
@@ -858,6 +866,47 @@ input:disabled { opacity: .6; cursor: not-allowed; }
 .fp-stats { color: var(--muted); font-size: 14px; }
 .fp-stats b { color: var(--text); }
 .fp-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+.fh-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.fh-stat { padding: 5px 12px; border-radius: 999px; background: var(--bg-3); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.fh-stat b { color: var(--text); }
+.feed-seg { display: inline-flex; padding: 4px; gap: 4px; border-radius: 999px; background: var(--bg-3); border: 1px solid var(--line); margin-bottom: 18px; }
+.feed-seg button { height: 34px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.feed-seg button.on { background: var(--accent-grad); color: #fff; }
+.fh-spot { position: relative; height: min(62vw, 330px); border-radius: 18px; overflow: hidden; background: #000; margin-bottom: 26px; box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+.spot-slide { position: absolute; inset: 0; cursor: pointer; animation: pop .25s ease-out; }
+.spot-media { position: absolute; inset: 0; }
+.spot-media video, .spot-media img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.spot-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.15) 55%, rgba(0,0,0,.25) 100%); pointer-events: none; }
+.spot-info { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+.spot-badge { font-size: 11px; font-weight: 800; letter-spacing: .08em; padding: 4px 10px; border-radius: 999px; background: linear-gradient(135deg, #f43f5e, #f59e0b); text-shadow: none; }
+.spot-who { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.spot-who .avatar { width: 28px; height: 28px; }
+.spot-who span { opacity: .8; font-size: 12px; }
+.spot-cap { font-size: 15px; line-height: 1.35; max-width: 90%; max-height: 2.8em; overflow: hidden; }
+.spot-go { pointer-events: none; height: 38px; display: inline-grid; place-items: center; padding: 0 18px; border-radius: 999px; text-shadow: none; }
+.spot-dots { position: absolute; right: 14px; bottom: 18px; display: flex; gap: 6px; z-index: 2; }
+.spot-dot { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.4); cursor: pointer; }
+.spot-dot.on { background: #fff; width: 22px; border-radius: 99px; }
+.fh-sechead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.fh-sechead h3 { margin: 0; }
+.fh-sechead small { color: var(--muted); font-size: 12px; }
+.fh-tags { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.feed-chip.tagcard { flex: none; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 2px; width: 138px; height: 84px; padding: 10px 12px; border-radius: 14px; border: 0; color: #fff; position: relative; scroll-snap-align: start; text-align: left; }
+.feed-chip.tagcard:hover { filter: brightness(1.15); }
+.tagcard .tc-rank { position: absolute; top: 8px; right: 10px; font-size: 12px; font-weight: 800; opacity: .75; }
+.tagcard b { font-size: 16px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tagcard small { color: rgba(255,255,255,.8); }
+.feed-shelf { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.feed-shelf .feed-tile { flex: none; width: 128px; scroll-snap-align: start; }
+@media (min-width: 700px) { .feed-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); overflow: visible; } .feed-shelf .feed-tile { width: auto; } }
+.feed-tile .tile-pill { position: absolute; top: 7px; left: 7px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; background: #22c55e; color: #04210e; }
+.feed-tile .tile-pill.likes { background: rgba(244, 63, 94, .92); color: #fff; }
+.fh-creators { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.creator-card { flex: none; width: 110px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 8px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg-3); color: var(--text); font: inherit; cursor: pointer; }
+.creator-card:hover { background: var(--bg-4); }
+.creator-card .avatar { width: 54px; height: 54px; font-size: 22px; }
+.creator-card b { font-size: 14px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.creator-card small { color: var(--muted); }
 .feed-empty.inline { height: auto; padding: 40px 24px; }
 /* upload button floats over the feed */
 #feed-top { position: absolute; top: 12px; right: 12px; left: 12px; z-index: 6; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
@@ -1171,6 +1220,7 @@ input:disabled { opacity: .6; cursor: not-allowed; }
             <div id="feed-more" class="feed-more"></div>
           </div>
         </div>
+        <div id="feed-soundhint" class="feed-soundhint" hidden>🔇 Tap anywhere for sound</div>
         <button id="feed-back" class="feed-back" type="button" aria-label="Back" title="Back" hidden>←</button>
         <button id="feed-newpill" class="feed-newpill" type="button" hidden></button>
         <div id="feed-tagbar" class="feed-tagbar" hidden><span></span><button type="button" aria-label="Show everything again" title="Show everything again">✕</button></div>
@@ -2341,7 +2391,7 @@ const FEED_IMAGE_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/pn
 const FEED_VIDEO_TYPES = { mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', avi: 'video/x-msvideo', mkv: 'video/x-matroska', '3gp': 'video/3gpp', '3g2': 'video/3gpp2' };
 const FEED_RISKY = ['mov', 'avi', 'mkv', '3gp', '3g2', 'heic', 'heif'];    // work on some devices only
 const FEED_FORMATS_TEXT = 'Videos: MP4, MOV, WebM, AVI, MKV, 3GP. Photos: JPG, PNG, GIF, WebP, AVIF, BMP, HEIC.';
-let feed = { ready: false, likes: new Map(), votesOk: false, mode: 'home', nav: 0, queue: [], qpos: 0, author: '', from: 'home', profileId: '', tag: '', muted: true, items: [], loaded: false, error: '', done: false, loading: false, channel: null, built: false, ui: null, file: null, busy: false,
+let feed = { homeType: 'all', homeRows: [], spot: null, blocked: false, unlockedAt: 0, ready: false, likes: new Map(), votesOk: false, mode: 'home', nav: 0, queue: [], qpos: 0, author: '', from: 'home', profileId: '', tag: '', muted: false, items: [], loaded: false, error: '', done: false, loading: false, channel: null, built: false, ui: null, file: null, busy: false,
              pending: [], holder: {}, sentinelObs: null, videoObs: null, previewUrl: '' };
 
 function feedIcon() {
@@ -2622,24 +2672,70 @@ function feedMedia(x) {
     } else {
       const v = el('video', { attrs: { loop: '', playsinline: '', preload: 'metadata', 'aria-label': x.caption || 'Video' } });
       v.muted = feed.muted;
-      const bar = el('i');
+      const fill = el('i');
+      const tip = el('div', { class: 'tip' });
+      const bar = el('div', { class: 'feed-bar', attrs: { role: 'slider', tabindex: '0', 'aria-label': 'Video position (drag to change)', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '0' } }, el('div', { class: 'track' }, fill), tip);
       const icon = el('div', { class: 'feed-playicon' }, el('span'));
       icon.firstChild.innerHTML = '<svg viewBox="0 0 24 24" width="38" height="38" fill="#fff"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
       v.onloadeddata = () => { const l = media.querySelector('.feed-load'); if (l) l.remove(); };
       v.onloadedmetadata = () => { if (!v.videoWidth) feedFailBox(media, x, 'This file has no picture your device can play (it may be audio only).', build); };
-      v.ontimeupdate = () => { if (v.duration) bar.style.width = (v.currentTime / v.duration * 100) + '%'; };
+      const fmt = (t) => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+      const paintBar = () => {
+        if (!isFinite(v.duration) || !v.duration) return;
+        const pct = Math.min(100, v.currentTime / v.duration * 100);
+        fill.style.width = pct + '%';
+        bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+        bar.setAttribute('aria-valuetext', fmt(v.currentTime) + ' of ' + fmt(v.duration));
+      };
+      v.ontimeupdate = paintBar;
+      // drag (finger or mouse) along the line to jump to any moment of the video
+      let dragging = false, wasPlaying = false;
+      const seekTo = (e) => {
+        if (!isFinite(v.duration) || !v.duration) return;
+        const r = bar.getBoundingClientRect();
+        const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+        v.currentTime = f * v.duration;
+        paintBar();
+        tip.textContent = fmt(v.currentTime) + ' / ' + fmt(v.duration);
+      };
+      bar.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        if (!isFinite(v.duration) || !v.duration) return;
+        dragging = true; wasPlaying = !v.paused;
+        try { bar.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        bar.classList.add('drag'); v.pause(); seekTo(e);
+      });
+      bar.addEventListener('pointermove', (e) => { if (dragging) seekTo(e); });
+      const endDrag = (e) => {
+        if (!dragging) return;
+        dragging = false; bar.classList.remove('drag');
+        try { bar.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        if (wasPlaying) feedPlay(v);
+      };
+      bar.addEventListener('pointerup', endDrag);
+      bar.addEventListener('pointercancel', endDrag);
+      bar.addEventListener('click', (e) => e.stopPropagation());     // touching the line must not pause the video
+      bar.addEventListener('keydown', (e) => {
+        if (!isFinite(v.duration) || !v.duration) return;
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault(); e.stopPropagation();
+          v.currentTime = Math.min(v.duration, Math.max(0, v.currentTime + (e.key === 'ArrowRight' ? 5 : -5)));
+          paintBar();
+        }
+      });
       v.onerror = () => feedFailBox(media, x,
         'Your device cannot play this ' + E + ' video. ' + (/^(avi|mkv|3gp|3g2|mov)$/.test(ext) ? E + ' videos only play on some phones and browsers. ' : '') +
         'Open the file to download it, or ask for an MP4 version.', build);
       // tap the video to pause or play
       media.onclick = (e) => {
         if (e.target.closest('.feed-fail')) return;
-        if (v.paused) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); icon.classList.remove('show'); }
+        if (Date.now() - feed.unlockedAt < 500) return;      // this tap only turned the sound on
+        if (v.paused) { feedPlay(v); icon.classList.remove('show'); }
         else { v.pause(); icon.classList.add('show'); }
       };
       v.onplay = () => icon.classList.remove('show');
       v.src = url;
-      media.append(v, icon, el('div', { class: 'feed-bar' }, bar));
+      media.append(v, icon, bar);
       if (feed.videoObs) feed.videoObs.observe(v);
     }
   };
@@ -2724,8 +2820,9 @@ function feedCard(x) {
     paint();
     mute.addEventListener('click', () => {
       feed.muted = !feed.muted;
+      feed.blocked = false;
       document.querySelectorAll('#feed-list video').forEach((v) => { v.muted = feed.muted; });
-      document.querySelectorAll('#feed-list .feed-btn[data-mute]').forEach((b) => b.repaint && b.repaint());
+      feedSoundUi();
     });
     mute.dataset.mute = '1'; mute.repaint = paint;
     side.append(mute);
@@ -2803,7 +2900,8 @@ document.addEventListener('keydown', (e) => {
 function stopFeedMedia() {
   if (feed.videoObs) feed.videoObs.disconnect();
   if (feed.sentinelObs) feed.sentinelObs.disconnect();
-  document.querySelectorAll('#feed-list video').forEach((v) => { try { v.pause(); } catch (e) { /* ignore */ } });
+  if (feed.spot) { clearInterval(feed.spot); feed.spot = null; }
+  document.querySelectorAll('#feed-list video, #feed-home video').forEach((v) => { try { v.pause(); } catch (e) { /* ignore */ } });
 }
 
 function startFeedVideoObserver() {
@@ -2812,10 +2910,43 @@ function startFeedVideoObserver() {
   feed.videoObs = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
       const v = e.target;
-      if (e.isIntersecting && e.intersectionRatio >= 0.6) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); }
+      if (e.isIntersecting && e.intersectionRatio >= 0.6) feedPlay(v);
       else if (!v.paused) v.pause();
     });
   }, { root: $('#feed-scroll'), threshold: [0, 0.6] });
+}
+
+
+// ----- sound: videos play WITH sound by default -----
+function feedSoundUi() {
+  document.querySelectorAll('#feed-list .feed-btn[data-mute]').forEach((b) => b.repaint && b.repaint());
+  const hint = $('#feed-soundhint');
+  if (hint) hint.hidden = !feed.blocked;
+}
+
+/** Plays with sound. If the browser refuses (some phones do until you touch the screen), plays muted and asks for a tap. */
+function feedPlay(v) {
+  v.muted = feed.muted;
+  let pr;
+  try { pr = v.play(); } catch (e) { return; }
+  if (!pr || !pr.catch) return;
+  pr.catch((err) => {
+    if (err && err.name === 'AbortError') return;       // scrolled away while loading: not a problem
+    if (!feed.muted && !v.muted) {
+      v.muted = true;
+      feed.blocked = true; feedSoundUi();
+      const p2 = v.play(); if (p2 && p2.catch) p2.catch(() => {});
+    }
+  });
+}
+
+/** The first touch, click or key press on the Feed turns the sound on if the browser had blocked it. */
+function feedUnlockSound() {
+  if (!feed.blocked || feed.muted) return;
+  feed.blocked = false;
+  feed.unlockedAt = Date.now();
+  document.querySelectorAll('#feed-list video').forEach((v) => { v.muted = false; });
+  feedSoundUi();
 }
 
 async function showPendingFeed() {
@@ -2844,6 +2975,7 @@ function enterFeedView() {
   if (!feed.built) {
     buildFeedTop();
     $('#feed-back').addEventListener('click', feedGoBack);
+    ['pointerdown', 'touchstart', 'keydown'].forEach((ev) => $('#feed-page').addEventListener(ev, feedUnlockSound, true));
   }
 }
 
@@ -2855,6 +2987,7 @@ function feedSetMode(mode) {
   $('#feed-watch').hidden = mode !== 'watch';
   $('#feed-back').hidden = mode === 'home';
   $('#feed-newpill').hidden = true;
+  feed.blocked = false; const sh = $('#feed-soundhint'); if (sh) sh.hidden = true;
   const bar = $('#feed-tagbar');
   bar.hidden = !(mode === 'watch' && feed.tag);
   if (feed.tag) { bar.firstChild.textContent = '#' + feed.tag; bar.lastChild.onclick = () => feedWatch({}); }
@@ -2908,7 +3041,7 @@ async function feedWatch(o = {}) {
 }
 
 /** A small square preview of a post (used on the home page and on profiles). */
-function feedTile(x, onOpen, label) {
+function feedTile(x, onOpen, label, pill) {
   const tile = el('button', { class: 'feed-tile', attrs: { type: 'button', 'aria-label': (label || 'Post') + (x.caption ? ': ' + x.caption : '') }, on: { click: onOpen } });
   const bad = () => tile.replaceChildren(el('span', { class: 'tile-bad', text: '⚠️' }));
   const url = feedUrl(x.path);
@@ -2916,12 +3049,20 @@ function feedTile(x, onOpen, label) {
     const img = el('img', { attrs: { alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' } });
     img.onerror = bad; img.src = url; tile.append(img);
   } else {
-    const v = el('video', { attrs: { muted: '', playsinline: '', preload: 'metadata' } });
+    const v = el('video', { attrs: { muted: '', playsinline: '', preload: 'metadata', loop: '' } });
     v.muted = true; v.onerror = bad; v.src = url + '#t=0.1'; tile.append(v);
     const pl = el('span', { class: 'tile-play' });
     pl.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
     tile.append(pl);
+    // on computers, hovering a video tile plays a silent preview
+    if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
+      tile.addEventListener('mouseenter', () => { const p = v.play(); if (p && p.catch) p.catch(() => {}); });
+      tile.addEventListener('mouseleave', () => { v.pause(); try { v.currentTime = 0.1; } catch (e) { /* ignore */ } });
+    }
   }
+  const fresh = Date.now() - new Date(x.created_at).getTime() < 864e5;
+  const text = pill || (fresh ? 'NEW' : '');
+  if (text) tile.append(el('span', { class: 'tile-pill' + (pill ? ' likes' : ''), text }));
   if (label) tile.append(el('div', { class: 'tile-shade', text: label }));
   return tile;
 }
@@ -2944,12 +3085,34 @@ async function feedHome() {
   $('#feed-top').hidden = !!error;
   if (error) { box.replaceChildren(feedNotReady(feedErrorText(error))); return; }
   const rows = data || [];
-  await feedFetchProfiles(rows);
+  const chunks = [];
+  for (let i = 0; i < rows.length; i += 100) chunks.push(rows.slice(i, i + 100));
+  await Promise.all([feedFetchProfiles(rows), ...chunks.map((c) => feedLoadVotes(c))]);
   if (tok !== feed.nav) return;
   renderFeedHome(box, rows);
 }
 
 function renderFeedHome(box, rows) {
+  feed.homeRows = rows;
+  paintFeedHome();
+}
+
+function feedGreeting() {
+  const h = new Date().getHours();
+  return h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
+
+/** Builds the Discover page. Called again when you switch between All / Videos / Photos. */
+function paintFeedHome() {
+  const box = $('#feed-home');
+  const keep = box.scrollTop;
+  if (feed.spot) { clearInterval(feed.spot); feed.spot = null; }
+  const all = feed.homeRows;
+  const rows = feed.homeType === 'all' ? all : all.filter((x) => x.kind === feed.homeType);
+  const nameFor = (x) => nameOf(profileOf(x.author_id));
+  const open = (x) => () => feedWatch({ startId: x.id });
+
+  // ---- search
   const search = el('input', { attrs: { type: 'text', maxlength: '32', placeholder: 'Search #hashtag or @person', 'aria-label': 'Search the Feed' } });
   const form = el('form', { class: 'fh-search', on: { submit: (e) => {
     e.preventDefault();
@@ -2964,38 +3127,106 @@ function renderFeedHome(box, rows) {
     if (/^[\p{L}\p{N}_]{1,30}$/u.test(tag)) feedWatch({ tag }); else toast('Hashtags can only use letters, numbers and _.', 'error');
   } } }, search, el('button', { class: 'btn btn-primary', text: 'Search', attrs: { type: 'submit' } }));
 
+  // ---- hero with a greeting and live numbers
+  const creators = new Set(all.map((x) => x.author_id));
+  const today = all.filter((x) => Date.now() - new Date(x.created_at).getTime() < 864e5).length;
+  const stat = (n, label) => el('span', { class: 'fh-stat' }, el('b', { text: String(n) }), ' ' + label);
   const hero = el('div', { class: 'fh-hero' },
     el('h1', { text: 'Discover' }),
-    el('p', { text: rows.length ? 'Fresh videos and photos from everyone. The order changes every time you visit.' : 'Share videos and photos with everyone on ChatWorld.' }),
+    el('p', { text: feedGreeting() + ', ' + nameOf(state.profile) + '! ' + (all.length ? 'Fresh videos and photos from everyone. The order changes every time you visit.' : 'Share videos and photos with everyone on ChatWorld.') }),
+    all.length ? el('div', { class: 'fh-stats' }, stat(all.length >= 200 ? '200+' : all.length, 'posts'), stat(creators.size, creators.size === 1 ? 'creator' : 'creators'), stat(today, 'new today')) : null,
     el('div', { class: 'fh-actions' },
       el('button', { class: 'btn btn-primary fh-watch', text: '▶ Watch now', attrs: { type: 'button' }, on: { click: () => feedWatch({}) } }),
       el('button', { class: 'btn btn-ghost fh-mine', text: 'My profile', attrs: { type: 'button' }, on: { click: () => feedProfile(state.user.id) } })));
   box.replaceChildren(hero, form);
 
-  if (!rows.length) {
+  if (!all.length) {
     box.append(el('div', { class: 'feed-empty inline' }, el('span', { class: 'big', text: '🎬' }), el('strong', { text: 'Nothing here yet' }),
       el('span', { text: 'Be the first to share a video or photo! Tap + Upload at the top. ' + FEED_FORMATS_TEXT + ' Tip: add #hashtags to your caption.' })));
     return;
   }
-  const section = (title, node) => box.append(el('div', { class: 'fh-sec' }, el('h3', { text: title }), node));
 
-  // trending hashtags (counted from the newest posts)
+  // ---- All / Videos / Photos
+  const seg = el('div', { class: 'feed-seg', attrs: { role: 'group', 'aria-label': 'Show' } },
+    ...[['all', 'All'], ['video', '🎬 Videos'], ['image', '📷 Photos']].map(([k, label]) =>
+      el('button', { class: feed.homeType === k ? 'on' : '', text: label, attrs: { type: 'button', 'aria-pressed': String(feed.homeType === k) },
+        on: { click: () => { feed.homeType = k; paintFeedHome(); } } })));
+  box.append(seg);
+
+  if (!rows.length) {
+    box.append(el('div', { class: 'feed-empty inline' }, el('span', { class: 'big', text: feed.homeType === 'video' ? '🎬' : '📷' }),
+      el('strong', { text: 'No ' + (feed.homeType === 'video' ? 'videos' : 'photos') + ' yet' }), el('span', { text: 'Be the first to post one!' })));
+    return;
+  }
+
+  // ---- spotlight: a big banner that plays silent previews and rotates
+  const picks = feedShuffle(rows).sort((a, b) => (b.kind === 'video') - (a.kind === 'video')).slice(0, 5);
+  const spot = el('div', { class: 'fh-spot' });
+  const dots = el('div', { class: 'spot-dots' });
+  let cur = -1;
+  const showSpot = (i) => {
+    cur = (i + picks.length) % picks.length;
+    const x = picks[cur];
+    const p = profileOf(x.author_id);
+    const media = el('div', { class: 'spot-media' });
+    const url = feedUrl(x.path);
+    if (x.kind === 'video') {
+      const v = el('video', { attrs: { muted: '', loop: '', playsinline: '', autoplay: '', preload: 'auto' } });
+      v.muted = true; v.src = url; v.onerror = () => media.replaceChildren(el('div', { class: 'tile-bad', text: '⚠️' }));
+      media.append(v); const pr = v.play(); if (pr && pr.catch) pr.catch(() => {});
+    } else {
+      const img = el('img', { attrs: { alt: '', draggable: 'false' } }); img.onerror = () => media.replaceChildren(el('div', { class: 'tile-bad', text: '⚠️' })); img.src = url; media.append(img);
+    }
+    const cap = el('div', { class: 'spot-cap' }); if (x.caption) appendRich(cap, x.caption);
+    const slide = el('div', { class: 'spot-slide', on: { click: (e) => { if (e.target.closest('.spot-dots,.hashtag,.mention')) return; feedWatch({ startId: x.id }); } } },
+      media, el('div', { class: 'spot-shade' }),
+      el('div', { class: 'spot-info' },
+        el('span', { class: 'spot-badge', text: x.kind === 'video' ? '✨ SPOTLIGHT · VIDEO' : '✨ SPOTLIGHT · PHOTO' }),
+        el('div', { class: 'spot-who' }, makeAvatar(p, 'sm'), el('b', { text: nameOf(p) }), el('span', { text: feedTimeAgo(x.created_at) })),
+        cap,
+        el('span', { class: 'btn btn-primary spot-go', text: '▶ Watch' })));
+    spot.replaceChildren(slide, dots);
+    [...dots.children].forEach((d, k) => d.classList.toggle('on', k === cur));
+  };
+  picks.forEach((x, i) => dots.append(el('button', { class: 'spot-dot', attrs: { type: 'button', 'aria-label': 'Spotlight ' + (i + 1) }, on: { click: (e) => { e.stopPropagation(); showSpot(i); restart(); } } })));
+  const restart = () => { if (feed.spot) clearInterval(feed.spot); if (picks.length > 1) feed.spot = setInterval(() => showSpot(cur + 1), 7000); };
+  showSpot(0); restart();
+  box.append(spot);
+
+  const section = (title, sub, node) => box.append(el('div', { class: 'fh-sec' }, el('div', { class: 'fh-sechead' }, el('h3', { text: title }), sub ? el('small', { text: sub }) : null), node));
+
+  // ---- trending hashtags: colourful cards
   const counts = new Map();
-  rows.forEach((x) => { const seen = new Set(); for (const m of String(x.caption || '').matchAll(/#([\p{L}\p{N}_]{1,30})/gu)) { const t = m[1]; if (!/\p{L}/u.test(t) || seen.has(t.toLowerCase())) continue; seen.add(t.toLowerCase()); const k = t.toLowerCase(); const c = counts.get(k) || { tag: t, n: 0 }; c.n += 1; counts.set(k, c); } });
-  const tags = [...counts.values()].sort((a, b) => b.n - a.n).slice(0, 12);
-  if (tags.length) section('Trending hashtags', el('div', { class: 'fh-chips' }, ...tags.map((t) =>
-    el('button', { class: 'feed-chip tag', attrs: { type: 'button' }, on: { click: () => feedWatch({ tag: t.tag }) } }, '#' + t.tag, el('small', { text: String(t.n) })))));
+  rows.forEach((x) => { const seen = new Set(); for (const m of String(x.caption || '').matchAll(/#([\p{L}\p{N}_]{1,30})/gu)) { const t = m[1]; const k = t.toLowerCase(); if (!/\p{L}/u.test(t) || seen.has(k)) continue; seen.add(k); const c = counts.get(k) || { tag: t, n: 0 }; c.n += 1; counts.set(k, c); } });
+  const tags = [...counts.values()].sort((a, b) => b.n - a.n).slice(0, 10);
+  const hue = (str) => { let h = 0; for (const ch of str) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
+  if (tags.length) section('🔥 Trending hashtags', 'what people are posting about',
+    el('div', { class: 'fh-tags' }, ...tags.map((t, i) => {
+      const h = hue(t.tag.toLowerCase());
+      return el('button', { class: 'feed-chip tag tagcard', attrs: { type: 'button' }, on: { click: () => feedWatch({ tag: t.tag }) },
+        style: { background: 'linear-gradient(135deg, hsl(' + h + ' 70% 38%), hsl(' + ((h + 50) % 360) + ' 70% 28%))' } },
+        el('span', { class: 'tc-rank', text: '#' + (i + 1) }), el('b', { text: '#' + t.tag }), el('small', { text: t.n + (t.n === 1 ? ' post' : ' posts') }));
+    })));
 
-  const nameFor = (x) => nameOf(profileOf(x.author_id));
-  section('Picked for you', el('div', { class: 'feed-grid' }, ...feedShuffle(rows).slice(0, 8).map((x) => feedTile(x, () => feedWatch({ startId: x.id }), nameFor(x)))));
-  section('Just posted', el('div', { class: 'feed-grid' }, ...rows.slice(0, 8).map((x) => feedTile(x, () => feedWatch({ startId: x.id }), nameFor(x)))));
+  // ---- most liked (likes are public; dislikes never are)
+  const liked = feed.votesOk ? rows.filter((x) => (feed.likes.get(x.id) || {}).likes > 0).sort((a, b) => feed.likes.get(b.id).likes - feed.likes.get(a.id).likes).slice(0, 8) : [];
+  if (liked.length) section('❤️ Most liked', 'the crowd favourites',
+    el('div', { class: 'feed-shelf' }, ...liked.map((x) => feedTile(x, open(x), nameFor(x), '♥ ' + feedCount(feed.likes.get(x.id).likes)))));
 
-  const seenAuthors = [];
-  rows.forEach((x) => { if (!seenAuthors.includes(x.author_id)) seenAuthors.push(x.author_id); });
-  section('Creators', el('div', { class: 'fh-chips' }, ...seenAuthors.slice(0, 12).map((id) => {
-    const p = profileOf(id);
-    return el('button', { class: 'feed-chip', attrs: { type: 'button' }, on: { click: () => feedProfile(id) } }, makeAvatar(p, 'sm'), nameOf(p));
-  })));
+  section('✨ Picked for you', 'new picks every visit', el('div', { class: 'feed-shelf' }, ...feedShuffle(rows).slice(0, 8).map((x) => feedTile(x, open(x), nameFor(x)))));
+  section('🆕 Just posted', null, el('div', { class: 'feed-shelf' }, ...rows.slice(0, 8).map((x) => feedTile(x, open(x), nameFor(x)))));
+
+  // ---- creators, busiest first
+  const byAuthor = new Map();
+  rows.forEach((x) => byAuthor.set(x.author_id, (byAuthor.get(x.author_id) || 0) + 1));
+  const top = [...byAuthor.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+  section('👥 Creators', 'tap to see everything they posted',
+    el('div', { class: 'fh-creators' }, ...top.map(([id, n]) => {
+      const p = profileOf(id);
+      return el('button', { class: 'creator-card', attrs: { type: 'button' }, on: { click: () => feedProfile(id) } },
+        makeAvatar(p, 'lg'), el('b', { text: nameOf(p) }), el('small', { text: n + (n === 1 ? ' post' : ' posts') }));
+    })));
+  box.scrollTop = keep;
 }
 
 /** A full-screen profile for the Feed: who they are and every video and photo they posted. */
