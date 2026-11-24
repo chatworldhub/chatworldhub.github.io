@@ -1549,6 +1549,7 @@ input:focus, textarea:focus { border-color: var(--mint); box-shadow: 0 0 0 3px r
           </span>
         </button>
         <button id="theme-btn" class="icon-btn" type="button" aria-label="Change colours" title="Change colours" aria-haspopup="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H17a4 4 0 0 0 4-4c0-4.4-4-7.2-9-7.2z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15.5" cy="7.5" r="1"/></svg></button>
+        <button id="music-btn" class="icon-btn" type="button" aria-label="Background music" title="Background music on/off"></button>
         <button id="sound-btn" class="icon-btn" type="button" aria-label="Message sound" title="Message sound on/off"></button>
       </div>
     </aside>
@@ -5892,6 +5893,115 @@ function toggleDing() {
   if (dingState.on) { dingState.last = 0; setTimeout(playDing, 80); }
 }
 
+// ---------------------------------------------------------------------------
+//  Background music: plays music.mp3 (a copy with a smooth join, so it repeats without a gap).
+//  Off until you press the music button; remembers your choice. Quietens itself during calls, livestreams
+//  and while a video or voice message is playing.
+// ---------------------------------------------------------------------------
+const MUSIC_FILE = 'music.mp3', MUSIC_VOLUME = 0.35;
+const music = { on: false, loading: false, buf: null, src: null, gain: null, el: null, playing: false, ducked: false, media: new Set(), wait: false };
+try { music.on = localStorage.getItem('chatworld-music') === 'on'; } catch (e) { /* ignore */ }
+
+function musicWantedVolume() { return music.ducked ? 0 : MUSIC_VOLUME; }
+function musicSetVolume(v, secs) {
+  if (music.gain) {
+    const c = music.gain.context, t = c.currentTime;
+    music.gain.gain.cancelScheduledValues(t); music.gain.gain.setValueAtTime(music.gain.gain.value, t);
+    music.gain.gain.linearRampToValueAtTime(v, t + secs);
+  } else if (music.el) { music.el.volume = v; }
+}
+function musicShouldDuck() {
+  return !!(typeof call !== 'undefined' && call) || !!(live && live.active) || music.media.size > 0;
+}
+function musicCheckDuck() {
+  if (!music.playing) return;
+  const d = musicShouldDuck();
+  if (d !== music.ducked) { music.ducked = d; musicSetVolume(musicWantedVolume(), d ? 0.5 : 1.5); }
+}
+['play', 'playing'].forEach((ev) => document.addEventListener(ev, (e) => {
+  if (e.target && (e.target.tagName === 'VIDEO' || e.target.tagName === 'AUDIO') && e.target !== music.el) { music.media.add(e.target); musicCheckDuck(); }
+}, true));
+['pause', 'ended', 'emptied'].forEach((ev) => document.addEventListener(ev, (e) => {
+  if (e.target && music.media.delete(e.target)) musicCheckDuck();
+}, true));
+setInterval(() => { music.media.forEach((m) => { if (!m.isConnected || m.paused) music.media.delete(m); }); musicCheckDuck(); }, 1000);
+
+function paintMusicBtn() {
+  const b = $('#music-btn'); if (!b) return;
+  const note = '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>';
+  b.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + note + (music.on ? '' : '<path d="m3 3 18 18"/>') + '</svg>';
+  b.title = music.on ? 'Background music is on (press to turn off)' : 'Background music is off (press to turn on)';
+  b.setAttribute('aria-pressed', String(music.on));
+}
+
+async function musicLoad() {
+  if (music.buf || music.el) return true;
+  const res = await fetch(MUSIC_FILE);
+  if (!res.ok) throw new Error('music file missing');
+  const data = await res.arrayBuffer();
+  const c = dingContext();
+  if (c) {
+    try {
+      music.buf = await new Promise((ok, no) => { const p = c.decodeAudioData(data, ok, no); if (p && p.then) p.then(ok, no); });
+      return true;
+    } catch (e) { /* not enough memory or an old browser: fall back to a normal audio player below */ }
+  }
+  music.el = new Audio(URL.createObjectURL(new Blob([data], { type: 'audio/mpeg' })));
+  music.el.loop = true; music.el.preload = 'auto';
+  return true;
+}
+
+async function musicStart() {
+  if (music.playing || music.loading) return;
+  music.loading = true;
+  try {
+    await musicLoad();
+    if (!music.on) return;                                     // switched off while it was loading
+    music.ducked = musicShouldDuck();
+    if (music.buf) {
+      const c = dingContext(); await c.resume().catch(() => {});
+      const g = c.createGain(); g.gain.value = 0; g.connect(c.destination);
+      const src = c.createBufferSource(); src.buffer = music.buf; src.loop = true; src.connect(g); src.start();
+      music.src = src; music.gain = g;
+      musicSetVolume(musicWantedVolume(), 1.5);
+    } else {
+      music.el.volume = 0; await music.el.play(); music.el.volume = musicWantedVolume();
+    }
+    music.playing = true;
+  } catch (e) {
+    music.on = false; try { localStorage.setItem('chatworld-music', 'off'); } catch (err) { /* ignore */ }
+    paintMusicBtn();
+    toast(e && e.message === 'music file missing' ? 'Music file not found. Upload music.mp3 next to index.html.' : 'Could not start the music. Press the music button to try again.', 'error');
+  } finally { music.loading = false; }
+}
+
+function musicStop() {
+  if (!music.playing) return;
+  music.playing = false;
+  musicSetVolume(0, 0.5);
+  const { src, gain, el } = music;
+  setTimeout(() => {
+    if (music.playing) return;                                 // it was switched on again meanwhile
+    try { if (src) { src.stop(); src.disconnect(); } if (gain) gain.disconnect(); if (el) el.pause(); } catch (e) { /* ignore */ }
+    if (music.src === src) { music.src = null; music.gain = null; }
+  }, 650);
+}
+
+function toggleMusic() {
+  music.on = !music.on;
+  try { localStorage.setItem('chatworld-music', music.on ? 'on' : 'off'); } catch (e) { /* ignore */ }
+  paintMusicBtn();
+  if (music.on) musicStart(); else musicStop();
+}
+
+/** Browsers only let music start after a click or key press, so if it was left on, it starts with your first one. */
+function musicResumeOnGesture() {
+  if (!music.on || music.wait) return;
+  music.wait = true;
+  const go = () => { ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => document.removeEventListener(ev, go, true)); music.wait = false; if (music.on) musicStart(); };
+  ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => document.addEventListener(ev, go, true));
+}
+
 function onNewMessage(m) {
   if (!notFromBlocked(m)) return;   // I blocked this person
   if (m.group_id && !state.groups.has(m.group_id)) { scheduleGroupsRefresh(); return; }   // a group I was just added to
@@ -7959,6 +8069,8 @@ function bindUI() {
   $('#theme-btn').addEventListener('click', (e) => { e.stopPropagation(); toggleThemePicker(); });
   $('#sound-btn').addEventListener('click', toggleDing);
   paintDingBtn();
+  $('#music-btn').addEventListener('click', toggleMusic);
+  paintMusicBtn(); musicResumeOnGesture();
   ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => document.addEventListener(ev, dingUnlock, { passive: true }));
   $('#image-input').addEventListener('change', (e) => {
     const file = e.target.files[0];
