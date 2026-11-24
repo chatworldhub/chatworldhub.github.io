@@ -403,6 +403,18 @@ input:focus, textarea:focus {
 .embed-stop { position: absolute; right: 6px; top: 6px; z-index: 2; width: 28px; height: 28px; border-radius: 50%; border: 0; cursor: pointer; background: rgba(0, 0, 0, .65); color: #fff; font-size: 14px; line-height: 1; opacity: .75; }
 .embed-open { position: absolute; right: 40px; top: 8px; z-index: 2; font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: rgba(0, 0, 0, .65); color: #fff; text-decoration: none; opacity: .75; }
 .embed-open:hover, .embed-open:focus-visible { opacity: 1; text-decoration: underline; }
+.link-card { display: block; width: min(100%, 380px); margin-top: 8px; border-radius: 14px; overflow: hidden; text-decoration: none; color: inherit; white-space: normal; background: rgb(var(--ink-rgb) / .06); border: 1px solid rgb(var(--line-rgb) / .18); border-left: 3px solid rgb(var(--hi-rgb)); transition: background .15s ease, transform .15s ease; }
+.link-card.pending { height: 1px; margin: 0; border: 0; opacity: 0; overflow: hidden; pointer-events: none; }
+.link-card:hover { background: rgb(var(--ink-rgb) / .1); transform: translateY(-1px); }
+.link-card:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+.link-card-img { display: block; width: 100%; max-height: 200px; object-fit: cover; background: rgba(0, 0, 0, .25); }
+.link-card-body { padding: 9px 12px 11px; display: grid; gap: 3px; }
+.link-card-site { font-size: 11.5px; font-weight: 700; color: var(--mint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-card-title { font-size: 14.5px; font-weight: 800; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.link-card-desc { font-size: 13px; line-height: 1.4; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.msg.mine .link-card { background: rgba(0, 0, 0, .2); border-color: rgba(255, 255, 255, .25); border-left-color: #fff; }
+.msg.mine .link-card-site, .msg.mine .link-card-desc { color: rgba(255, 255, 255, .85); }
+@media (prefers-reduced-motion: reduce) { .link-card { transition: none; } .link-card:hover { transform: none; } }
 .embed-stop:hover, .embed-stop:focus-visible { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .embed-btn { transition: none; } }
 .chat-link:hover { filter: brightness(1.2); background: rgb(125 211 252 / .22); }
@@ -2185,6 +2197,65 @@ function renderEmbed(info, href) {
   return card;
 }
 
+// ---- Website previews: the first normal website link in a message gets a small card (picture, title, description) ----
+// A little Supabase function ("link-preview") reads the website for us and remembers the answer for everybody.
+// If that function is not set up (or the site cannot be read), no card appears and the link works as usual.
+const previewCache = new Map();   // link -> Promise of { title, description, image, site } or null
+let previewBusy = 0; const previewQueue = [];
+function previewPump() {
+  while (previewBusy < 3 && previewQueue.length) {
+    const job = previewQueue.shift(); previewBusy++;
+    job().finally(() => { previewBusy--; previewPump(); });
+  }
+}
+function getPreview(href) {
+  if (previewCache.has(href)) return previewCache.get(href);
+  const p = new Promise((resolve) => {
+    previewQueue.push(() => {
+      try {
+        return db.functions.invoke('link-preview', { body: { url: href } })
+          .then(({ data, error }) => resolve(!error && data && data.ok ? data : null))
+          .catch(() => resolve(null));
+      } catch (e) { resolve(null); return Promise.resolve(); }
+    });
+    previewPump();
+  });
+  previewCache.set(href, p);
+  return p;
+}
+function previewWanted(href) {
+  try {
+    const h = new URL(href).hostname.toLowerCase();
+    return !(h === location.hostname || h.endsWith('.supabase.co') || h.endsWith('.supabase.in'));
+  } catch (e) { return false; }
+}
+const previewObserver = ('IntersectionObserver' in window)
+  ? new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { previewObserver.unobserve(e.target); if (e.target._load) e.target._load(); } });
+    }, { rootMargin: '200px 0px' })
+  : null;
+function renderPreview(href) {
+  const card = el('a', { class: 'link-card pending', attrs: { href, target: '_blank', rel: 'noopener noreferrer nofollow ugc', tabindex: '-1', 'aria-hidden': 'true' } });
+  card.addEventListener('click', (e) => e.stopPropagation());
+  card._load = () => getPreview(href).then((d) => {
+    if (!d || !(d.title || d.description || d.image)) { card.remove(); return; }
+    const body = el('div', { class: 'link-card-body' }, el('div', { class: 'link-card-site', text: d.site || new URL(href).hostname.replace(/^www\./, '') }));
+    if (d.title) body.append(el('div', { class: 'link-card-title', text: d.title }));
+    if (d.description) body.append(el('div', { class: 'link-card-desc', text: d.description }));
+    if (d.image && /^https?:\/\//i.test(d.image)) {
+      const im = el('img', { class: 'link-card-img', attrs: { src: d.image, alt: '', loading: 'lazy', draggable: 'false', referrerpolicy: 'no-referrer' } });
+      im.addEventListener('error', () => im.remove());
+      im.addEventListener('load', () => { if (state.stick) scrollToBottom(); });
+      card.append(im);
+    }
+    card.append(body);
+    card.classList.remove('pending'); card.removeAttribute('aria-hidden'); card.removeAttribute('tabindex');
+    if (state.stick) scrollToBottom();
+  });
+  if (previewObserver) previewObserver.observe(card); else card._load();
+  return card;
+}
+
 function appendMentions(node, text) {
   const re = /(^|[^\p{L}\p{N}_])([@#])([\p{L}\p{N}_]{1,30})/gu;
   let last = 0;
@@ -2232,7 +2303,11 @@ function renderContent(content) {
   for (const m of content.matchAll(URL_RE)) {          // the first YouTube / TikTok / Vimeo link gets a play button
     const href = safeHref(cleanUrl(m[0]));
     const info = href && embedInfo(href);
-    if (info) { box.append(renderEmbed(info, href)); break; }
+    if (info) { box.append(renderEmbed(info, href)); return box; }
+  }
+  for (const m of content.matchAll(URL_RE)) {          // otherwise the first website link gets a preview card
+    const href = safeHref(cleanUrl(m[0]));
+    if (href && previewWanted(href)) { box.append(renderPreview(href)); break; }
   }
   return box;
 }
