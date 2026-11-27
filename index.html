@@ -456,6 +456,9 @@ input:focus, textarea:focus {
 }
 .send-btn:hover:not(:disabled) { filter: brightness(1.12); }
 .send-btn:disabled { opacity: .45; cursor: not-allowed; }
+.send-btn.cooling svg { display: none; }
+.send-btn.cooling::after { content: attr(data-count); font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; }
+.send-btn.cooling { opacity: .8; }
 .composer-meta { height: 16px; text-align: right; font-size: 11px; color: var(--muted); padding: 3px 6px 0; }
 .composer-meta .warn { color: var(--amber); }
 
@@ -1442,6 +1445,10 @@ html[data-theme="rgb"] .ads-link { border-color: var(--rgb1); box-shadow: 0 0 14
 .msg-img, .msg-video { border-radius: 14px; }
 .reply-quote { background: rgb(var(--accent-rgb) / .14); border-left-color: var(--mint); }
 .reply-btn:hover, .reply-btn:focus-visible { color: var(--mint); }
+.mod-btn:hover, .mod-btn:focus-visible { color: #f87171; }
+.mod-sec { margin-top: 8px; }
+.mod-list { display: grid; gap: 8px; margin-top: 10px; }
+.mod-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--bg-3, rgb(255 255 255 / .05)); }
 .load-more { background: rgb(var(--accent-rgb) / .16); }
 .mention { color: var(--mint); background: rgb(var(--hi-rgb) / .14); }
 
@@ -3700,7 +3707,7 @@ function feedCard(x) {
     mute.dataset.mute = '1'; mute.repaint = paint;
     side.append(mute);
   }
-  if (x.author_id === state.user.id || isAnnouncer()) {
+  if (isAnnouncer()) {   // only the moderator can delete posts
     const del = el('button', { class: 'feed-btn del', attrs: { type: 'button', title: 'Delete this post', 'aria-label': 'Delete this post' }, on: { click: () => deleteFeedPost(x.id) } });
     del.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>';
     side.append(del);
@@ -3948,7 +3955,7 @@ function commentRow(c, isReply) {
   if (!isReply && cm.post.author_id === me) {
     actions.append(el('button', { class: 'cm-act pin' + (c.pinned ? ' on' : ''), text: c.pinned ? '📌 Unpin' : '📌 Pin', attrs: { type: 'button', title: c.pinned ? 'Unpin this comment' : 'Pin this comment to the top' }, on: { click: () => pinComment(c) } }));
   }
-  if (c.author_id === me || cm.post.author_id === me || isAnnouncer()) {
+  if (isAnnouncer()) {   // only the moderator can delete comments
     actions.append(el('button', { class: 'cm-act del', text: 'Delete', attrs: { type: 'button' }, on: { click: () => deleteComment(c) } }));
   }
   const av = makeAvatar(p, 'sm');
@@ -4473,7 +4480,7 @@ function livePaintMsgs() {
     const p = profileOf(m.author_id);
     const isHost = m.author_id === live.stream.host_id;
     const row = el('div', { class: 'live-msg' + (isHost ? ' host' : ''), attrs: { 'data-mid': String(m.id) } }, el('span', {}, el('b', { text: nameOf(p) }), el('span', { text: m.body })));
-    if (m.author_id === state.user.id || live.stream.host_id === state.user.id || isAnnouncer()) {
+    if (isAnnouncer()) {   // only the moderator can delete live chat messages
       row.append(el('button', { text: '✕', attrs: { type: 'button', 'aria-label': 'Delete this message', title: 'Delete this message' }, on: { click: () => liveDeleteMsg(m) } }));
     }
     return row;
@@ -5895,7 +5902,7 @@ function renderTyping() {
 // =====================================================================
 //  UNDO  (take back a message you just sent, within 15 seconds)
 // =====================================================================
-const UNDO_SECONDS = 15;
+const UNDO_SECONDS = 0;   // Undo is OFF: only the moderator (xxx) can delete messages. (Set to 15 and re-run supabase-undo.sql to bring it back.)
 
 function undoLeft(id) {
   const until = state.undoUntil.get(id);
@@ -6111,6 +6118,24 @@ try { const o = JSON.parse(localStorage.getItem('chatworld-vol') || 'null'); if 
 const volSave = () => { try { localStorage.setItem('chatworld-vol', JSON.stringify(vol)); } catch (e) { /* ignore */ } };
 const ringState = { on: true };
 try { ringState.on = localStorage.getItem('chatworld-ring') !== 'off'; } catch (e) { /* default: on */ }
+
+// ---- Slow mode (your own setting): wait a few seconds between the messages YOU send ----
+const slow = { on: false, secs: 10, timer: 0 };
+try { const o = JSON.parse(localStorage.getItem('chatworld-slow') || 'null'); if (o) { slow.on = !!o.on; if (o.secs >= 1 && o.secs <= 30) slow.secs = Math.round(o.secs); } } catch (e) { /* defaults */ }
+const slowSave = () => { try { localStorage.setItem('chatworld-slow', JSON.stringify({ on: slow.on, secs: slow.secs })); } catch (e) { /* ignore */ } };
+/** Seconds you still have to wait before you may send again (0 = go ahead). */
+function slowLeft() { return slow.on ? Math.max(0, Math.ceil((state.lastSendAt + slow.secs * 1000 - Date.now()) / 1000)) : 0; }
+function slowTick() {
+  const b = document.getElementById('send-btn'), n = slowLeft();
+  if (b) { b.classList.toggle('cooling', n > 0); if (n > 0) b.setAttribute('data-count', String(n)); else b.removeAttribute('data-count'); }
+  if (n <= 0) { clearInterval(slow.timer); slow.timer = 0; }
+}
+function slowStart() { slowTick(); if (!slow.timer && slowLeft() > 0) slow.timer = setInterval(slowTick, 250); }
+/** Returns true (and tells the person) when slow mode says "not yet". */
+function slowBlocked() {
+  const n = slowLeft(); if (!n) return false;
+  toast('Slow mode is on: wait ' + n + ' more second' + (n === 1 ? '' : 's') + ' before sending.', 'info'); slowStart(); return true;
+}
 
 const THEMES = [
   { id: 'aurora',   name: 'Aurora',   c: ['#4ff2c8', '#7a6bff', '#ff5fa8'], bar: '#0b0f24' },
@@ -7243,7 +7268,35 @@ function replyButton(m, p) {
   const btn = el('button', { class: 'reply-btn', attrs: { type: 'button', 'aria-label': 'Reply to ' + nameOf(p), title: 'Reply' }, on: { click: () => startReply(m) } });
   btn.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
   btn.append(el('span', { text: 'Reply' }));
-  return el('div', { class: 'msg-actions' }, btn);
+  const box = el('div', { class: 'msg-actions' }, btn);
+  if (isAnnouncer()) {
+    const del = el('button', { class: 'reply-btn mod-btn', text: '🗑 Delete', attrs: { type: 'button', 'aria-label': 'Delete this message (moderator)', title: 'Delete this message for everyone' }, on: { click: () => modDeleteMessage(m) } });
+    box.append(del);
+  }
+  return box;
+}
+
+// ---------- Moderator tools (only the account named in ANNOUNCER, "xxx") ----------
+function modErrorText(error) {
+  const msg = (error && error.message) || '';
+  if (/mod_delete_message|mod_set_ban|mod_banned_list|schema cache|could not find the function|PGRST202/i.test(msg)) return 'Moderator tools need a one-time database update. Run supabase-moderator.sql in Supabase (see README.md).';
+  if (/only the moderator|already gone|cannot be banned|run supabase-ban|not found|sign in again/i.test(msg)) return msg;
+  return 'Could not do that. Please try again.';
+}
+async function modDeleteMessage(m) {
+  if (!isAnnouncer() || !window.confirm('Delete this message for everyone?')) return;
+  const { error } = await db.rpc('mod_delete_message', { mid: m.id });
+  if (error) { toast(modErrorText(error), 'error'); return; }
+  removeMessageLocally(m.id);
+  toast('Message deleted.', 'success');
+}
+async function modSetBan(p, ban) {
+  if (!isAnnouncer()) return false;
+  if (ban && !window.confirm('Ban ' + nameOf(p) + ' (@' + p.username + ')?\n\nThey are signed out everywhere and cannot log in again. You can unban them in Settings.')) return false;
+  const { error } = await db.rpc('mod_set_ban', { target: p.id, do_ban: ban });
+  if (error) { toast(modErrorText(error), 'error'); return false; }
+  toast(ban ? nameOf(p) + ' was banned.' : nameOf(p) + ' was unbanned.', 'success');
+  return true;
 }
 
 // =====================================================================
@@ -7317,6 +7370,7 @@ async function sendMessage(textOverride) {
 
   if (text.length > MAX_LEN) { toast('Messages can be up to ' + MAX_LEN + ' characters.', 'error'); return; }
 
+  if (slowBlocked()) return;
   if (Date.now() - state.lastSendAt < MIN_SEND_GAP_MS) {
     toast('Easy there! Wait a moment before sending again.');
     return;
@@ -7396,7 +7450,7 @@ async function sendMessage(textOverride) {
     return;
   }
 
-  state.lastSendAt = Date.now();
+  state.lastSendAt = Date.now(); slowStart();
   if (replyTo === replying) clearReply();
   if (typeof textOverride !== 'string') { input.value = ''; autosize(); }
   if (usingImage) {
@@ -7547,6 +7601,7 @@ function friendlyAudioError(error) {
 async function sendVoiceMemo() {
   if (!voice.blob || voice.sending || state.sending) return;
   if (isBlockedDm()) { toast('You blocked this person. Unblock them in their profile to chat.', 'error'); return; }
+  if (slowBlocked()) return;
   if (Date.now() - state.lastSendAt < MIN_SEND_GAP_MS) { toast('Easy there! Wait a moment before sending again.'); return; }
   const blob = voice.blob, url = voice.url, secs = voice.secs, ext = voice.ext, type = voice.type;
   const recipient = state.chat.type === 'dm' ? state.chat.id : null;
@@ -7572,7 +7627,7 @@ async function sendVoiceMemo() {
     toast(/audio_path|audio_secs|content_length/i.test(error.message || '') ? friendlyAudioError(error) : friendlySendError(error), 'error');
     return;
   }
-  state.lastSendAt = Date.now();
+  state.lastSendAt = Date.now(); slowStart();
   if (replyTo === replying) clearReply();
   signedLinks.set('a:' + path, { url, until: Date.now() + 50 * 60 * 1000 });   // play our own memo straight from this device
   voice.url = null;                                                           // (kept alive for the message above)
@@ -7759,6 +7814,9 @@ function openProfile(id) {
             if (err) toast(err, 'error'); else openProfile(p.id);
           } } }),
       el('p', { class: 'field-note', text: 'Blocked people cannot message or call you. You will not see their messages anywhere.' }),
+      ...(isAnnouncer() && String(p.username || '').toLowerCase() !== ANNOUNCER ? [
+        el('button', { class: 'btn btn-block', text: '🔨 Ban from ChatWorld (moderator)', attrs: { type: 'button' }, on: { click: async () => { if (await modSetBan(p, true)) closeModal(); } } }),
+      ] : []),
     );
   } else {
     let chosen = safeColor(p.avatar_color);
@@ -7968,6 +8026,16 @@ function openSettings() {
       toggle: () => { ringState.on = !ringState.on; try { localStorage.setItem('chatworld-ring', ringState.on ? 'on' : 'off'); } catch (e) { /* ignore */ } if (ringState.on) previewRing(); },
       preview: previewRing }),
   ];
+  const slowPaint = () => { sw.setAttribute('aria-checked', String(slow.on)); sr.disabled = !slow.on; sp.textContent = sr.value + ' s'; };
+  const sw = el('button', { class: 'set-switch', attrs: { type: 'button', role: 'switch', 'aria-label': 'Slow mode on or off' } }, el('i'));
+  const sr = el('input', { attrs: { type: 'range', min: '1', max: '30', step: '1', 'aria-label': 'Seconds to wait between messages' } });
+  const sp = el('span', { class: 'set-pct' });
+  sr.value = String(slow.secs);
+  sw.addEventListener('click', () => { slow.on = !slow.on; slowSave(); slowPaint(); slowTick(); });
+  sr.addEventListener('input', () => { slow.secs = Number(sr.value); slowSave(); slowPaint(); slowTick(); });
+  slowPaint();
+  const slowRow = el('div', { class: 'set-row' }, el('span', { class: 'set-name', text: 'Slow mode' }), sw, sr, sp,
+    el('span', { class: 'set-hint', text: 'Makes you wait between the messages you send, so chats feel calmer. Choose 1 to 30 seconds. Only affects you.' }));
   const reset = el('button', { class: 'btn btn-ghost small', text: 'Reset volumes', attrs: { type: 'button' }, on: { click: () => {
     Object.assign(vol, VOL_DEFAULT); volSave(); rows.forEach((p) => p());
     musicSetVolume(musicWantedVolume(), .1); if (rain.master && rain.ac) rain.master.gain.setTargetAtTime(rainSoundWanted(), rain.ac.currentTime, .05);
@@ -7983,8 +8051,29 @@ function openSettings() {
   drawThemes();
   card.append(closeBtn, el('h3', { text: 'Settings' }),
     el('h4', { class: 'set-sec', text: 'Sounds' }), el('div', { class: 'set-grid' }, ...soundRows), reset,
-    el('h4', { class: 'set-sec', text: 'Themes' }), grid);
+    el('h4', { class: 'set-sec', text: 'Chatting' }), slowRow,
+    el('h4', { class: 'set-sec', text: 'Themes' }), grid,
+    ...(isAnnouncer() ? [modSettingsSection()] : []));
   $('#modal').hidden = false;
+}
+
+function modSettingsSection() {
+  const list = el('div', { class: 'mod-list' });
+  const btn = el('button', { class: 'btn btn-ghost small', text: 'Show banned people', attrs: { type: 'button' } });
+  const load = async () => {
+    list.replaceChildren(el('p', { class: 'muted', text: 'Loading…' }));
+    const { data, error } = await db.rpc('mod_banned_list');
+    if (error) { list.replaceChildren(el('p', { class: 'form-error', text: modErrorText(error) })); return; }
+    if (!data || !data.length) { list.replaceChildren(el('p', { class: 'muted', text: 'Nobody is banned right now.' })); return; }
+    list.replaceChildren(...data.map((u) => el('div', { class: 'mod-row' },
+      el('span', { text: (u.display_name ? u.display_name + ' ' : '') + '@' + u.username }),
+      el('button', { class: 'btn btn-ghost small', text: 'Unban', attrs: { type: 'button' }, on: { click: async () => { if (await modSetBan({ id: u.id, username: u.username, display_name: u.display_name }, false)) load(); } } }))));
+  };
+  btn.addEventListener('click', load);
+  return el('div', { class: 'mod-sec' },
+    el('h4', { class: 'set-sec', text: 'Moderator' }),
+    el('p', { class: 'set-hint', text: 'Only you can delete messages. Tap 🗑 Delete under any message, or open someone\'s profile to ban them.' }),
+    btn, list);
 }
 
 function closeModal() {
